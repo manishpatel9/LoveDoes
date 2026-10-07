@@ -28,7 +28,8 @@ const allowedOrigins = new Set([
 app.use(
   cors({
     origin: (origin, cb) => {
-      if (!origin || allowedOrigins.has(origin)) {
+      // Allow specific origins, no origin (Postman/Server), or any Vercel preview domain
+      if (!origin || allowedOrigins.has(origin) || origin.endsWith('.vercel.app')) {
         cb(null, true);
         return;
       }

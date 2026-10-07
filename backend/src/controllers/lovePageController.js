@@ -233,7 +233,7 @@ export async function recordView(req, res) {
     res.status(404).json({ success: false });
     return;
   }
-  const ip = req.headers["x-forwarded-for"]?.toString().split(",")[0] || req.socket.remoteAddress;
+  const ip = req.headers["x-forwarded-for"]?.toString().split(",")[0] || req.socket?.remoteAddress || "0.0.0.0";
   await query("INSERT INTO page_views (love_page_id, ip_hash, device) VALUES (?, ?, ?)", [
     pages[0].id,
     hashIp(ip),
@@ -254,7 +254,7 @@ export async function submitContactMessage(req, res) {
     return;
   }
 
-  const ip = req.headers["x-forwarded-for"]?.toString().split(",")[0] || req.socket.remoteAddress;
+  const ip = req.headers["x-forwarded-for"]?.toString().split(",")[0] || req.socket?.remoteAddress || "0.0.0.0";
 
   await query(
     "INSERT INTO contact_messages (name, email, topic, message, status, ip_address) VALUES (?, ?, ?, ?, 'unread', ?)",
