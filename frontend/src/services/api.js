@@ -45,10 +45,12 @@ export function getPublicPage(slug) {
 
 export function recordView(slug) {
   // Fire view recording immediately to keep page load fast
+  let tz = "";
+  try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch(e) {}
   return fetch(`${API}/public/love/${slug}/view`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ location: "" }),
+    body: JSON.stringify({ location: tz || "Unknown Location" }),
   }).then(parse);
 }
 

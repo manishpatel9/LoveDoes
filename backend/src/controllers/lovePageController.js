@@ -234,10 +234,12 @@ export async function recordView(req, res) {
     return;
   }
   const ip = req.headers["x-forwarded-for"]?.toString().split(",")[0] || req.socket?.remoteAddress || "0.0.0.0";
-  await query("INSERT INTO page_views (love_page_id, ip_hash, device) VALUES (?, ?, ?)", [
+  const location = String(req.body.location || "Unknown Location").trim().slice(0, 150);
+  await query("INSERT INTO page_views (love_page_id, ip_hash, device, location) VALUES (?, ?, ?, ?)", [
     pages[0].id,
     hashIp(ip),
     deviceFromUa(req.headers["user-agent"]),
+    location,
   ]);
   await query("UPDATE love_pages SET views = views + 1 WHERE id = ?", [pages[0].id]);
   res.json({ success: true });
