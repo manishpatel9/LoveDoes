@@ -28,7 +28,11 @@ export async function adminLogin(req, res) {
 
 // Admin Logout
 export function adminLogout(_req, res) {
-  res.clearCookie("lovedoes_admin", { path: "/" });
+  res.clearCookie("lovedoes_admin", { 
+    path: "/", 
+    sameSite: "none", 
+    secure: true 
+  });
   res.json({ success: true });
 }
 

@@ -12,8 +12,8 @@ export function signAdmin(admin) {
 export function authCookie(token, res) {
   res.cookie("lovedoes_admin", token, {
     httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    sameSite: "none",
+    secure: true,
     maxAge: 12 * 60 * 60 * 1000,
     path: "/",
   });
