@@ -51,4 +51,4 @@ Free pages expire after 30 days. Photos: JPEG/PNG/WEBP. Personal audio: MP3/WAV/
 
 ## Production notes
 
-Keep the frontend on Netlify and point it at a hosted API. Never commit real production secrets. Put `DB_PASSWORD` only in server environment variables.
+Keep the frontend on Netlify and point it at the hosted API. Production API requests default to `https://lovedoes.onrender.com`; set the frontend build variable `VITE_API_URL` to a different backend origin if needed. In local development, the existing Vite proxy still routes requests to `http://localhost:4000`. The backend's `FRONTEND_ORIGIN` must match the deployed frontend origin for cross-origin requests. Never commit real production secrets. Put `DB_PASSWORD` only in server environment variables.

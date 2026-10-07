@@ -1,4 +1,18 @@
-const API = "/api/v1";
+const API_ORIGIN = (import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "" : "https://lovedoes.onrender.com")).replace(/\/+$/, "");
+const API = `${API_ORIGIN}/api/v1`;
+
+function normalizeResponse(data) {
+  if (typeof data === "string") {
+    return data.startsWith("/uploads/") ? `${API_ORIGIN}${data}` : data;
+  }
+  if (Array.isArray(data)) {
+    return data.map(normalizeResponse);
+  }
+  if (data && typeof data === "object") {
+    return Object.fromEntries(Object.entries(data).map(([key, value]) => [key, normalizeResponse(value)]));
+  }
+  return data;
+}
 
 async function parse(res) {
   const data = await res.json().catch(() => ({}));
@@ -8,7 +22,7 @@ async function parse(res) {
     error.expired = data.expired;
     throw error;
   }
-  return data;
+  return normalizeResponse(data);
 }
 
 const cred = { credentials: "include" };
@@ -303,5 +317,4 @@ export function adminUpdatePaymentSettings(data) {
     ...cred,
   }).then(parse);
 }
-
 
