@@ -83,6 +83,7 @@ async function main() {
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     multipleStatements: true,
+    database: process.env.DB_NAME,
   });
 
   await connection.query(schema);
@@ -95,14 +96,14 @@ async function main() {
     }
   }
 
-  await addColumn("ALTER TABLE mylove_db.love_pages ADD COLUMN occasion VARCHAR(120) NULL");
-  await addColumn("ALTER TABLE mylove_db.love_pages ADD COLUMN special_date DATE NULL");
-  await addColumn("ALTER TABLE mylove_db.love_pages ADD COLUMN audio_url TEXT NULL");
-  await addColumn("ALTER TABLE mylove_db.love_pages ADD COLUMN is_unlocked TINYINT(1) DEFAULT 0");
-  await addColumn("ALTER TABLE mylove_db.page_views ADD COLUMN location VARCHAR(150) NULL DEFAULT 'Local Dev / Internal'");
+  await addColumn("ALTER TABLE love_pages ADD COLUMN occasion VARCHAR(120) NULL");
+  await addColumn("ALTER TABLE love_pages ADD COLUMN special_date DATE NULL");
+  await addColumn("ALTER TABLE love_pages ADD COLUMN audio_url TEXT NULL");
+  await addColumn("ALTER TABLE love_pages ADD COLUMN is_unlocked TINYINT(1) DEFAULT 0");
+  await addColumn("ALTER TABLE page_views ADD COLUMN location VARCHAR(150) NULL DEFAULT 'Local Dev / Internal'");
   try {
     await connection.query(
-      "ALTER TABLE mylove_db.love_photos MODIFY type ENUM('creator','partner','memory','couple') NOT NULL"
+      "ALTER TABLE love_photos MODIFY type ENUM('creator','partner','memory','couple') NOT NULL"
     );
   } catch {
     /* already migrated */
@@ -112,7 +113,7 @@ async function main() {
   const password = process.env.ADMIN_PASSWORD || "LoveAdmin@123";
   const hash = await bcrypt.hash(password, 12);
   await connection.query(
-    `INSERT INTO mylove_db.admins (email, password_hash, status)
+    `INSERT INTO admins (email, password_hash, status)
      VALUES (?, ?, 'active')
      ON DUPLICATE KEY UPDATE password_hash = VALUES(password_hash), status = 'active'`,
     [email, hash]
@@ -120,38 +121,38 @@ async function main() {
 
   for (const theme of themes) {
     await connection.query(
-      `INSERT INTO mylove_db.themes (name, slug, config, status)
+      `INSERT INTO themes (name, slug, config, status)
        VALUES (?, ?, ?, 'active')
        ON DUPLICATE KEY UPDATE name = VALUES(name), config = VALUES(config), status = 'active'`,
       [theme.name, theme.slug, JSON.stringify(theme.config)]
     );
   }
 
-  const [existingMusic] = await connection.query("SELECT COUNT(*) AS c FROM mylove_db.music");
+  const [existingMusic] = await connection.query("SELECT COUNT(*) AS c FROM music");
   if (!existingMusic[0].c) {
     for (const [title, artist, tone] of musicRows) {
       await connection.query(
-        "INSERT INTO mylove_db.music (title, artist, tone, status) VALUES (?, ?, ?, 'active')",
+        "INSERT INTO music (title, artist, tone, status) VALUES (?, ?, ?, 'active')",
         [title, artist, tone]
       );
     }
   }
 
   await connection.query(`
-    CREATE TABLE IF NOT EXISTS mylove_db.payment_settings (
+    CREATE TABLE IF NOT EXISTS payment_settings (
       setting_key VARCHAR(100) PRIMARY KEY,
       setting_value TEXT NOT NULL,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      updated_at TIMESTAMP NULL
     )
   `);
 
   await connection.query(
-    `INSERT IGNORE INTO mylove_db.payment_settings (setting_key, setting_value)
+    `INSERT IGNORE INTO payment_settings (setting_key, setting_value)
      VALUES ('upi_id', 'lovedoes@ybl'), ('qr_code_url', '')`
   );
 
   await connection.end();
-  console.log("Database mylove_db is ready.");
+  console.log("Database is ready.");
 }
 
 main().catch((err) => {

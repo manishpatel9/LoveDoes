@@ -1,8 +1,3 @@
-CREATE DATABASE IF NOT EXISTS mylove_db
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
-
-USE mylove_db;
 
 CREATE TABLE IF NOT EXISTS admins (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -19,7 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash VARCHAR(255) NOT NULL,
   status ENUM('active','blocked') DEFAULT 'active',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  updated_at TIMESTAMP NULL
 );
 
 CREATE TABLE IF NOT EXISTS themes (
@@ -27,7 +22,7 @@ CREATE TABLE IF NOT EXISTS themes (
   name VARCHAR(80) NOT NULL,
   slug VARCHAR(80) UNIQUE NOT NULL,
   thumbnail VARCHAR(255),
-  config JSON NOT NULL,
+  config TEXT NOT NULL,
   status ENUM('active','inactive') DEFAULT 'active',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -61,7 +56,7 @@ CREATE TABLE IF NOT EXISTS love_pages (
   views INT UNSIGNED DEFAULT 0,
   expires_at TIMESTAMP NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NULL,
   INDEX (user_id),
   INDEX (theme_id),
   INDEX (music_id),
@@ -130,7 +125,7 @@ CREATE TABLE IF NOT EXISTS payment_verifications (
   status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
   notes TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NULL,
   INDEX (love_page_id),
   INDEX (slug),
   CONSTRAINT fk_payment_page FOREIGN KEY (love_page_id) REFERENCES love_pages(id) ON DELETE CASCADE
@@ -139,7 +134,7 @@ CREATE TABLE IF NOT EXISTS payment_verifications (
 CREATE TABLE IF NOT EXISTS payment_settings (
   setting_key VARCHAR(100) PRIMARY KEY,
   setting_value TEXT NOT NULL,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  updated_at TIMESTAMP NULL
 );
 
 
