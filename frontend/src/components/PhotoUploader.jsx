@@ -34,7 +34,6 @@ export default function PhotoUploader({ label, hint, file, preview, onChange, on
           type="file"
           className="upload-file-input"
           accept="image/jpeg,image/png,image/webp"
-          capture="environment"
           onChange={onChange}
         />
       </motion.div>
