@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import heroBg from "C:/Users/Lenovo/.gemini/antigravity/brain/051556ae-bbfd-4579-903a-8e33f93707e3/romantic_balcony_sunset_hero_bg_1790679547252.png";
+import heroBg from "../assets/hero_bg.png";
 import { playSparkleSound } from "../utils/audioSynth.js";
 
 const fadeUp = {
