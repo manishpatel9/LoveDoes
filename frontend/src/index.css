@@ -2587,24 +2587,65 @@ main {
 
 /* LETTER COMPACT */
 .compact-letter-box {
-  background: linear-gradient(135deg, rgba(42, 8, 28, 0.94) 0%, rgba(20, 3, 14, 0.96) 100%);
+  background: linear-gradient(135deg, rgba(45, 12, 28, 0.95), rgba(20, 5, 13, 0.98));
+  backdrop-filter: blur(20px);
   border-radius: 20px;
-  padding: 18px 24px;
-  border: 1.8px solid rgba(255, 126, 168, 0.65);
+  padding: 42px 30px;
+  border: 1px solid rgba(255, 126, 168, 0.65);
   width: 100%;
   max-width: 500px;
-  margin-bottom: 14px;
-  max-height: 160px;
+  margin-bottom: -15px;
+  max-height: 280px;
   overflow-y: auto;
   text-align: center;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(255, 79, 129, 0.15);
+  position: relative;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6), inset 0 0 40px rgba(255, 79, 129, 0.2);
+  z-index: 2;
+  animation: floatyLetter 6s ease-in-out infinite;
+}
+
+@keyframes floatyLetter {
+  0%, 100% { transform: translateY(0); box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6), inset 0 0 40px rgba(255, 79, 129, 0.2); }
+  50% { transform: translateY(-8px); box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7), inset 0 0 55px rgba(255, 79, 129, 0.3); }
+}
+
+.compact-letter-box::before {
+  content: '“';
+  font-family: 'Playfair Display', serif;
+  font-size: 5.5rem;
+  color: rgba(255, 182, 193, 0.25);
+  position: absolute;
+  top: 15px;
+  left: 20px;
+  line-height: 0.8;
+  text-shadow: 0 0 10px rgba(255, 182, 193, 0.3);
+}
+
+.love-letter-text {
+  font-family: "Cormorant Garamond", "Playfair Display", serif !important;
+  font-size: clamp(1.25rem, 5vw, 1.55rem) !important;
+  font-weight: 500 !important;
+  font-style: italic !important;
+  color: #fffaf6 !important;
+  line-height: 1.6 !important;
+  text-shadow: 0 2px 15px rgba(0, 0, 0, 0.8) !important;
+  position: relative;
+  z-index: 2;
 }
 
 .compact-letter-signature {
   font-family: "Alex Brush", cursive;
-  font-size: 1.75rem;
+  font-size: 2.3rem;
   color: #ff9ebb;
-  margin-bottom: 14px;
+  margin-bottom: 24px;
+  z-index: 3;
+  position: relative;
+  transform: rotate(-3deg);
+  text-align: right;
+  width: 100%;
+  max-width: 460px;
+  padding-right: 32px;
+  text-shadow: 0 0 15px rgba(255, 79, 129, 0.6);
 }
 
 /* SPARK COMPACT */
