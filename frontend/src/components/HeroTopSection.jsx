@@ -91,7 +91,6 @@ export default function HeroTopSection() {
           animate="show"
           variants={fadeUp}
           custom={5}
-          style={{ width: '100%', display: 'flex', justifyContent: 'center', paddingBottom: '30px' }}
         >
           <Link 
             to="/create" 
