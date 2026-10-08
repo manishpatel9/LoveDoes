@@ -160,6 +160,11 @@ export default function Create() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    // When step changes (Continue/Back), perfectly realign the user at the top of the form on mobile
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [step]);
+
   const selectedTheme = themes.find((t) => t.id === form.themeId);
   const labels = ["Couple", "Photos", "Memories", "Message", "Music", "Theme", "Preview"];
   const tabIcons = ["💑 Couple", "📸 Photos", "📖 Memories", "💌 Letter", "🎵 Song", "🎨 Vibe", "✨ Preview"];
@@ -677,6 +682,40 @@ export default function Create() {
               )}
             </motion.div>
           </AnimatePresence>
+              
+              {/* MOVED: Error & Action buttons now sit right below the form elements but before the live preview! */}
+              {error ? <p className="error" style={{ marginTop: 20 }}>{error}</p> : null}
+
+              <div className="row-actions" style={{ marginTop: 20 }}>
+                <button
+                  type="button"
+                  className="btn secondary"
+                  disabled={step === 0}
+                  onClick={() => setStep((s) => s - 1)}
+                >
+                  ← Back
+                </button>
+                {step < 6 ? (
+                  <button
+                    type="button"
+                    className="btn"
+                    disabled={!canNext}
+                    onClick={() => setStep((s) => s + 1)}
+                  >
+                    Continue →
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn glow"
+                    disabled={saving || !canNext}
+                    onClick={submit}
+                  >
+                    {saving ? "Creating sanctuary..." : "Create Love Sanctuary ❤️"}
+                  </button>
+                )}
+              </div>
+
             </div>
 
             {/* Sticky Royal Live Preview Column */}
@@ -690,37 +729,6 @@ export default function Create() {
             </div>
           </div>
 
-          {error ? <p className="error">{error}</p> : null}
-
-          <div className="row-actions">
-            <button
-              type="button"
-              className="btn secondary"
-              disabled={step === 0}
-              onClick={() => setStep((s) => s - 1)}
-            >
-              ← Back
-            </button>
-            {step < 6 ? (
-              <button
-                type="button"
-                className="btn"
-                disabled={!canNext}
-                onClick={() => setStep((s) => s + 1)}
-              >
-                Continue →
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="btn glow"
-                disabled={saving || !canNext}
-                onClick={submit}
-              >
-                {saving ? "Creating sanctuary..." : "Create Love Sanctuary ❤️"}
-              </button>
-            )}
-          </div>
         </div>
       </section>
     </PublicLayout>
