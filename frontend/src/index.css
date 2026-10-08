@@ -1710,9 +1710,11 @@ main { position: relative; z-index: 1; }
 /* STORY COMPACT SHOWCASE */
 .compact-photo-trio {
   display: flex;
+  flex-direction: row !important;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: clamp(8px, 2vw, 20px);
   margin-bottom: 14px;
   width: 100%;
 }
@@ -6312,6 +6314,16 @@ main { position: relative; z-index: 1; }
   .lp-handwritten-note,
   .lp-handwritten-center {
     font-size: 1.8rem;
+  }
+
+  .compact-photo-trio {
+    flex-direction: column !important;
+    gap: 30px;
+  }
+  
+  .compact-photo-frame {
+    width: 220px;
+    height: 220px;
   }
 
   .contact-form-card {
