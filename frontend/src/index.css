@@ -9619,6 +9619,7 @@ main { position: relative; z-index: 1; }
 @media (min-width: 1024px) {
   .bottom-cta-wrapper {
     justify-content: flex-start;
+    padding-left: 44px;
   }
   
   .custom-animated-cta {
