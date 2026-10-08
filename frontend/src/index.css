@@ -6232,7 +6232,7 @@ main { position: relative; z-index: 1; }
   }
 
   .grid-2 {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 10px;
   }
 
