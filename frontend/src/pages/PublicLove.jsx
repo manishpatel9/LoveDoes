@@ -41,7 +41,7 @@ export default function PublicLove() {
   const [quoteIndex, setQuoteIndex] = useState(0);
   const [showCertModal, setShowCertModal] = useState(false);
   const [viewCount, setViewCount] = useState(0);
-  const [showAudioPlayer, setShowAudioPlayer] = useState(true);
+  const [showAudioPlayer, setShowAudioPlayer] = useState(false);
 
   // Contact Admin Modal State
   const [showContactModal, setShowContactModal] = useState(false);

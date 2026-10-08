@@ -1725,8 +1725,8 @@ main { position: relative; z-index: 1; }
 }
 
 .compact-photo-frame {
-  width: 120px;
-  height: 120px;
+  width: clamp(125px, 22vw, 160px);
+  height: clamp(125px, 22vw, 160px);
   border-radius: 24px;
   padding: 3px;
   background: linear-gradient(135deg, #ffffff, #ff4f81, #ffd166);
