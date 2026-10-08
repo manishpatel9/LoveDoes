@@ -9508,12 +9508,13 @@ main { position: relative; z-index: 1; }
 .custom-animated-cta {
   display: inline-flex;
   align-items: center;
-  gap: 16px;
-  padding: 12px 28px 12px 24px;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px 20px;
   background: linear-gradient(90deg, #ff9a76 0%, #ff4b72 50%, #d81159 100%);
   background-size: 200% auto;
-  border-radius: 99px;
-  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  border-radius: 90px;
+  border: 1.2px solid rgba(255, 255, 255, 0.4);
   color: #fff !important;
   text-decoration: none;
   box-shadow: 0 10px 30px rgba(216, 17, 89, 0.4), inset 0 0 12px rgba(255, 255, 255, 0.2);
@@ -9522,6 +9523,9 @@ main { position: relative; z-index: 1; }
   overflow: hidden;
   animation: ctaBgGlow 4s linear infinite;
   margin-top: 10px;
+  max-width: 90%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .custom-animated-cta:hover {
