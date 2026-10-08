@@ -1323,7 +1323,7 @@ main { position: relative; z-index: 1; }
   .finale-name { font-size: clamp(2rem, 8vw, 3rem) !important; }
   .step-tabs { gap: 3px; padding: 4px; }
   .step-tab-btn { padding: 8px 10px; font-size: 0.78rem; }
-  .couple-showcase-banner { flex-direction: column; padding: 16px; gap: 10px; }
+  .couple-showcase-banner { flex-direction: row; padding: 12px; gap: 8px; justify-content: center; transform: scale(0.9); }
   .love-welcome-panel, .love-story-panel, .love-memories-panel,
   .love-letter-panel, .love-spark-panel, .love-proposal-card, .love-finale-panel {
     padding: 24px 16px;
@@ -6230,8 +6230,22 @@ main { position: relative; z-index: 1; }
   }
 
   .couple-showcase-banner {
-    flex-direction: column;
-    gap: 16px;
+    flex-direction: row;
+    gap: 12px;
+    padding: 12px 10px;
+    justify-content: center;
+  }
+  .couple-avatar-frame {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .wizard-header-wrapper {
+    margin-bottom: 20px;
+  }
+  .royal-wizard-title {
+    font-size: 2rem;
+    margin-bottom: 12px;
   }
 
   .step-tabs {
