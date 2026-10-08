@@ -350,7 +350,8 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, cert
   ctx.fillText("✨ YOU SAID YES! ✨", w / 2, 68);
 
   // Main Header Title: You said YES!
-  ctx.font = "italic 36px 'Cormorant Garamond', Georgia, serif";
+  const pulseSize = 36 + Math.sin(timeSec * 3) * 1.5;
+  ctx.font = `italic ${pulseSize}px 'Cormorant Garamond', Georgia, serif`;
   ctx.fillStyle = "#ffffff";
   ctx.fillText("You said YES!", w / 2, 115);
 
@@ -372,7 +373,8 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, cert
   // Left Polaroid: Creator
   if (creator) {
     ctx.save();
-    ctx.translate(w / 2 - 130, 340);
+    const driftY1 = Math.sin(timeSec * 1.4) * 8;
+    ctx.translate(w / 2 - 130, 340 + driftY1);
     ctx.rotate(-0.08); // -4.5deg tilt
 
     // Shadow & Polaroid card body
@@ -404,7 +406,8 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, cert
   // Right Polaroid: Partner
   if (partner) {
     ctx.save();
-    ctx.translate(w / 2 + 130, 340);
+    const driftY2 = Math.cos(timeSec * 1.6 + 1) * 8;
+    ctx.translate(w / 2 + 130, 340 + driftY2);
     ctx.rotate(0.08); // +4.5deg tilt
 
     // Shadow & Polaroid card body
@@ -451,7 +454,8 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, cert
   const certW = 600;
   const certH = 500;
   const certX = (w - certW) / 2;
-  const certY = 530;
+  const certDriftY = Math.sin(timeSec * 1.1 + 0.5) * 6;
+  const certY = 530 + certDriftY;
 
   ctx.save();
   // Card Shadow & Glow
