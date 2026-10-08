@@ -145,9 +145,13 @@ export default function StatusRecorder({ page, photos }) {
     const start = performance.now();
 
     const tick = (now) => {
-      const t = Math.min(1, (now - start) / 30000);
+      const elapsed = Math.max(0, now - start);
+      const t = Math.min(1, elapsed / 30000);
+      const timeSec = elapsed / 1000;
+      
       setProgress(Math.round(t * 100));
-      drawFrame(ctx, w, h, t, { creator, partner, couple, page, certBgImg });
+      drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, certBgImg });
+      
       if (t < 1) {
         requestAnimationFrame(tick);
       } else {
@@ -258,12 +262,12 @@ function drawCoverImage(ctx, img, x, y, w, h, radius = 0) {
   ctx.restore();
 }
 
-function drawFrame(ctx, w, h, t, { creator, partner, couple, page, certBgImg }) {
+function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, certBgImg }) {
   const creatorName = page?.creatorName || "Rahul";
   const partnerName = page?.partnerName || "Priya";
 
   // 1. FULL SCREEN DEEP ROYAL BURGUNDY GRADIENT BACKGROUND
-  const g = ctx.createLinearGradient(0, 0, w, h);
+  const g = ctx.createLinearGradient(0, -timeSec * 2, w, h + timeSec * 2);
   g.addColorStop(0, "#1a0209");
   g.addColorStop(0.25, "#3d0515");
   g.addColorStop(0.65, "#660a22");
@@ -271,8 +275,16 @@ function drawFrame(ctx, w, h, t, { creator, partner, couple, page, certBgImg }) 
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, w, h);
 
-  // 2. AMBIENT GLOW ORBS
-  const orb1Y = 200 + Math.sin(t * Math.PI * 4) * 40;
+  // Background Photo Overlay (Faint Background)
+  if (couple) {
+    ctx.save();
+    ctx.globalAlpha = 0.12;
+    drawCoverImage(ctx, couple, 0, 0, w, h);
+    ctx.restore();
+  }
+
+  // 2. AMBIENT GLOW ORBS (Animate using timeSec)
+  const orb1Y = 200 + Math.sin(timeSec) * 40;
   const rad1 = ctx.createRadialGradient(w / 2, orb1Y, 10, w / 2, orb1Y, 350);
   rad1.addColorStop(0, "rgba(230, 28, 93, 0.35)");
   rad1.addColorStop(1, "rgba(0,0,0,0)");
@@ -293,8 +305,8 @@ function drawFrame(ctx, w, h, t, { creator, partner, couple, page, certBgImg }) 
   ];
 
   bubbles.forEach((b) => {
-    const y = (h + 100 - ((t * b.speedY * 2.5 + b.seed * 140) % (h + 200)));
-    const waveX = b.x + Math.sin(t * Math.PI * 4 + b.seed) * 15;
+    const y = (h + 100 - ((timeSec * b.speedY * 0.5 + b.seed * 140) % (h + 200)));
+    const waveX = b.x + Math.sin(timeSec * 0.8 + b.seed) * 20;
     ctx.save();
     ctx.fillStyle = "rgba(255, 255, 255, 0.18)";
     ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
@@ -312,12 +324,12 @@ function drawFrame(ctx, w, h, t, { creator, partner, couple, page, certBgImg }) 
 
   // 4. DYNAMIC RAINING CONFETTI & ROSE PETALS
   for (let i = 0; i < 35; i++) {
-    const cx = (i * 47 + t * 80) % w;
-    const cy = (i * 83 + t * 900) % (h + 100);
+    const cx = (i * 47 + timeSec * 35) % w;
+    const cy = (i * 83 + timeSec * 150) % (h + 100);
     const size = 6 + (i % 6);
     ctx.save();
     ctx.translate(cx, cy);
-    ctx.rotate(t * Math.PI * 6 + i);
+    ctx.rotate(timeSec * 1.5 + i);
     ctx.fillStyle = i % 2 === 0 ? "rgba(255, 117, 160, 0.7)" : "rgba(255, 215, 0, 0.6)";
     ctx.fillRect(-size / 2, -size / 2, size, size * 1.4);
     ctx.restore();
@@ -375,8 +387,8 @@ function drawFrame(ctx, w, h, t, { creator, partner, couple, page, certBgImg }) 
     ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
     ctx.fillRect(-35, -132, 70, 24);
 
-    // Photo inside frame
-    ctx.drawImage(creator, -88, -108, 176, 180);
+    // Photo inside frame (USE FIXED COVER IMAGE RESING WITHOUT DISTORTION)
+    drawCoverImage(ctx, creator, -88, -108, 176, 180, 0);
 
     // Name Tag Pill
     ctx.fillStyle = "#e61c5d";
@@ -407,8 +419,8 @@ function drawFrame(ctx, w, h, t, { creator, partner, couple, page, certBgImg }) 
     ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
     ctx.fillRect(-35, -132, 70, 24);
 
-    // Photo inside frame
-    ctx.drawImage(partner, -88, -108, 176, 180);
+    // Photo inside frame (USE FIXED COVER IMAGE RESING WITHOUT DISTORTION)
+    drawCoverImage(ctx, partner, -88, -108, 176, 180, 0);
 
     // Name Tag Pill
     ctx.fillStyle = "#e61c5d";
@@ -421,15 +433,18 @@ function drawFrame(ctx, w, h, t, { creator, partner, couple, page, certBgImg }) 
     ctx.restore();
   }
 
-  // Center Crown & Heart badge between polaroids
+  // Center Crown & Heart badge between polaroids (Animate pulse with timeSec)
   ctx.save();
+  const crownScale = 1 + Math.sin(timeSec * 2) * 0.08;
+  ctx.translate(w / 2, 330);
+  ctx.scale(crownScale, crownScale);
   ctx.fillStyle = "#ffb800";
   ctx.font = "28px sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("👑", w / 2, 330);
+  ctx.fillText("👑", 0, 0);
   ctx.fillStyle = "#e61c5d";
   ctx.font = "20px sans-serif";
-  ctx.fillText("❤️", w / 2, 360);
+  ctx.fillText("❤️", 0, 30);
   ctx.restore();
 
   // 7. EMBEDDED ROMANTIC CERTIFICATE CARD (Lower Section)

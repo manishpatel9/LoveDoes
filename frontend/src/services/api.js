@@ -43,14 +43,29 @@ export function getPublicPage(slug) {
   return fetch(`${API}/public/love/${slug}`).then(parse);
 }
 
-export function recordView(slug) {
-  // Fire view recording immediately to keep page load fast
-  let tz = "";
-  try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch(e) {}
+export async function recordView(slug) {
+  let location = "Unknown Location";
+  try {
+    const geoRes = await fetch("https://ipapi.co/json/").catch(() => null);
+    if (geoRes && geoRes.ok) {
+      const geo = await geoRes.json();
+      if (geo.city && geo.country_name) {
+        location = `${geo.city}, ${geo.country_name}`;
+      }
+    }
+  } catch (err) {
+    // Ignore fetch errors
+  }
+
+  // Fallback to timezone if exact geolocation fails or is blocked
+  if (location === "Unknown Location") {
+    try { location = Intl.DateTimeFormat().resolvedOptions().timeZone || location; } catch(e) {}
+  }
+
   return fetch(`${API}/public/love/${slug}/view`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ location: tz || "Unknown Location" }),
+    body: JSON.stringify({ location }),
   }).then(parse);
 }
 
