@@ -6220,13 +6220,28 @@ main { position: relative; z-index: 1; }
   }
 
   .wizard-card {
-    padding: 24px 16px;
-    margin: 16px auto 40px;
-    border-radius: 24px;
+    padding: 16px 14px;
+    margin: 12px auto 30px;
+    border-radius: 20px;
   }
 
   .grid-2 {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .field {
+    margin-bottom: 12px;
+  }
+
+  .chip-grid {
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  .chip-btn {
+    padding: 6px 12px;
+    font-size: 0.75rem;
   }
 
   .couple-showcase-banner {
