@@ -9506,12 +9506,11 @@ main { position: relative; z-index: 1; }
 
 /* Custom Animated CTA Button */
 .custom-animated-cta {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  max-width: 360px;
-  padding: 12px 24px;
+  justify-content: center;
+  gap: 14px;
+  padding: 14px 28px;
   margin: 10px auto 30px;
   background: linear-gradient(90deg, #ff9a76 0%, #ff4b72 50%, #d81159 100%);
   background-size: 200% auto;
