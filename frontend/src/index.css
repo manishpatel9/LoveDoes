@@ -2360,13 +2360,13 @@ main {
    ===================================================== */
 .compact-one-page {
   max-width: 720px !important;
-  max-height: calc(100vh - 30px) !important;
+  max-height: none !important;
   padding: 30px 32px !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
-  justify-content: center !important;
-  overflow: hidden !important;
+  justify-content: flex-start !important;
+  overflow: visible !important;
   margin: 0 auto !important;
 }
 
