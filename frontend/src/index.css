@@ -9504,6 +9504,105 @@ main { position: relative; z-index: 1; }
   }
 }
 
+/* Custom Animated CTA Button */
+.custom-animated-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 28px 12px 24px;
+  background: linear-gradient(90deg, #ff9a76 0%, #ff4b72 50%, #d81159 100%);
+  background-size: 200% auto;
+  border-radius: 99px;
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  color: #fff !important;
+  text-decoration: none;
+  box-shadow: 0 10px 30px rgba(216, 17, 89, 0.4), inset 0 0 12px rgba(255, 255, 255, 0.2);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  position: relative;
+  overflow: hidden;
+  animation: ctaBgGlow 4s linear infinite;
+  margin-top: 10px;
+}
+
+.custom-animated-cta:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 15px 40px rgba(216, 17, 89, 0.6), inset 0 0 20px rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.8);
+}
+
+.custom-animated-cta::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 50%; height: 100%;
+  background: linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent);
+  transform: skewX(-20deg);
+  animation: ctaShimmer 4s ease-in-out infinite;
+}
+
+@keyframes ctaBgGlow {
+  0% { background-position: 0% center; }
+  50% { background-position: 100% center; }
+  100% { background-position: 0% center; }
+}
+
+@keyframes ctaShimmer {
+  0% { left: -100%; }
+  20% { left: 200%; }
+  100% { left: 200%; }
+}
+
+.cta-heart-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: heartBeat 1.5s infinite;
+}
+
+@keyframes heartBeat {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); filter: drop-shadow(0 0 8px rgba(255,255,255,0.6)); }
+}
+
+.cta-text-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+}
+
+.cta-title-main {
+  font-family: "Great Vibes", "Playfair Display", cursive;
+  font-size: 2.2rem;
+  font-weight: 500;
+  line-height: 1.0;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  margin-bottom: 2px;
+}
+
+.cta-subtitle-lower {
+  font-family: 'Poppins', system-ui, -apple-system, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  opacity: 0.95;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.cta-arrow {
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+.custom-animated-cta:hover .cta-arrow {
+  transform: translateX(6px);
+}
+
 
 
 
