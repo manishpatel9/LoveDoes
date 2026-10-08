@@ -2399,8 +2399,8 @@ main {
 }
 
 .compact-photo-frame {
-  width: 120px;
-  height: 120px;
+  width: clamp(135px, 40vw, 175px);
+  height: clamp(135px, 40vw, 175px);
   border-radius: 24px;
   padding: 3px;
   background: linear-gradient(135deg, #ffffff, #ff4f81, #ffd166);
@@ -10441,13 +10441,30 @@ main {
 
   /* Trio Photo Showcase on Mobile */
   .compact-photo-trio {
-    flex-direction: column !important;
-    gap: 16px !important;
+    flex-direction: row !important;
+    gap: 0px !important;
     align-items: center !important;
+    justify-content: center !important;
   }
 
   .compact-photo-card {
-    transform: rotate(0deg) !important;
+    transform: none !important;
+    z-index: 2;
+  }
+  
+  .compact-photo-card:first-child {
+    margin-right: -8px !important;
+    transform: rotate(-5deg) !important;
+  }
+
+  .compact-photo-card:last-child {
+    margin-left: -8px !important;
+    transform: rotate(5deg) !important;
+  }
+
+  .compact-heart-pulse-center {
+    z-index: 10 !important;
+    margin: 0 -12px !important;
   }
 
   /* Finale Photo Row */
