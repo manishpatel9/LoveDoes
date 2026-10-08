@@ -2213,11 +2213,14 @@ main {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 7px 24px;
+  padding: 8px 24px;
   border-radius: 999px;
-  background: linear-gradient(135deg, rgba(201, 24, 74, 0.65), rgba(255, 42, 117, 0.55));
-  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  background: linear-gradient(135deg, rgba(201, 24, 74, 0.55), rgba(255, 42, 117, 0.45));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
   box-shadow: 0 6px 20px rgba(201, 24, 74, 0.4), 0 0 18px rgba(255, 126, 168, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  margin-top: 18px;
   margin-bottom: 24px;
 }
 
