@@ -41,6 +41,7 @@ export default function PublicLove() {
   const [quoteIndex, setQuoteIndex] = useState(0);
   const [showCertModal, setShowCertModal] = useState(false);
   const [viewCount, setViewCount] = useState(0);
+  const [showAudioPlayer, setShowAudioPlayer] = useState(true);
 
   // Contact Admin Modal State
   const [showContactModal, setShowContactModal] = useState(false);
@@ -957,34 +958,82 @@ export default function PublicLove() {
             </motion.div>
           </div>
         )}
-        {/* FLOATING BACKGROUND AUDIO PLAYER */}
+        {/* FLOATING BACKGROUND AUDIO PLAYER WITH TOGGLE */}
         {started && (page.audioUrl || page.music?.fileUrl) && (
-          <div
+          <motion.div
             style={{
               position: "fixed",
               bottom: 24,
               right: 24,
               zIndex: 9999,
-              background: "rgba(25, 4, 16, 0.85)",
+              background: "rgba(25, 4, 16, 0.9)",
               backdropFilter: "blur(12px)",
               padding: "6px 12px",
-              borderRadius: 999,
+              borderRadius: 50,
               border: "1px solid rgba(255, 180, 205, 0.4)",
               boxShadow: "0 10px 30px rgba(0, 0, 0, 0.6)",
               display: "flex",
               alignItems: "center",
               gap: 8,
+              cursor: "pointer",
             }}
+            initial={false}
+            animate={{ width: showAudioPlayer ? "auto" : 48 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
           >
-            <span style={{ fontSize: "0.85rem", color: "#ff9ebb" }}>🎵</span>
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowAudioPlayer(!showAudioPlayer); }}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "#ff9ebb",
+                fontSize: "1.1rem",
+                cursor: "pointer",
+                padding: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 24,
+                height: 24,
+                outline: "none"
+              }}
+            >
+              {showAudioPlayer ? "🎵" : "🎶"}
+            </button>
             <audio
               controls
               autoPlay
               loop
               src={page.audioUrl || page.music?.fileUrl}
-              style={{ height: 32, maxWidth: 210 }}
+              style={{
+                height: 32,
+                maxWidth: 210,
+                display: showAudioPlayer ? "block" : "none"
+              }}
             />
-          </div>
+            {showAudioPlayer && (
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowAudioPlayer(false); }}
+                style={{
+                  background: "rgba(255,255,255,0.1)",
+                  border: "none",
+                  color: "#ff9ebb",
+                  fontSize: "0.8rem",
+                  cursor: "pointer",
+                  borderRadius: "50%",
+                  width: 24,
+                  height: 24,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginLeft: 4,
+                  outline: "none"
+                }}
+              >
+                ➔
+              </button>
+            )}
+          </motion.div>
         )}
       </div>
     </div>
