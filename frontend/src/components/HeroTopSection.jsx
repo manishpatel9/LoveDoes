@@ -82,10 +82,14 @@ export default function HeroTopSection() {
                 to="/create" 
                 className="hero-ref-cta-btn royal-gold-btn"
                 onClick={() => playSparkleSound()}
+                style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '12px 28px', flexDirection: 'row' }}
               >
-                <span className="btn-heart-prefix">👑</span>
-                <span style={{ fontWeight: 800 }}>Begin Your Royal Journey</span>
-                <span className="btn-arrow">→</span>
+                <span className="pink-heart-outline" style={{ fontSize: '36px', lineHeight: 1, marginTop: '-4px' }}>♡</span>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                  <span style={{ fontFamily: '"Great Vibes", "Playfair Display", serif', fontSize: '32px', fontWeight: 400, lineHeight: 1.1, textTransform: 'capitalize' }}>Create Our Love Story</span>
+                  <span style={{ fontSize: '13px', fontWeight: 500, opacity: 0.9, marginTop: '2px', letterSpacing: '0.5px' }}>A Journey of Hearts, Forever</span>
+                </div>
+                <span className="btn-arrow" style={{ fontSize: '24px', marginLeft: '8px' }}>→</span>
               </Link>
             </motion.div>
           </motion.div>
