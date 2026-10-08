@@ -9510,9 +9510,9 @@ main { position: relative; z-index: 1; }
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  max-width: 380px;
-  padding: 18px 24px;
-  margin: 10px auto 0;
+  max-width: 360px;
+  padding: 12px 24px;
+  margin: 10px auto 30px;
   background: linear-gradient(90deg, #ff9a76 0%, #ff4b72 50%, #d81159 100%);
   background-size: 200% auto;
   border-radius: 90px;
@@ -9524,6 +9524,7 @@ main { position: relative; z-index: 1; }
   position: relative;
   overflow: hidden;
   animation: ctaBgGlow 4s linear infinite;
+  z-index: 10;
 }
 
 .custom-animated-cta:hover {
@@ -9574,24 +9575,23 @@ main { position: relative; z-index: 1; }
   justify-content: center;
   text-align: center;
   flex: 1;
-  margin-top: -2px;
 }
 
 .cta-title-main {
   font-family: "Great Vibes", "Playfair Display", cursive;
-  font-size: 1.85rem;
+  font-size: 2.1rem;
   font-weight: 500;
-  line-height: 1.0;
+  line-height: 0.95;
   letter-spacing: 0.5px;
   text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 
 .cta-subtitle-lower {
   font-family: 'Poppins', system-ui, -apple-system, sans-serif;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 500;
-  line-height: 1.25;
+  line-height: 1.1;
   letter-spacing: 0.3px;
   opacity: 0.95;
   text-shadow: 0 1px 2px rgba(0,0,0,0.2);

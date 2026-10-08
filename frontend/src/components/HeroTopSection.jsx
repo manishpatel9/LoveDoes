@@ -89,7 +89,9 @@ export default function HeroTopSection() {
                   </svg>
                 </div>
                 <div className="cta-text-wrapper">
-                  <span className="cta-title-main">Create Our Love Story</span>
+                  <span className="cta-title-main">
+                    Create Our Love<br/>Story
+                  </span>
                   <span className="cta-subtitle-lower">A Journey of Hearts, Forever</span>
                 </div>
                 <div className="cta-arrow">
