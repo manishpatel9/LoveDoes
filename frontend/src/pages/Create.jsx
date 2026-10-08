@@ -682,43 +682,28 @@ export default function Create() {
               )}
             </motion.div>
           </AnimatePresence>
-              
-              {/* MOVED: Error & Action buttons now sit right below the form elements but before the live preview! */}
-              {error ? <p className="error" style={{ marginTop: 20 }}>{error}</p> : null}
-
-              <div className="row-actions" style={{ marginTop: 20 }}>
-                <button
-                  type="button"
-                  className="btn secondary"
-                  disabled={step === 0}
-                  onClick={() => setStep((s) => s - 1)}
-                >
-                  ← Back
-                </button>
-                {step < 6 ? (
-                  <button
-                    type="button"
-                    className="btn"
-                    disabled={!canNext}
-                    onClick={() => setStep((s) => s + 1)}
-                  >
-                    Continue →
+        </div>
+  
+                {/* 
+                  MOBILE-ONLY BUTTONS
+                  Renders strictly before the Preview column on mobile devices.
+                */}
+                <div className="row-actions mobile-only-actions" style={{ marginTop: 24, marginBottom: 10 }}>
+                  <button type="button" className="btn secondary" disabled={step === 0} onClick={() => setStep((s) => s - 1)}>
+                    ← Back
                   </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="btn glow"
-                    disabled={saving || !canNext}
-                    onClick={submit}
-                  >
-                    {saving ? "Creating sanctuary..." : "Create Love Sanctuary ❤️"}
-                  </button>
-                )}
-              </div>
-
-            </div>
-
-            {/* Sticky Royal Live Preview Column */}
+                  {step < 6 ? (
+                    <button type="button" className="btn" disabled={!canNext} onClick={() => setStep((s) => s + 1)}>
+                      Continue →
+                    </button>
+                  ) : (
+                    <button type="button" className="btn glow" disabled={saving || !canNext} onClick={submit}>
+                      {saving ? "Creating sanctuary..." : "Create Love Sanctuary ❤️"}
+                    </button>
+                  )}
+                </div>
+  
+                {/* Sticky Royal Live Preview Column */}
             <div className="wizard-preview-column">
               <RoyalLiveSanctuaryCard
                 form={form}
@@ -729,6 +714,26 @@ export default function Create() {
             </div>
           </div>
 
+          {error ? <p className="error" style={{ marginTop: 10 }}>{error}</p> : null}
+
+          {/* 
+            DESKTOP-ONLY BUTTONS
+            Renders securely at the bottom spanning across on wider screens.
+          */}
+          <div className="row-actions desktop-only-actions" style={{ marginTop: 30 }}>
+            <button type="button" className="btn secondary" disabled={step === 0} onClick={() => setStep((s) => s - 1)}>
+              ← Back
+            </button>
+            {step < 6 ? (
+              <button type="button" className="btn" disabled={!canNext} onClick={() => setStep((s) => s + 1)}>
+                Continue →
+              </button>
+            ) : (
+              <button type="button" className="btn glow" disabled={saving || !canNext} onClick={submit}>
+                {saving ? "Creating sanctuary..." : "Create Love Sanctuary ❤️"}
+              </button>
+            )}
+          </div>
         </div>
       </section>
     </PublicLayout>

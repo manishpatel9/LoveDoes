@@ -543,6 +543,10 @@ main { position: relative; z-index: 1; }
   flex-shrink: 0;
 }
 
+.mobile-only-actions {
+  display: none !important;
+}
+
 @media (max-width: 1024px) {
   .wizard-split-layout {
     flex-direction: column;
@@ -551,6 +555,8 @@ main { position: relative; z-index: 1; }
     width: 100%;
     position: static;
   }
+  .mobile-only-actions { display: flex !important; }
+  .desktop-only-actions { display: none !important; }
 }
 
 /* Royal Live Sanctuary Preview Card */
