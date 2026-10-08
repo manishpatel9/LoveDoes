@@ -90,9 +90,11 @@ export default function HeroTopSection() {
                 </div>
                 <div className="cta-text-wrapper">
                   <span className="cta-title-main">
-                    Create Our Love<br/>Story
+                    Create Love<br/>Story
                   </span>
-                  <span className="cta-subtitle-lower">A Journey of Hearts, Forever</span>
+                  <span className="cta-subtitle-lower">
+                    A Journey of Hearts,<br/>Forever
+                  </span>
                 </div>
                 <div className="cta-arrow">
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
