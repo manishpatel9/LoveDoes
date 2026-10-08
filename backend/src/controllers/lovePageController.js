@@ -23,9 +23,16 @@ async function getOrSetCache(key, ttlMs, fetcher) {
   return data;
 }
 
-function publicUrl(filename) {
-  if (!filename) return null;
-  return `/uploads/${filename}`;
+function publicUrl(file) {
+  if (!file) return null;
+  // If it's a multer-storage-cloudinary file, it provides a direct URL in 'path'
+  if (typeof file === "object" && file.path && file.path.startsWith("http")) {
+    return file.path;
+  }
+  const name = typeof file === "object" ? file.filename : file;
+  if (!name) return null;
+  if (name.startsWith("http")) return name;
+  return `/uploads/${name}`;
 }
 
 function parseMemories(raw) {
@@ -116,7 +123,7 @@ export async function createLovePage(req, res) {
       occasion,
       specialDate || null,
       message,
-      audioFile ? publicUrl(audioFile.filename) : null,
+      audioFile ? publicUrl(audioFile) : null,
       themeId,
       resolvedMusicId,
       expires,
@@ -127,12 +134,12 @@ export async function createLovePage(req, res) {
 
   await query(
     "INSERT INTO love_photos (love_page_id, type, file_url, sort_order) VALUES (?, 'creator', ?, 0), (?, 'partner', ?, 1)",
-    [pageId, publicUrl(creatorPhoto.filename), pageId, publicUrl(partnerPhoto.filename)]
+    [pageId, publicUrl(creatorPhoto), pageId, publicUrl(partnerPhoto)]
   );
   if (couplePhoto) {
     await query(
       "INSERT INTO love_photos (love_page_id, type, file_url, sort_order) VALUES (?, 'couple', ?, 2)",
-      [pageId, publicUrl(couplePhoto.filename)]
+      [pageId, publicUrl(couplePhoto)]
     );
   }
 
@@ -148,7 +155,7 @@ export async function createLovePage(req, res) {
         pageId,
         String(memory.title || "Memory").slice(0, 150),
         String(memory.description || "").slice(0, 500),
-        photo ? publicUrl(photo.filename) : null,
+        photo ? publicUrl(photo) : null,
         memory.date || null,
         i,
       ]

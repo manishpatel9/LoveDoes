@@ -2,6 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import multer from "multer";
 import crypto from "node:crypto";
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
 
 const uploadRoot = path.resolve(process.env.UPLOAD_DIR || "uploads");
 const imageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -28,7 +30,7 @@ const maxAudio = Number(process.env.MAX_AUDIO_MB || 12) * 1024 * 1024;
 
 fs.mkdirSync(uploadRoot, { recursive: true });
 
-const storage = multer.diskStorage({
+const diskStorage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, uploadRoot),
   filename: (_req, file, cb) => {
     const ext = path.extname(file.originalname || "").toLowerCase();
@@ -41,8 +43,20 @@ const storage = multer.diskStorage({
   },
 });
 
+const cloudStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'lovedoes',
+    resource_type: 'auto', // Auto detects image or video/raw for audio
+    public_id: (req, file) => `${Date.now()}-${crypto.randomBytes(4).toString("hex")}`
+  },
+});
+
+// Automatically use Cloudinary if credentials exist, preventing ephemeral loss on free-tier Render
+const activeStorage = process.env.CLOUDINARY_URL ? cloudStorage : diskStorage;
+
 export const createUpload = multer({
-  storage,
+  storage: activeStorage,
   limits: { fileSize: maxAudio, files: 14 },
   fileFilter: (_req, file, cb) => {
     if (file.fieldname === "audioFile") {
@@ -72,7 +86,7 @@ export const createUpload = multer({
 ]);
 
 export const multiAudioUpload = multer({
-  storage,
+  storage: activeStorage,
   limits: { fileSize: maxAudio, files: 100 },
   fileFilter: (_req, file, cb) => {
     if (!audioTypes.has(file.mimetype) && !/\.(mp3|mpeg|wav|m4a|aac|ogg|webm|opus|amr|3gp|m4r)$/i.test(file.originalname || "")) {
@@ -113,7 +127,7 @@ export function handleAudioUpload(req, res, next) {
 }
 
 export const singleImageUpload = multer({
-  storage,
+  storage: activeStorage,
   limits: { fileSize: maxImage },
   fileFilter: (_req, file, cb) => {
     if (!imageTypes.has(file.mimetype)) {
