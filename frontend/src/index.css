@@ -6617,16 +6617,21 @@ main { position: relative; z-index: 1; }
   }
   .hero-ref-feature-bar {
     grid-template-columns: repeat(2, 1fr);
-    margin: 16px 16px 20px;
-    padding: 14px;
-    gap: 12px;
-  }
-  .hero-ref-feature-label {
-    font-size: 0.78rem;
+    margin: 12px 14px 16px;
+    padding: 10px 12px;
+    gap: 8px 10px;
   }
   .hero-ref-icon-badge {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
+  }
+  .hero-ref-icon-badge svg {
+    width: 18px;
+    height: 18px;
+  }
+  .hero-ref-feature-label {
+    font-size: 0.7rem;
+    line-height: 1.15;
   }
 }
 
