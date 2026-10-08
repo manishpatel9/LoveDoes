@@ -9696,11 +9696,19 @@ main { position: relative; z-index: 1; }
   transform: translateX(6px);
 }
 
+.row-actions {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
 
-
-
-
-
+.row-actions button {
+  flex: 1;
+  white-space: nowrap;
+}
 
 
 
