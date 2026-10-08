@@ -2444,20 +2444,27 @@ main {
 }
 
 .compact-couple-banner {
-  width: calc(100% + 32px);
-  max-width: 640px;
+  flex-shrink: 0;
+  width: calc(100% + 16px);
+  max-width: 540px;
+  min-height: 180px;
   border-radius: 22px;
   position: relative;
   overflow: hidden;
-  margin: 0 -16px 20px -16px;
+  margin: 0 -8px 24px -8px;
   border: 1.5px solid rgba(255, 255, 255, 0.55);
   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4), 0 0 25px rgba(255, 79, 129, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .compact-couple-banner img {
   width: 100%;
   height: auto;
   display: block;
+  flex-shrink: 0;
+  object-fit: contain;
 }
 
 .compact-couple-tag {
