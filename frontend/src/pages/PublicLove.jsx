@@ -397,7 +397,7 @@ export default function PublicLove() {
       <Lightbox src={light?.src} title={light?.title} onClose={() => setLight(null)} />
 
       <div className="love-stage">
-        {started && page.audioUrl ? <PersonalAudio src={page.audioUrl} autoStart /> : null}
+        {/* Removed duplicate PersonalAudio tag that caused dual playback - playback is handled exclusively by the floating player below */}
 
         <AnimatePresence mode="wait">
           {/* ───────── 1. WELCOME SCREEN (EXACT TARGET MATCH) ───────── */}
