@@ -2675,18 +2675,43 @@ main {
 
 /* PROPOSAL COMPACT */
 .compact-proposal-heart {
-  font-size: 3.3rem;
-  margin-bottom: 8px;
-  filter: drop-shadow(0 0 25px rgba(255, 42, 117, 0.9));
+  font-size: 4.5rem;
+  margin-bottom: -5px;
+  filter: drop-shadow(0 0 35px rgba(255, 42, 117, 1));
+  animation: giantHeartPulse 2s ease-in-out infinite;
+  display: inline-block;
+}
+
+@keyframes giantHeartPulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 25px rgba(255,42,117,0.7)); }
+  50% { transform: scale(1.15); filter: drop-shadow(0 0 60px rgba(255,42,117,1)); }
 }
 
 .compact-proposal-headline {
   font-family: "Cormorant Garamond", "Playfair Display", serif;
-  font-size: clamp(1.9rem, 5vw, 3rem);
+  font-size: clamp(2.4rem, 7vw, 3.8rem);
   font-weight: 700;
-  color: #ffffff;
-  margin-bottom: 10px;
-  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  font-style: italic;
+  background: linear-gradient(135deg, #ffffff 0%, #ffb3c6 50%, #ffffff 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  margin: 10px 0 24px;
+  filter: drop-shadow(0 4px 20px rgba(255, 79, 129, 0.6));
+  line-height: 1.1;
+  padding: 0 10px;
+}
+
+.proposal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 10px;
+  position: relative;
+  height: 80px;
+  width: 100%;
 }
 
 .compact-btn {
@@ -2695,8 +2720,23 @@ main {
 }
 
 .compact-btn.yes-glow {
-  background: linear-gradient(90deg, #ff0055 0%, #ff4f81 100%) !important;
-  box-shadow: 0 0 40px rgba(255, 0, 85, 0.9) !important;
+  background: linear-gradient(135deg, #ff0055 0%, #ff4f81 50%, #ff0055 100%) !important;
+  background-size: 200% auto !important;
+  box-shadow: 0 0 45px rgba(255, 0, 85, 0.9), inset 0 0 20px rgba(255, 255, 255, 0.4) !important;
+  animation: ctaGradient 3s linear infinite, giantHeartPulse 2.5s ease-in-out infinite !important;
+  font-size: 1.35rem !important;
+  font-weight: 800 !important;
+  padding: 18px 48px !important;
+  border-radius: 999px !important;
+  border: 2px solid rgba(255,255,255,0.7) !important;
+}
+
+.love-taunt {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.05rem;
+  color: #ffb3c6;
+  margin-bottom: 24px;
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5));
 }
 
 /* =====================================================
@@ -3822,12 +3862,19 @@ main {
   padding: 8px 8px 30px;
   border-radius: 14px;
   box-shadow: 0 16px 35px rgba(0, 0, 0, 0.4);
-  width: 145px;
+  width: clamp(140px, 42vw, 180px);
+  transition: transform 0.3s ease;
+}
+
+.target-polaroid-frame:hover {
+  transform: translateY(-8px) scale(1.05) rotate(0deg) !important;
+  z-index: 20 !important;
 }
 
 .target-polaroid-frame img {
   width: 100%;
-  height: 140px;
+  aspect-ratio: 1 / 1.1;
+  height: auto;
   object-fit: cover;
   border-radius: 8px;
 }
@@ -10538,19 +10585,34 @@ main {
 
   /* Finale Photo Row */
   .target-photos-row {
-    flex-direction: column !important;
-    gap: 20px !important;
+    flex-direction: row !important;
+    gap: 0px !important;
     align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
   }
 
   .target-polaroid-frame {
-    width: 200px !important;
-    height: 240px !important;
-    transform: rotate(0deg) !important;
+    width: clamp(135px, 42vw, 180px) !important;
+    height: auto !important;
+    transform: none !important;
+    z-index: 1;
+  }
+  
+  .target-polaroid-frame.left-tilt {
+    margin-right: -12px !important;
+    transform: rotate(-6deg) !important;
+  }
+
+  .target-polaroid-frame.right-tilt {
+    margin-left: -12px !important;
+    transform: rotate(6deg) !important;
   }
 
   .target-center-seal {
-    margin: 8px 0 !important;
+    z-index: 10 !important;
+    margin: 0 -18px !important;
+    transform: scale(0.9);
   }
 
   .target-secondary-row {
