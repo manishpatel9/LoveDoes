@@ -2447,12 +2447,14 @@ main {
 
 .compact-couple-banner {
   width: 100%;
-  max-width: 360px;
-  height: 80px;
+  max-width: 480px;
+  aspect-ratio: 16 / 9;
+  min-height: 160px;
+  max-height: 280px;
   border-radius: 20px;
   position: relative;
   overflow: hidden;
-  margin-bottom: 12px;
+  margin: 0 auto 16px auto;
   border: 1.5px solid rgba(255, 255, 255, 0.55);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35), 0 0 20px rgba(255, 79, 129, 0.3);
 }
