@@ -14,6 +14,7 @@ import StatusRecorder from "../components/StatusRecorder.jsx";
 import LoveBubbles from "../components/LoveBubbles.jsx";
 import GlowOrbs from "../components/GlowOrbs.jsx";
 import LoveFinaleStageDecoration from "../components/LoveFinaleStageDecoration.jsx";
+import CrazyLoveRain from "../components/CrazyLoveRain.jsx";
 import RomanticCertificate from "../components/RomanticCertificate.jsx";
 import PaywallModal from "../components/PaywallModal.jsx";
 import { getPublicPage, recordView, submitContactMessage } from "../services/api.js";
@@ -387,10 +388,11 @@ export default function PublicLove() {
         </div>
       ))}
 
-      {/* Finale Fireworks & Confetti */}
+      {/* Finale Fireworks, Confetti & Crazy Love Rain */}
       {screen === "finale" && (
         <>
           <ConfettiBurst />
+          <CrazyLoveRain />
           <Fireworks />
         </>
       )}
