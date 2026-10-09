@@ -7385,7 +7385,17 @@ main {
   }
 
   .grid-2 {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .field {
+    margin-bottom: 14px;
+  }
+
+  .chip-grid {
+    gap: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
   }
 
   .couple-showcase-banner {
