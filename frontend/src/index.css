@@ -7389,8 +7389,33 @@ main {
   }
 
   .couple-showcase-banner {
-    flex-direction: column;
-    gap: 16px;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 10px;
+  }
+
+  .couple-avatar-frame {
+    width: 60px !important;
+    height: 60px !important;
+  }
+
+  .couple-avatar-name {
+    font-size: 0.85rem !important;
+  }
+
+  .couple-connector {
+    gap: 4px;
+  }
+
+  .couple-heart-badge {
+    font-size: 1.5rem !important;
+  }
+
+  .couple-title-sub {
+    font-size: 0.75rem !important;
+    max-width: 90px;
   }
 
   .step-tabs {
