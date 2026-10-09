@@ -335,6 +335,30 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, cert
     ctx.restore();
   }
 
+  // 4b. CRAZY LOVE RAIN EMOJIS (Mirrors the webpage effect)
+  const rainEmojis = ["💖", "💕", "✨", "💌", "🌹", "💖", "💕"];
+  for (let j = 0; j < 15; j++) {
+    const char = rainEmojis[j % rainEmojis.length];
+    // Gentle staggered fall simulation
+    const fallSpeed = 35 + (j % 5) * 5;
+    const dropY = (j * 110 + timeSec * fallSpeed) % (h + 100);
+    const swayX = Math.sin(timeSec * 0.5 + j) * 40;
+    const dropX = ((j * 85) % w) + swayX;
+    
+    // Avoid drawing directly behind Center text
+    if (dropX > w/2 - 120 && dropX < w/2 + 120 && dropY > 50 && dropY < 250) {
+      continue;
+    }
+
+    ctx.save();
+    ctx.font = "26px sans-serif";
+    ctx.textAlign = "center";
+    ctx.translate(dropX, dropY - 50);
+    ctx.rotate(Math.sin(timeSec * 0.8 + j) * 0.2); // Gentle sway rotation
+    ctx.fillText(char, 0, 0);
+    ctx.restore();
+  }
+
   // 5. SANCTUARY HEADER SECTION (Top)
   // Badge: YOU SAID YES
   ctx.save();

@@ -8,28 +8,19 @@ const EMOJI_PALETTE = [
 ];
 
 export default function CrazyLoveRain() {
-  // useMemo ensures these drops are calculated EXACTLY ONCE on mount.
-  // There is NO React state, NO intervals, NO rerenders.
-  // This guarantees silky smooth 60fps performance on mobile.
   const drops = useMemo(() => {
-    // Only 15 total items looping infinitely on CSS
     return Array.from({ length: 14 }).map((_, i) => {
       const text = EMOJI_PALETTE[Math.floor(Math.random() * EMOJI_PALETTE.length)];
-      const delay = Math.random() * 10; // Start instantly or up to 10s later
-      const duration = 14 + Math.random() * 8; // Extremely slow (14s to 22s to fall)
+      const delay = Math.random() * 10;
+      const duration = 14 + Math.random() * 8;
       
-      // Determine columns (0-100vw). Push items slightly away from absolute center if possible
       let left = Math.random() * 100;
       if (left > 40 && left < 60) {
-        left += (Math.random() > 0.5 ? 20 : -20); // Push out of center safe-zone
+        left += (Math.random() > 0.5 ? 20 : -20);
       }
 
       const isText = text.length > 2; 
-      
-      // Keep words smaller and emojis a nice size
       const size = isText ? (0.9 + Math.random() * 0.3) : (1.1 + Math.random() * 0.5);
-      
-      // Random sway pattern assignment
       const swayType = Math.random() > 0.5 ? "love-rain-sway-left" : "love-rain-sway-right";
       
       return { id: i, text, left, delay, duration, isText, size, swayType };
@@ -71,10 +62,6 @@ export default function CrazyLoveRain() {
           z-index: 1;
         }
 
-        /* 
-         * Using translate3d forces GPU hardware acceleration, 
-         * ensuring the smoothest possible float down the screen.
-         */
         @keyframes love-rain-sway-left {
           0% { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 0; }
           10% { opacity: 0.8; }
@@ -96,13 +83,13 @@ export default function CrazyLoveRain() {
         {drops.map(drop => (
           <div
             key={drop.id}
-            className={\`love-rain-drop \${drop.swayType} \${drop.isText ? 'love-rain-text' : 'love-rain-emoji'}\`}
+            className={`love-rain-drop ${drop.swayType} ${drop.isText ? 'love-rain-text' : 'love-rain-emoji'}`}
             style={{
-              left: \`\${drop.left}%\`,
-              fontSize: \`\${drop.size}rem\`,
+              left: `${drop.left}%`,
+              fontSize: `${drop.size}rem`,
               animationName: drop.swayType,
-              animationDuration: \`\${drop.duration}s\`,
-              animationDelay: \`\${drop.delay}s\`,
+              animationDuration: `${drop.duration}s`,
+              animationDelay: `${drop.delay}s`,
               animationTimingFunction: 'linear',
               animationIterationCount: 'infinite'
             }}

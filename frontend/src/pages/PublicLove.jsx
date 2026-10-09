@@ -374,9 +374,7 @@ export default function PublicLove() {
       {screen === "finale" && <LoveFinaleStageDecoration />}
 
       {/* Floating Love Bubbles */}
-      {screen === "finale" ? (
-        <LoveBubbles count={36} showMessages />
-      ) : (
+      {screen !== "finale" && (
         <LoveBubbles count={16} showMessages={false} />
       )}
 
