@@ -274,23 +274,29 @@ export default function Create() {
 
       <section className="wizard mockup-bg" style={{ backgroundImage: `url(${heroBg})`, minHeight: "100vh", backgroundSize: "cover", backgroundPosition: "center", padding: "40px 16px" }}>
         <div className="mockup-container">
-          <div className="mockup-header-wrapper">
+          <div className="mockup-header-wrapper" style={{alignItems: "flex-start", textAlign: "left"}}>
             <div className="mockup-badge">
-              <span className="gold-line"></span>
-              👑 ROYAL LOVE SANCTUARY <span style={{fontSize:"0.6rem", letterSpacing:"0.3em", display:"block", textAlign:"center", width:"100%"}}>CREATOR</span>
-              <span className="gold-line"></span>
+              <span className="crown-icon">👑</span> 
+              <div style={{display: "flex", flexDirection: "column", gap: "4px"}}>
+                <span>ROYAL LOVE SANCTUARY</span>
+                <div style={{display: "flex", alignItems: "center", gap: "8px", fontSize: "0.55rem", letterSpacing: "0.4em", color: "#ffd166", marginLeft: "2px"}}>
+                  <div style={{height: "1px", width: "30px", background: "#ffd166"}}></div>
+                  CREATOR
+                  <div style={{height: "1px", width: "30px", background: "#ffd166"}}></div>
+                </div>
+              </div>
             </div>
             
-            <h1 className="mockup-title">
+            <h1 className="mockup-title" style={{alignItems: "flex-start", marginLeft: "10px"}}>
               <span className="text-white fade-in-up">Craft Your</span><br/>
-              <span className="text-gold pop-in">Eternal Love</span><br/>
-              <span className="text-pink slide-in-right">Sanctuary</span>
+              <span className="text-gold pop-in">Eternal Love<span style={{fontSize:"1.5rem", verticalAlign:"top", color:"#ffd166"}}>♡</span></span><br/>
+              <span className="text-pink slide-in-right">Sanctuary<span style={{fontSize:"1rem", verticalAlign:"bottom", marginLeft:"8px", color:"#ff4f81"}}>♡</span></span>
             </h1>
 
             <div className="mockup-quote-card">
               <span className="quote-mark">“</span>
-              <p>I loved you yesterday, love you still, always have, always will.</p>
-              <span className="quote-mark">”</span>
+              <p>I loved you yesterday, love<br/>you still, always have, always<br/>will. <span style={{color:"#ff4f81", fontSize:"0.8rem"}}>💖</span></p>
+              <span className="quote-mark" style={{alignSelf: "flex-end", marginBottom:"-10px"}}>”</span>
             </div>
           </div>
 
@@ -326,7 +332,7 @@ export default function Create() {
                     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l7.78-7.78a5.5 5.5 0 0 0 0-7.78z" />
                   </svg>
                 </div>
-                <span className="mockup-story-text">Two hearts,<br/>one story</span>
+                <span className="mockup-story-text"><span style={{color:"#ff4f81", fontSize:"0.6rem"}}>💖</span> Two hearts,<br/>one story <span style={{color:"#ff4f81", fontSize:"0.6rem"}}>💖</span></span>
               </div>
 
               <div className="mockup-avatar-wrapper right-avatar">
@@ -342,7 +348,7 @@ export default function Create() {
 
           {/* Stepper Navigation Tabs */}
           <div className="mockup-tabs-card">
-            {tabIcons.slice(0, 3).map((tabLabel, idx) => (
+            {["🤍 Couple", "📷 Photos", "🖼️ Memories"].map((tabLabel, idx) => (
               <div key={idx} className="mockup-tab-wrapper">
                 <button
                   type="button"
@@ -375,7 +381,7 @@ export default function Create() {
           </div>
 
           <div className="wizard-split-layout">
-            <div className="wizard-form-column" style={{ background: "linear-gradient(145deg, rgba(82, 9, 39, 0.4), rgba(35, 6, 22, 0.6))", borderRadius: "24px", border: "1px solid rgba(255, 143, 171, 0.2)", padding: "20px", marginTop: "16px", backdropFilter: "blur(12px)" }}>
+            <div className="wizard-form-column mockup-form-container">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={step}
@@ -386,9 +392,20 @@ export default function Create() {
                 >
               {step === 0 && (
                 <>
-                  <p style={{ color: "var(--muted)", fontStyle: "italic", marginBottom: 18 }}>
-                    Tell us about your love story — softly, honestly, from the bottom of your heart.
-                  </p>
+                  <div className="mockup-form-intro">
+                    <div className="intro-line-container">
+                      <span className="intro-heart">💖</span>
+                      <div className="intro-bar"></div>
+                    </div>
+                    <p className="intro-text">
+                      Tell us about your love story —<br/>
+                      softly, honestly, from the bottom<br/>
+                      of your heart.
+                    </p>
+                    <div className="intro-signature">
+                      Forever<br/>Together <span style={{fontSize:"0.8rem"}}>♡</span>
+                    </div>
+                  </div>
 
                   <div className="grid-2">
                     <div className="field">
