@@ -7385,20 +7385,8 @@ main {
   }
 
   .grid-2 {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-  }
-
-  .grid-2 label {
-    font-size: 0.75rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .grid-2 input {
-    padding: 10px 12px;
-    font-size: 0.85rem;
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
 
   .field {
