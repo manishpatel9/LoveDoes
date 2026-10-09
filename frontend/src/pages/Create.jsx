@@ -9,6 +9,7 @@ import RosePetals from "../components/RosePetals.jsx";
 import { COUPLE_AVATARS } from "../components/CoupleAvatars.jsx";
 import { createLovePage, listMusic, listThemes } from "../services/api.js";
 import { compressImage } from "../utils/compress.js";
+import heroBg from "../assets/hero_bg.png";
 
 const ROMANTIC_QUOTES = [
   "“In all the world, there is no heart for me like yours.”",
@@ -271,83 +272,110 @@ export default function Create() {
       <HeartField count={30} dense />
       <RosePetals count={18} />
 
-      <section className="wizard">
-        <div className="card wizard-card">
-          <div className="wizard-header-wrapper">
-            <div className="royal-wizard-badge">
-              👑 ROYAL LOVE SANCTUARY CREATOR
+      <section className="wizard mockup-bg" style={{ backgroundImage: `url(${heroBg})`, minHeight: "100vh", backgroundSize: "cover", backgroundPosition: "center", padding: "40px 16px" }}>
+        <div className="mockup-container">
+          <div className="mockup-header-wrapper">
+            <div className="mockup-badge">
+              <span className="gold-line"></span>
+              👑 ROYAL LOVE SANCTUARY <span style={{fontSize:"0.6rem", letterSpacing:"0.3em", display:"block", textAlign:"center", width:"100%"}}>CREATOR</span>
+              <span className="gold-line"></span>
             </div>
-            <h1 className="royal-wizard-title">Craft Your Eternal Love Sanctuary</h1>
-            <div className="romantic-quote-ticker">
-              <span>✨</span>
-              <span>{ROMANTIC_QUOTES[quoteIndex]}</span>
-              <span>✨</span>
+            
+            <h1 className="mockup-title">
+              <span className="text-white fade-in-up">Craft Your</span><br/>
+              <span className="text-gold pop-in">Eternal Love</span><br/>
+              <span className="text-pink slide-in-right">Sanctuary</span>
+            </h1>
+
+            <div className="mockup-quote-card">
+              <span className="quote-mark">“</span>
+              <p>I loved you yesterday, love you still, always have, always will.</p>
+              <span className="quote-mark">”</span>
             </div>
           </div>
 
           {/* Dynamic Love Couple Showcase Banner */}
-          <div className="couple-showcase-banner">
-            <div className="couple-avatar-slot">
-              <div className="couple-avatar-frame">
-                {form.creatorPreview ? (
-                  <img src={form.creatorPreview} alt="Creator" />
-                ) : (
-                  activeAvatarPreset.creatorSvg
-                )}
-              </div>
-              <span className="couple-avatar-name">{form.creatorName || "You"}</span>
+          <div className="mockup-couple-card">
+            <h2 className="mockup-couple-header">You & Partner</h2>
+            <div className="mockup-couple-divider">
+              <span className="gold-dash"></span> <span className="tiny-heart">💖</span> <span className="gold-dash"></span>
             </div>
-
-            <div className="couple-connector">
-              <span className="couple-heart-badge">💖</span>
-              <span className="couple-title-sub">{form.title || "Our Story"}</span>
-            </div>
-
-            <div className="couple-avatar-slot">
-              <div className="couple-avatar-frame">
-                {form.partnerPreview ? (
-                  <img src={form.partnerPreview} alt="Partner" />
-                ) : (
-                  activeAvatarPreset.partnerSvg
-                )}
+            
+            <div className="mockup-couple-display">
+              <div className="mockup-avatar-wrapper left-avatar">
+                <div className="mockup-crown">👑</div>
+                <div className="mockup-avatar-frame pink-glow">
+                  {form.creatorPreview ? <img src={form.creatorPreview} alt="Creator" /> : activeAvatarPreset.creatorSvg}
+                </div>
+                <span className="mockup-avatar-name">You</span>
+                <div className="mockup-name-line"></div>
               </div>
-              <span className="couple-avatar-name">{form.partnerName || "Partner"}</span>
+
+              <div className="mockup-connector">
+                <div className="interlocking-hearts">
+                  <svg width="45" height="45" viewBox="0 0 24 24" fill="none" stroke="url(#goldGradient)" strokeWidth="1.5">
+                    <defs>
+                      <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#ffd166" />
+                        <stop offset="100%" stopColor="#ffb4cd" />
+                      </linearGradient>
+                    </defs>
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l7.78-7.78a5.5 5.5 0 0 0 0-7.78z" />
+                  </svg>
+                  <svg width="45" height="45" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" style={{position:"absolute", left:"15px", top:"-5px", opacity:0.8}}>
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l7.78-7.78a5.5 5.5 0 0 0 0-7.78z" />
+                  </svg>
+                </div>
+                <span className="mockup-story-text">Two hearts,<br/>one story</span>
+              </div>
+
+              <div className="mockup-avatar-wrapper right-avatar">
+                <div className="mockup-crown">👑</div>
+                <div className="mockup-avatar-frame blue-glow">
+                  {form.partnerPreview ? <img src={form.partnerPreview} alt="Partner" /> : activeAvatarPreset.partnerSvg}
+                </div>
+                <span className="mockup-avatar-name">Partner</span>
+                <div className="mockup-name-line blue-line"></div>
+              </div>
             </div>
           </div>
 
           {/* Stepper Navigation Tabs */}
-          <div className="step-tabs">
-            {tabIcons.map((tabLabel, idx) => (
-              <button
-                key={idx}
-                type="button"
-                className={`step-tab-btn ${step === idx ? "active" : ""} ${idx < step ? "done" : ""}`}
-                onClick={() => {
-                  if (idx <= step || canNext) setStep(idx);
-                }}
-              >
-                {tabLabel}
-              </button>
+          <div className="mockup-tabs-card">
+            {tabIcons.slice(0, 3).map((tabLabel, idx) => (
+              <div key={idx} className="mockup-tab-wrapper">
+                <button
+                  type="button"
+                  className={`mockup-tab-btn ${step === idx ? "active" : ""}`}
+                  onClick={() => { if (idx <= step || canNext) setStep(idx); }}
+                >
+                  {tabLabel}
+                </button>
+                {idx < 2 && <span className="mockup-tab-divider">|</span>}
+              </div>
             ))}
           </div>
 
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-            <span style={{ fontSize: "0.82rem", color: "#ffd166", fontWeight: 600 }}>
-              Step {step + 1} of 7: {labels[step]} Details
-            </span>
-            <span style={{ fontSize: "0.82rem", color: "#ff9ebb", fontWeight: 600 }}>
-              {Math.round(((step + 1) / 7) * 100)}% Complete
-            </span>
-          </div>
-
-          <div className="progress">
-            {labels.map((_, i) => (
-              <span key={i} className={i <= step ? "done" : ""} />
-            ))}
+          <div className="mockup-progress-card">
+            <div className="progress-top-row">
+              <div className="progress-info">
+                <span className="pulsing-heart-icon">💖</span>
+                <div>
+                  <div className="step-count">Step {step + 1} of 7:</div>
+                  <div className="step-title">{labels[step]} Details</div>
+                </div>
+              </div>
+              <div className="progress-pill">{Math.round(((step + 1) / 7) * 100)}% Complete</div>
+            </div>
+            <div className="mockup-progress-bars">
+              {labels.map((_, i) => (
+                <div key={i} className={`mockup-bar ${i <= step ? "done" : ""}`} />
+              ))}
+            </div>
           </div>
 
           <div className="wizard-split-layout">
-            <div className="wizard-form-column">
+            <div className="wizard-form-column" style={{ background: "linear-gradient(145deg, rgba(82, 9, 39, 0.4), rgba(35, 6, 22, 0.6))", borderRadius: "24px", border: "1px solid rgba(255, 143, 171, 0.2)", padding: "20px", marginTop: "16px", backdropFilter: "blur(12px)" }}>
               <AnimatePresence mode="wait">
                 <motion.div
                   key={step}
