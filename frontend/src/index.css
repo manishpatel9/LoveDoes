@@ -7499,7 +7499,7 @@ main {
   box-shadow: 0 30px 85px rgba(0, 0, 0, 0.6), 0 0 0 1.5px rgba(244, 193, 110, 0.4) inset;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
   overflow: hidden;
   padding: 0;
 }
@@ -7643,8 +7643,8 @@ main {
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  margin-top: 32px;
-  margin-bottom: 70px;
+  margin-top: 24px;
+  margin-bottom: 24px;
   position: relative;
   z-index: 5;
 }
