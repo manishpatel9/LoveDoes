@@ -11022,9 +11022,9 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   align-items: center;
 }
 
-.text-white { color: #ffffff; font-size: 3.5rem; align-self: flex-start; margin-left: -20px; }
-.text-gold { color: #ffd166; font-size: 4.8rem; margin-left: 20%; text-shadow: 0 4px 20px rgba(255,209,102,0.4); }
-.text-pink { color: #ff4f81; font-size: 4rem; margin-left: 40%; text-shadow: 0 4px 20px rgba(255,79,129,0.5); }
+.text-white { color: #ffffff; font-size: 2.2rem; align-self: flex-start; margin-left: -10px; white-space: nowrap; }
+.text-gold { color: #ffd166; font-size: 3rem; margin-left: 10%; text-shadow: 0 4px 20px rgba(255,209,102,0.6); white-space: nowrap; line-height: 1; }
+.text-pink { color: #ff4f81; font-size: 2.5rem; margin-left: 20%; text-shadow: 0 4px 20px rgba(255,79,129,0.6); white-space: nowrap; line-height: 1; }
 
 .mockup-quote-card {
   font-family: 'Playfair Display', serif;
@@ -11200,16 +11200,22 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 @media (max-width: 576px) {
-  .text-white { font-size: 2.8rem; margin-left: 0; }
-  .text-gold { font-size: 3.8rem; margin-left: 5%; }
-  .text-pink { font-size: 3.2rem; margin-left: 10%; }
+  .mockup-header-wrapper { margin-bottom: 0px; }
+  .mockup-badge { margin-bottom: 2px; }
+  .crown-icon { font-size: 1.4rem; }
+  .text-white { font-size: 2.2rem; margin-left: 0; }
+  .text-gold { font-size: 3.2rem; margin-left: 5%; line-height: 0.9; }
+  .text-pink { font-size: 2.8rem; margin-left: 15%; line-height: 0.9; }
+  .mockup-quote-card { max-width: 100%; font-size: 0.9rem; margin-top: 10px; margin-bottom: 15px; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+  .quote-mark { font-size: 1.2rem; }
+  .mockup-couple-card { padding: 16px 12px; margin-top: 5px; }
+  .mockup-couple-header { font-size: 2rem; }
+  .mockup-couple-divider { margin-bottom: 16px; }
   .mockup-avatar-frame { width: 75px; height: 75px; }
   .interlocking-hearts { width: 50px; height: 40px; }
   .interlocking-hearts svg { width: 40px; height: 40px; }
   .mockup-tab-btn { padding: 10px 14px; font-size: 0.85rem; }
   .mockup-tabs-card { padding: 6px 8px; }
-  .quote-mark { font-size: 1.4rem; }
-  .mockup-quote-card { max-width: 100%; font-size: 1rem; }
 }
 
 .crown-icon {
