@@ -9,7 +9,6 @@ import RosePetals from "../components/RosePetals.jsx";
 import { COUPLE_AVATARS } from "../components/CoupleAvatars.jsx";
 import { createLovePage, listMusic, listThemes } from "../services/api.js";
 import { compressImage } from "../utils/compress.js";
-import heroBg from "../assets/hero_bg.png";
 
 const ROMANTIC_QUOTES = [
   "“In all the world, there is no heart for me like yours.”",
@@ -272,116 +271,83 @@ export default function Create() {
       <HeartField count={30} dense />
       <RosePetals count={18} />
 
-      <section className="wizard mockup-bg" style={{ backgroundImage: `url(${heroBg})`, minHeight: "100vh", backgroundSize: "cover", backgroundPosition: "center", padding: "40px 16px" }}>
-        <div className="mockup-container">
-          <div className="mockup-header-wrapper" style={{alignItems: "flex-start", textAlign: "left"}}>
-            <div className="mockup-badge">
-              <span className="crown-icon">👑</span> 
-              <div style={{display: "flex", flexDirection: "column", gap: "4px"}}>
-                <span>ROYAL LOVE SANCTUARY</span>
-                <div style={{display: "flex", alignItems: "center", gap: "8px", fontSize: "0.55rem", letterSpacing: "0.4em", color: "#ffd166", marginLeft: "2px"}}>
-                  <div style={{height: "1px", width: "30px", background: "#ffd166"}}></div>
-                  CREATOR
-                  <div style={{height: "1px", width: "30px", background: "#ffd166"}}></div>
-                </div>
-              </div>
+      <section className="wizard">
+        <div className="card wizard-card">
+          <div className="wizard-header-wrapper">
+            <div className="royal-wizard-badge">
+              👑 ROYAL LOVE SANCTUARY CREATOR
             </div>
-            
-            <h1 className="mockup-title" style={{alignItems: "flex-start", marginLeft: "10px"}}>
-              <span className="text-white fade-in-up">Craft Your</span><br/>
-              <span className="text-gold pop-in">Eternal Love<span style={{fontSize:"1.5rem", verticalAlign:"top", color:"#ffd166"}}>♡</span></span><br/>
-              <span className="text-pink slide-in-right">Sanctuary<span style={{fontSize:"1rem", verticalAlign:"bottom", marginLeft:"8px", color:"#ff4f81"}}>♡</span></span>
-            </h1>
-
-            <div className="mockup-quote-card">
-              <span className="quote-mark">“</span>
-              <p>I loved you yesterday, love<br/>you still, always have, always<br/>will. <span style={{color:"#ff4f81", fontSize:"0.8rem"}}>💖</span></p>
-              <span className="quote-mark" style={{alignSelf: "flex-end", marginBottom:"-10px"}}>”</span>
+            <h1 className="royal-wizard-title">Craft Your Eternal Love Sanctuary</h1>
+            <div className="romantic-quote-ticker">
+              <span>✨</span>
+              <span>{ROMANTIC_QUOTES[quoteIndex]}</span>
+              <span>✨</span>
             </div>
           </div>
 
           {/* Dynamic Love Couple Showcase Banner */}
-          <div className="mockup-couple-card">
-            <h2 className="mockup-couple-header">You & Partner</h2>
-            <div className="mockup-couple-divider">
-              <span className="gold-dash"></span> <span className="tiny-heart">💖</span> <span className="gold-dash"></span>
+          <div className="couple-showcase-banner">
+            <div className="couple-avatar-slot">
+              <div className="couple-avatar-frame">
+                {form.creatorPreview ? (
+                  <img src={form.creatorPreview} alt="Creator" />
+                ) : (
+                  activeAvatarPreset.creatorSvg
+                )}
+              </div>
+              <span className="couple-avatar-name">{form.creatorName || "You"}</span>
             </div>
-            
-            <div className="mockup-couple-display">
-              <div className="mockup-avatar-wrapper left-avatar">
-                <div className="mockup-crown">👑</div>
-                <div className="mockup-avatar-frame pink-glow">
-                  {form.creatorPreview ? <img src={form.creatorPreview} alt="Creator" /> : activeAvatarPreset.creatorSvg}
-                </div>
-                <span className="mockup-avatar-name">You</span>
-                <div className="mockup-name-line"></div>
-              </div>
 
-              <div className="mockup-connector">
-                <div className="interlocking-hearts">
-                  <svg width="45" height="45" viewBox="0 0 24 24" fill="none" stroke="url(#goldGradient)" strokeWidth="1.5">
-                    <defs>
-                      <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#ffd166" />
-                        <stop offset="100%" stopColor="#ffb4cd" />
-                      </linearGradient>
-                    </defs>
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l7.78-7.78a5.5 5.5 0 0 0 0-7.78z" />
-                  </svg>
-                  <svg width="45" height="45" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" style={{position:"absolute", left:"15px", top:"-5px", opacity:0.8}}>
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l7.78-7.78a5.5 5.5 0 0 0 0-7.78z" />
-                  </svg>
-                </div>
-                <span className="mockup-story-text"><span style={{color:"#ff4f81", fontSize:"0.6rem"}}>💖</span> Two hearts,<br/>one story <span style={{color:"#ff4f81", fontSize:"0.6rem"}}>💖</span></span>
-              </div>
+            <div className="couple-connector">
+              <span className="couple-heart-badge">💖</span>
+              <span className="couple-title-sub">{form.title || "Our Story"}</span>
+            </div>
 
-              <div className="mockup-avatar-wrapper right-avatar">
-                <div className="mockup-crown">👑</div>
-                <div className="mockup-avatar-frame blue-glow">
-                  {form.partnerPreview ? <img src={form.partnerPreview} alt="Partner" /> : activeAvatarPreset.partnerSvg}
-                </div>
-                <span className="mockup-avatar-name">Partner</span>
-                <div className="mockup-name-line blue-line"></div>
+            <div className="couple-avatar-slot">
+              <div className="couple-avatar-frame">
+                {form.partnerPreview ? (
+                  <img src={form.partnerPreview} alt="Partner" />
+                ) : (
+                  activeAvatarPreset.partnerSvg
+                )}
               </div>
+              <span className="couple-avatar-name">{form.partnerName || "Partner"}</span>
             </div>
           </div>
 
           {/* Stepper Navigation Tabs */}
-          <div className="mockup-tabs-card">
-            {["🤍 Couple", "📷 Photos", "🖼️ Memories"].map((tabLabel, idx) => (
-              <div key={idx} className="mockup-tab-wrapper">
-                <button
-                  type="button"
-                  className={`mockup-tab-btn ${step === idx ? "active" : ""}`}
-                  onClick={() => { if (idx <= step || canNext) setStep(idx); }}
-                >
-                  {tabLabel}
-                </button>
-                {idx < 2 && <span className="mockup-tab-divider">|</span>}
-              </div>
+          <div className="step-tabs">
+            {tabIcons.map((tabLabel, idx) => (
+              <button
+                key={idx}
+                type="button"
+                className={`step-tab-btn ${step === idx ? "active" : ""} ${idx < step ? "done" : ""}`}
+                onClick={() => {
+                  if (idx <= step || canNext) setStep(idx);
+                }}
+              >
+                {tabLabel}
+              </button>
             ))}
           </div>
 
-          <div className="mockup-progress-card">
-            <div className="progress-top-row">
-              <div className="progress-info">
-                <span className="pulsing-heart-icon">💖</span>
-                <div>
-                  <div className="step-count">Step {step + 1} of 7:</div>
-                  <div className="step-title">{labels[step]} Details</div>
-                </div>
-              </div>
-              <div className="progress-pill">{Math.round(((step + 1) / 7) * 100)}% Complete</div>
-            </div>
-            <div className="mockup-progress-bars">
-              {labels.map((_, i) => (
-                <div key={i} className={`mockup-bar ${i <= step ? "done" : ""}`} />
-              ))}
-            </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+            <span style={{ fontSize: "0.82rem", color: "#ffd166", fontWeight: 600 }}>
+              Step {step + 1} of 7: {labels[step]} Details
+            </span>
+            <span style={{ fontSize: "0.82rem", color: "#ff9ebb", fontWeight: 600 }}>
+              {Math.round(((step + 1) / 7) * 100)}% Complete
+            </span>
+          </div>
+
+          <div className="progress">
+            {labels.map((_, i) => (
+              <span key={i} className={i <= step ? "done" : ""} />
+            ))}
           </div>
 
           <div className="wizard-split-layout">
-            <div className="wizard-form-column mockup-form-container">
+            <div className="wizard-form-column">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={step}
@@ -392,20 +358,9 @@ export default function Create() {
                 >
               {step === 0 && (
                 <>
-                  <div className="mockup-form-intro">
-                    <div className="intro-line-container">
-                      <span className="intro-heart">💖</span>
-                      <div className="intro-bar"></div>
-                    </div>
-                    <p className="intro-text">
-                      Tell us about your love story —<br/>
-                      softly, honestly, from the bottom<br/>
-                      of your heart.
-                    </p>
-                    <div className="intro-signature">
-                      Forever<br/>Together <span style={{fontSize:"0.8rem"}}>♡</span>
-                    </div>
-                  </div>
+                  <p style={{ color: "var(--muted)", fontStyle: "italic", marginBottom: 18 }}>
+                    Tell us about your love story — softly, honestly, from the bottom of your heart.
+                  </p>
 
                   <div className="grid-2">
                     <div className="field">
