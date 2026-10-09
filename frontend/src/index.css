@@ -10955,3 +10955,146 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 input[type="date"]::-webkit-calendar-picker-indicator:hover {
   opacity: 1;
 }
+
+/* ==========================================================================
+   MODERN PREMIUM WIZARD THEME ENHANCEMENTS (ANIMATED & COLORFUL)
+   ========================================================================== */
+
+/* 1. Animated Gradient Border for the Main Wizard Card */
+@keyframes neonGlow {
+  0% { box-shadow: 0 0 20px rgba(255, 79, 129, 0.15), inset 0 0 10px rgba(255, 209, 102, 0.05); border-color: rgba(255, 79, 129, 0.2); }
+  50% { box-shadow: 0 0 40px rgba(255, 209, 102, 0.35), inset 0 0 15px rgba(255, 79, 129, 0.2); border-color: rgba(255, 209, 102, 0.4); }
+  100% { box-shadow: 0 0 20px rgba(255, 79, 129, 0.15), inset 0 0 10px rgba(255, 209, 102, 0.05); border-color: rgba(255, 79, 129, 0.2); }
+}
+
+.wizard-card {
+  border: 1px solid rgba(255, 79, 129, 0.3);
+  animation: neonGlow 4s infinite alternate ease-in-out;
+  background: linear-gradient(145deg, rgba(20, 3, 14, 0.95) 0%, rgba(35, 6, 22, 0.9) 100%);
+  backdrop-filter: blur(16px);
+}
+
+/* 2. Glittering Royal Badge */
+@keyframes shimmerSweep {
+  0% { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+.royal-wizard-badge {
+  display: inline-block;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: linear-gradient(110deg, #2d081e 25%, #601438 50%, #2d081e 75%);
+  background-size: 400% 100%;
+  color: #ffd166;
+  border: 1px solid #ffd166;
+  box-shadow: 0 4px 15px rgba(255, 209, 102, 0.25);
+  animation: shimmerSweep 3s infinite linear;
+  margin-bottom: 12px;
+}
+
+/* 3. Glowing Cursive Title */
+.royal-wizard-title {
+  font-family: 'Great Vibes', cursive;
+  font-size: clamp(2.8rem, 6vw, 3.8rem);
+  background: linear-gradient(135deg, #ffffff 0%, #ff8fab 40%, #ffd166 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 4px 20px rgba(255, 143, 171, 0.4);
+  margin-bottom: 16px;
+  line-height: 1.1;
+  text-align: center;
+}
+
+/* 4. Animated Romantic Quote Ticker */
+@keyframes softFloat {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+  100% { transform: translateY(0); }
+}
+
+.romantic-quote-ticker {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: clamp(0.85rem, 3.5vw, 1.05rem);
+  color: #ffb4cd;
+  padding: 12px 24px;
+  background: rgba(255, 79, 129, 0.08);
+  border: 1px solid rgba(255, 79, 129, 0.25);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  animation: softFloat 4s infinite ease-in-out;
+  box-shadow: 0 6px 20px rgba(255, 79, 129, 0.15);
+  text-align: center;
+  margin: 0 auto;
+  max-width: 90%;
+}
+
+/* 5. Heartbeat for Couple Badge */
+@keyframes heartbeatPulse {
+  0% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(255, 0, 85, 0.6)); }
+  15% { transform: scale(1.2); filter: drop-shadow(0 0 15px rgba(255, 0, 85, 0.9)); }
+  30% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(255, 0, 85, 0.6)); }
+  45% { transform: scale(1.2); filter: drop-shadow(0 0 15px rgba(255, 0, 85, 0.9)); }
+  60% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(255, 0, 85, 0.6)); }
+}
+
+.couple-heart-badge {
+  display: inline-block;
+  animation: heartbeatPulse 2.5s infinite;
+}
+
+/* 6. Glowing Animated Couple Banner */
+.couple-showcase-banner {
+  background: linear-gradient(135deg, rgba(82, 9, 39, 0.6), rgba(35, 6, 22, 0.8));
+  border-radius: 24px;
+  border: 1px solid rgba(255, 143, 171, 0.3);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), inset 0 0 20px rgba(255, 143, 171, 0.1);
+  padding: 20px 14px;
+  margin-top: 24px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.couple-showcase-banner::before {
+  content: "";
+  position: absolute;
+  top: -50%; left: -50%; width: 200%; height: 200%;
+  background: radial-gradient(circle, rgba(255,209,102,0.1) 0%, transparent 60%);
+  animation: rotateGlow 15s infinite linear;
+  z-index: 0;
+  pointer-events: none;
+}
+
+@keyframes rotateGlow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.couple-avatar-slot, .couple-connector {
+  position: relative;
+  z-index: 1;
+}
+
+.couple-avatar-frame {
+  box-shadow: 0 0 0 3px rgba(255, 209, 102, 0.6), 0 0 20px rgba(255, 209, 102, 0.6);
+  transition: all 0.3s ease;
+}
+
+.couple-title-sub {
+  font-family: 'Great Vibes', cursive;
+  font-size: 1.4rem !important;
+  color: #ffd166;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  margin-top: 4px;
+  max-width: 100px;
+}
