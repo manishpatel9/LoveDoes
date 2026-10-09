@@ -286,32 +286,58 @@ export default function Create() {
           </div>
 
           {/* Dynamic Love Couple Showcase Banner */}
-          <div className="couple-showcase-banner">
-            <div className="couple-avatar-slot">
-              <div className="couple-avatar-frame">
-                {form.creatorPreview ? (
-                  <img src={form.creatorPreview} alt="Creator" />
-                ) : (
-                  activeAvatarPreset.creatorSvg
-                )}
-              </div>
-              <span className="couple-avatar-name">{form.creatorName || "You"}</span>
+          <div className="couple-showcase-banner" style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "24px 16px" }}>
+            <h2 style={{ fontFamily: "'Great Vibes', cursive", fontSize: "2.4rem", color: "#ffd166", margin: "0", textShadow: "0 2px 5px rgba(0,0,0,0.5)", lineHeight: 1 }}>You & Partner</h2>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px", marginTop: "10px" }}>
+              <span style={{ width: "30px", height: "1.5px", background: "#ffd166" }}></span> <span style={{ fontSize: "0.8rem", filter: "drop-shadow(0 0 5px #ff4f81)" }}>💖</span> <span style={{ width: "30px", height: "1.5px", background: "#ffd166" }}></span>
             </div>
 
-            <div className="couple-connector">
-              <span className="couple-heart-badge">💖</span>
-              <span className="couple-title-sub">{form.title || "Our Story"}</span>
-            </div>
-
-            <div className="couple-avatar-slot">
-              <div className="couple-avatar-frame">
-                {form.partnerPreview ? (
-                  <img src={form.partnerPreview} alt="Partner" />
-                ) : (
-                  activeAvatarPreset.partnerSvg
-                )}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", position: "relative" }}>
+                <div style={{ position: "absolute", top: "-20px", fontSize: "1.6rem", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.8))" }}>👑</div>
+                <div className="couple-avatar-frame" style={{ width: "80px", height: "80px", borderRadius: "50%", overflow: "hidden", boxShadow: "0 0 0 3px #fff, 0 0 25px #ff4f81", color: "#ff4f81", background: "#ff4f81" }}>
+                  {form.creatorPreview ? (
+                    <img src={form.creatorPreview} alt="Creator" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  ) : (
+                    activeAvatarPreset.creatorSvg
+                  )}
+                </div>
+                <span className="couple-avatar-name" style={{ marginTop: "12px", fontWeight: "700", textShadow: "0 2px 4px rgba(0,0,0,0.5)" }}>{form.creatorName || "You"}</span>
+                <div style={{ width: "35px", height: "3px", background: "#ff4f81", marginTop: "4px", borderRadius: "2px", boxShadow: "0 0 10px #ff4f81" }}></div>
               </div>
-              <span className="couple-avatar-name">{form.partnerName || "Partner"}</span>
+
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+                <div style={{ position: "relative", width: "55px", height: "35px" }}>
+                  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="url(#goldGradient)" strokeWidth="1.8">
+                    <defs>
+                      <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#ffd166" />
+                        <stop offset="100%" stopColor="#ffb4cd" />
+                      </linearGradient>
+                    </defs>
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l7.78-7.78a5.5 5.5 0 0 0 0-7.78z" />
+                  </svg>
+                  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" style={{position:"absolute", left:"12px", top:"-4px", opacity:0.8}}>
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l7.78-7.78a5.5 5.5 0 0 0 0-7.78z" />
+                  </svg>
+                </div>
+                <span style={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic", fontSize: "0.8rem", textAlign: "center", color: "#fff", textShadow: "0 2px 4px rgba(0,0,0,0.8)", lineHeight: "1.2" }}>
+                  <span style={{color:"#ff4f81", fontSize:"0.6rem"}}>💖</span> {form.title || "Two hearts,\none story"} <span style={{color:"#ff4f81", fontSize:"0.6rem"}}>💖</span>
+                </span>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", position: "relative" }}>
+                <div style={{ position: "absolute", top: "-20px", fontSize: "1.6rem", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.8))" }}>👑</div>
+                <div className="couple-avatar-frame" style={{ width: "80px", height: "80px", borderRadius: "50%", overflow: "hidden", boxShadow: "0 0 0 3px #fff, 0 0 25px #4facfe", color: "#4facfe", background: "#4facfe" }}>
+                  {form.partnerPreview ? (
+                    <img src={form.partnerPreview} alt="Partner" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  ) : (
+                    activeAvatarPreset.partnerSvg
+                  )}
+                </div>
+                <span className="couple-avatar-name" style={{ marginTop: "12px", fontWeight: "700", textShadow: "0 2px 4px rgba(0,0,0,0.5)" }}>{form.partnerName || "Partner"}</span>
+                <div style={{ width: "35px", height: "3px", background: "#4facfe", marginTop: "4px", borderRadius: "2px", boxShadow: "0 0 10px #4facfe" }}></div>
+              </div>
             </div>
           </div>
 
