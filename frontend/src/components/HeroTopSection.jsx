@@ -72,6 +72,37 @@ export default function HeroTopSection() {
               A private, majestic romantic sanctuary — pre-filled with your names, intimate photos, symphonic melodies, and secret love notes that unfold like magic.
             </motion.p>
 
+            {/* CTA BUTTON MOVED INSIDE MAIN CONTENT FOR LEFT ALIGNMENT */}
+            <motion.div 
+              className="bottom-cta-wrapper"
+              initial="hidden"
+              animate="show"
+              variants={fadeUp}
+              custom={3}
+            >
+              <Link 
+                to="/create" 
+                className="custom-animated-cta"
+                onClick={() => playSparkleSound()}
+              >
+                <div className="cta-heart-icon">
+                  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                  </svg>
+                </div>
+                <div className="cta-text-wrapper">
+                  <span className="cta-title-main">Create Love Story</span>
+                  <span className="cta-subtitle-lower">A Journey of Hearts, Forever</span>
+                </div>
+                <div className="cta-arrow">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                  </svg>
+                </div>
+              </Link>
+            </motion.div>
+
           </motion.div>
 
           {/* Right Floating Handwritten Touch */}
@@ -83,37 +114,6 @@ export default function HeroTopSection() {
             </div>
           </div>
         </div>
-
-        {/* CTA BUTTON MOVED TO JUST ABOVE FEATURE BAR */}
-        <motion.div 
-          className="bottom-cta-wrapper"
-          initial="hidden"
-          animate="show"
-          variants={fadeUp}
-          custom={5}
-        >
-          <Link 
-            to="/create" 
-            className="custom-animated-cta"
-            onClick={() => playSparkleSound()}
-          >
-            <div className="cta-heart-icon">
-              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-              </svg>
-            </div>
-            <div className="cta-text-wrapper">
-              <span className="cta-title-main">Create Love Story</span>
-              <span className="cta-subtitle-lower">A Journey of Hearts, Forever</span>
-            </div>
-            <div className="cta-arrow">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-              </svg>
-            </div>
-          </Link>
-        </motion.div>
 
         {/* BOTTOM FEATURE BAR (GLASSMORPHISM RIBBON) */}
         <motion.div 
