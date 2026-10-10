@@ -67,13 +67,13 @@ export default function StatusRecorder({ page, photos }) {
     }
   };
 
-  async function record() {
+  async function recordDesktop() {
     setError("");
 
     // Fallback: If getting a screen share stream is not supported (e.g. mobile iOS without flag)
     if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
       // Use the existing handcrafted Canvas animation as fallback
-      await runCanvasFallbackRecording();
+      await recordMobile();
       return;
     }
 
@@ -181,11 +181,11 @@ export default function StatusRecorder({ page, photos }) {
     } catch (err) {
       console.error("Screen recording setup failed.", err);
       // Fallback if they denied permission or it failed
-      await runCanvasFallbackRecording();
+      await recordMobile();
     }
   }
 
-  async function runCanvasFallbackRecording() {
+  async function recordMobile() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -319,16 +319,29 @@ export default function StatusRecorder({ page, photos }) {
       />
 
       {phase === "idle" && (
-        <button
-          className="target-primary-btn glow"
-          type="button"
-          onClick={record}
-          style={{ width: "100%", background: "linear-gradient(135deg, #e61c5d, #9e0c3b)", color: "#ffffff", fontWeight: 700, padding: "16px 24px", borderRadius: "30px", border: "none", cursor: "pointer", fontSize: "1.1rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", boxShadow: "0 10px 30px rgba(230, 28, 93, 0.4)", transition: "all 0.3s ease" }}
-        >
-          <span className="btn-icon-left">🤍</span>
-          <span className="btn-text">Create My Love Status (30s Video)</span>
-          <span className="btn-icon-right">→</span>
-        </button>
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px", width: "100%" }}>
+          <button
+            className="target-primary-btn glow"
+            type="button"
+            onClick={recordMobile}
+            style={{ width: "100%", background: "linear-gradient(135deg, #e61c5d, #9e0c3b)", color: "#ffffff", fontWeight: 700, padding: "14px 20px", borderRadius: "30px", border: "none", cursor: "pointer", fontSize: "1.05rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", boxShadow: "0 10px 30px rgba(230, 28, 93, 0.4)", transition: "all 0.3s ease" }}
+          >
+            <span className="btn-icon-left">📱</span>
+            <span className="btn-text">Mobile Status (9:16 Video)</span>
+            <span className="btn-icon-right">→</span>
+          </button>
+          
+          <button
+            className="target-primary-btn glow"
+            type="button"
+            onClick={recordDesktop}
+            style={{ width: "100%", background: "linear-gradient(135deg, #6d28d9, #4c1d95)", color: "#ffffff", fontWeight: 700, padding: "14px 20px", borderRadius: "30px", border: "none", cursor: "pointer", fontSize: "1.05rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", boxShadow: "0 10px 30px rgba(109, 40, 217, 0.4)", transition: "all 0.3s ease" }}
+          >
+            <span className="btn-icon-left">💻</span>
+            <span className="btn-text">Desktop Video (Full Screen)</span>
+            <span className="btn-icon-right">→</span>
+          </button>
+        </div>
       )}
 
       {(phase === "loading" || phase === "recording") && (
