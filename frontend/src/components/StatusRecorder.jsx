@@ -89,7 +89,7 @@ export default function StatusRecorder({ page, photos }) {
       const selectedMime = getBestSupportedMimeType();
       const isMp4 = selectedMime.includes("mp4");
       const cleanBlobType = isMp4 ? "video/mp4" : "video/webm";
-      const ext = "mp4"; // Force .mp4 container extension, as H264 webm often plays perfectly when renamed
+      const ext = isMp4 ? "mp4" : "webm";
       
       const rawCreator = page?.creatorName || "Kumar";
       const rawPartner = page?.partnerName || "Bhumi";
@@ -215,7 +215,7 @@ export default function StatusRecorder({ page, photos }) {
       const selectedMime = getBestSupportedMimeType();
       const isMp4 = selectedMime.includes("mp4");
       const cleanBlobType = isMp4 ? "video/mp4" : "video/webm";
-      const ext = "mp4"; 
+      const ext = isMp4 ? "mp4" : "webm"; 
       
       const rawCreator = page?.creatorName || "Kumar";
       const rawPartner = page?.partnerName || "Bhumi";
@@ -320,13 +320,23 @@ export default function StatusRecorder({ page, photos }) {
           }
           ctx.drawImage(videoEl, bx, by, bw, bh, 0, 0, 720, 1280);
 
-          // 2. Draw perfectly scaled, uncropped screen in the center
+          // 2. Draw perfectly scaled, uncropped screen in the center (Object-Fit: Contain)
           ctx.filter = "none";
-          // We want the video to fit exactly inside width 720
-          const drawW = 720;
-          const drawH = 720 * (vh / vw);
-          const drawY = (1280 - drawH) / 2;
-          ctx.drawImage(videoEl, 0, 0, vw, vh, 0, drawY, drawW, drawH);
+          let drawW, drawH, drawX, drawY;
+          if (sourceRatio > targetRatio) {
+            // Input is wider than 9:16 (e.g. desktop monitor) - clamp width, center vertically
+            drawW = 720;
+            drawH = 720 * (vh / vw);
+            drawX = 0;
+            drawY = (1280 - drawH) / 2;
+          } else {
+            // Input is narrower than 9:16 (e.g. real mobile phone) - clamp height, center horizontally
+            drawH = 1280;
+            drawW = 1280 * (vw / vh);
+            drawX = (720 - drawW) / 2;
+            drawY = 0;
+          }
+          ctx.drawImage(videoEl, 0, 0, vw, vh, drawX, drawY, drawW, drawH);
         }
 
         if (t < 1) {
