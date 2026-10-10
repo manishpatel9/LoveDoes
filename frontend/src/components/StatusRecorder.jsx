@@ -14,8 +14,25 @@ function loadImage(src) {
 
     const img = new Image();
     img.crossOrigin = "anonymous";
+    
     img.onload = () => resolve(img);
-    img.onerror = () => resolve(null);
+    
+    img.onerror = () => {
+      if (src.startsWith("data:") || src.startsWith("blob:")) {
+        resolve(null);
+        return;
+      }
+      
+      // Fallback: Retry with aggressive cache-busting querying
+      const fallbackImg = new Image();
+      fallbackImg.crossOrigin = "anonymous";
+      fallbackImg.onload = () => resolve(fallbackImg);
+      fallbackImg.onerror = () => resolve(null);
+      
+      const bust = src.includes("?") ? `&cb=${Date.now()}` : `?cb=${Date.now()}`;
+      fallbackImg.src = src + bust;
+    };
+    
     img.src = src;
   });
 }
