@@ -1,5 +1,4 @@
 import { useRef, useState } from "react";
-import html2canvas from "html2canvas";
 import certBg from "../assets/cert_bg.png";
 
 const isMobileDevice = () =>
@@ -196,260 +195,7 @@ export default function StatusRecorder({ page, photos }) {
       console.error("Screen recording setup failed.", err);
       await runCanvasFallbackRecording();
     }
-  }
-
-  async function recordMobile() {
-    setError("");
-    setProgress(0);
-    setPhase("loading");
-
-    let audioEl = null;
-    let audioContext = null;
-    let audioDestination = null;
-    let animationTimer = null;
-    let finished = false;
-
-    try {
-      const canvas = canvasRef.current;
-
-      if (!canvas || !canvas.captureStream || typeof MediaRecorder === "undefined") {
-        throw new Error("This browser does not support video recording.");
-      }
-
-      try {
-        if (page?.audioUrl && window.AudioContext) {
-          audioEl = new Audio();
-          audioEl.src = page.audioUrl;
-          audioEl.crossOrigin = "anonymous";
-          audioEl.loop = true;
-          audioEl.volume = 0.5;
-          audioEl.playsInline = true;
-
-          audioContext = new AudioContext();
-          if (audioContext.state === "suspended") {
-            await audioContext.resume();
-          }
-
-          audioDestination = audioContext.createMediaStreamDestination();
-
-          const source = audioContext.createMediaElementSource(audioEl);
-          source.connect(audioDestination);
-          source.connect(audioContext.destination);
-
-          await audioEl.play().catch(() => {
-            console.warn("Mobile audio playback was blocked.");
-          });
-        }
-      } catch (audioError) {
-        console.warn("Audio setup failed:", audioError);
-        audioEl = null;
-        audioContext = null;
-        audioDestination = null;
-      }
-      
-      // CRITICAL FIX: Ensure viewport is entirely reset to top before taking snapshot
-      // html2canvas fails or renders a black box if the page is mid-scroll.
-      window.scrollTo(0, 0);
-      await new Promise((r) => setTimeout(r, 600)); // allow DOM reflows to settle
-
-      // Target the exact content shell to bypass body gradient/fixed position bugs
-      const targetElement = document.querySelector(".love-shell") || document.body;
-      const pageWidth = targetElement.scrollWidth || window.innerWidth;
-      const pageHeight = targetElement.scrollHeight || window.innerHeight;
-
-      const outputWidth = 720;
-      const outputHeight = 1280;
-      const maxPixels = 12000000; // Safe limit for older Android/iOS WebKit WebGL planes
-
-      let snapshotScale = outputWidth / Math.max(pageWidth, 300);
-
-      if (pageWidth * pageHeight * snapshotScale * snapshotScale > maxPixels) {
-        snapshotScale = Math.sqrt(maxPixels / (pageWidth * pageHeight)) * 0.9;
-      }
-
-      const snapshot = await html2canvas(targetElement, {
-        scale: Math.max(0.5, snapshotScale),
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: "#1a0610", // hardcode pure background to bypass gradient errors
-        logging: false,
-        width: pageWidth,
-        height: pageHeight,
-        windowWidth: pageWidth,
-        windowHeight: pageHeight,
-        scrollY: 0,
-        scrollX: 0,
-        ignoreElements: (element) => {
-          return (
-            element.classList?.contains("status-recorder-wrapper") ||
-            element.tagName === "VIDEO" ||
-            element.tagName === "CANVAS" ||
-            element.classList?.contains("ambient") || // Ignore fixed ambient wrappers
-            element.classList?.contains("sparkle-layer")
-          );
-        }
-      });
-
-      const ctx = canvas.getContext("2d", {
-        alpha: false,
-        desynchronized: true
-      });
-
-      if (!ctx) {
-        throw new Error("Unable to create drawing context.");
-      }
-
-      canvas.width = outputWidth;
-      canvas.height = outputHeight;
-      canvas.style.display = "none";
-
-      const snapshotWidth = snapshot.width;
-      const snapshotHeight = snapshot.height;
-      const drawScale = outputWidth / snapshotWidth;
-      const renderedPageHeight = snapshotHeight * drawScale;
-      const maxScroll = Math.max(0, renderedPageHeight - outputHeight);
-
-      const bodyBg = getComputedStyle(document.body).backgroundColor || "#1a0209";
-
-      const selectedMime = getBestSupportedMimeType();
-      const isMp4 = selectedMime.includes("mp4");
-      const videoMimeType = isMp4 ? "video/mp4" : "video/webm";
-      const extension = isMp4 ? "mp4" : "webm";
-
-      const creator = (page?.creatorName || "Kumar").replace(/[^a-zA-Z0-9]/g, "_");
-      const partner = (page?.partnerName || "Bhumi").replace(/[^a-zA-Z0-9]/g, "_");
-      const fileName = `Love_Sanctuary_Status_30s_${creator}_and_${partner}.${extension}`;
-
-      setDownloadFileName(fileName);
-      setFileFormatLabel(extension.toUpperCase());
-
-      const canvasStream = canvas.captureStream(30);
-      let mixedStream = canvasStream;
-
-      if (audioDestination && audioDestination.stream.getAudioTracks().length > 0) {
-        mixedStream = new MediaStream([
-          ...canvasStream.getVideoTracks(),
-          ...audioDestination.stream.getAudioTracks()
-        ]);
-      }
-
-      let recorder;
-      try {
-        recorder = new MediaRecorder(mixedStream, {
-          mimeType: selectedMime,
-          videoBitsPerSecond: 4000000
-        });
-      } catch {
-        recorder = new MediaRecorder(mixedStream);
-      }
-
-      const chunks = [];
-
-      recorder.ondataavailable = (event) => {
-        if (event.data && event.data.size > 0) {
-          chunks.push(event.data);
-        }
-      };
-
-      recorder.onstop = () => {
-        if (finished) return;
-        finished = true;
-
-        try {
-          audioEl?.pause();
-          audioEl?.removeAttribute("src");
-          audioContext?.close();
-        } catch { }
-
-        canvasStream.getTracks().forEach((track) => track.stop());
-
-        if (!chunks.length) {
-          setError("No video data was generated. Please try again.");
-          setPhase("idle");
-          return;
-        }
-
-        const blob = new Blob(chunks, { type: videoMimeType });
-        const file = new File([blob], fileName, { type: videoMimeType });
-        setFinalFile(file);
-
-        const objectUrl = URL.createObjectURL(blob);
-        setBlobUrl(objectUrl);
-        setProgress(100);
-        setPhase("ready");
-
-        try {
-          downloadBlob(blob, fileName);
-        } catch (e) {
-          console.warn("Auto download failed:", e);
-        }
-      };
-
-      const drawFrame = (progressValue) => {
-        const scrollY = maxScroll * progressValue;
-
-        const sourceY = scrollY / drawScale;
-        const sourceHeight = Math.min(outputHeight / drawScale, snapshotHeight - sourceY);
-
-        ctx.fillStyle = bodyBg;
-        ctx.fillRect(0, 0, outputWidth, outputHeight);
-
-        ctx.drawImage(
-          snapshot,
-          0,
-          sourceY,
-          snapshotWidth,
-          sourceHeight,
-          0,
-          0,
-          outputWidth,
-          sourceHeight * drawScale
-        );
-
-        ctx.fillStyle = "rgba(255,255,255,0.6)";
-        ctx.fillRect(40, outputHeight - 42, (outputWidth - 80) * progressValue, 6);
-      };
-
-      const DURATION = 30000;
-      const start = performance.now();
-
-      setPhase("recording");
-      recorder.start(250);
-
-      drawFrame(0);
-
-      animationTimer = window.setInterval(() => {
-        const elapsed = performance.now() - start;
-        const progressValue = Math.min(1, elapsed / DURATION);
-
-        const eased =
-          progressValue < 0.5
-            ? 2 * progressValue * progressValue
-            : -1 + (4 - 2 * progressValue) * progressValue;
-
-        drawFrame(eased);
-        setProgress(Math.round(progressValue * 100));
-
-        if (elapsed >= DURATION) {
-          clearInterval(animationTimer);
-          animationTimer = null;
-          recorder.stop();
-        }
-      }, 1000 / 30);
-    } catch (err) {
-      console.error("Page snapshot recording failed:", err);
-
-      try {
-        audioEl?.pause();
-        audioContext?.close();
-      } catch { }
-
-      if (animationTimer) {
-        clearInterval(animationTimer);
-      }
-
-      await runCanvasFallbackRecording();
-    }
+    await runCanvasFallbackRecording();
   }
 
   async function runCanvasFallbackRecording() {
@@ -469,6 +215,16 @@ export default function StatusRecorder({ page, photos }) {
     const couple = await loadImage(photos?.couple);
     const certBgImg = await loadImage(certBg);
 
+    const memoryImgs = [];
+    if (page?.memories?.length > 0) {
+      for (const m of page.memories) {
+        if (m.photo) {
+          const loaded = await loadImage(m.photo);
+          if (loaded) memoryImgs.push({ ...m, loadedImage: loaded });
+        }
+      }
+    }
+
     const supports = typeof MediaRecorder !== "undefined" && canvas.captureStream;
 
     const rawCreator = page?.creatorName || "Kumar";
@@ -477,7 +233,7 @@ export default function StatusRecorder({ page, photos }) {
     const cleanPartner = rawPartner.replace(/[^a-zA-Z0-9]/g, "_");
 
     if (!supports) {
-      drawFrame(ctx, w, h, 1, 30, { creator, partner, couple, page, certBgImg });
+      drawFrame(ctx, w, h, 1, 30, { creator, partner, couple, page, certBgImg, memoryImgs });
       canvas.toBlob((blob) => {
         if (!blob) return;
 
@@ -567,7 +323,7 @@ export default function StatusRecorder({ page, photos }) {
       const timeSec = elapsed / 1000;
 
       setProgress(Math.round(t * 100));
-      drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, certBgImg });
+      drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, certBgImg, memoryImgs });
 
       if (t < 1) {
         requestAnimationFrame(tick);
@@ -874,7 +630,7 @@ function drawCoverImage(ctx, img, x, y, w, h, radius = 0) {
   ctx.restore();
 }
 
-function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, certBgImg }) {
+function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, certBgImg, memoryImgs }) {
   const creatorName = page?.creatorName || "Rahul";
   const partnerName = page?.partnerName || "Priya";
 
@@ -964,6 +720,19 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, cert
     ctx.fillText(char, 0, 0);
     ctx.restore();
   }
+
+  // CALCULATE DYNAMIC SCROLL
+  const hasStory = !!page?.storyText;
+  const memCount = memoryImgs?.length || 0;
+  const totalContentH = 1100 + (hasStory ? 500 : 0) + (memCount * 450);
+  const maxScroll = Math.max(0, totalContentH - h + 100);
+  
+  // Cinematic ease scroll downwards over the 30s
+  const easeScroll = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+  const currentScrollY = maxScroll * easeScroll;
+
+  ctx.save();
+  ctx.translate(0, -currentScrollY);
 
   ctx.save();
   ctx.fillStyle = "rgba(230, 28, 93, 0.85)";
@@ -1136,6 +905,69 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, cert
   ctx.textAlign = "center";
   ctx.fillText("💕 A digital love story, created just for the two of you. 💕", w / 2, 1070);
 
+  let currentY = 1140;
+
+  // Render Love Letter 
+  if (page?.storyText) {
+    ctx.shadowColor = "rgba(230, 28, 93, 0.4)";
+    ctx.shadowBlur = 15;
+    ctx.fillStyle = "rgba(25, 2, 8, 0.7)";
+    roundRect(ctx, 40, currentY, w - 80, 400, 20);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = "#ffd1d9";
+    ctx.font = "bold 24px 'Cinzel', serif";
+    ctx.fillText("💌 Our Love Letter 💌", w/2, currentY + 50);
+
+    ctx.fillStyle = "#fffcf2";
+    ctx.font = "18px 'Cormorant Garamond', serif";
+    wrapText(ctx, page.storyText, w/2, currentY + 110, w - 120, 28);
+    currentY += 460;
+  }
+
+  // Render Memories Timeline
+  if (memoryImgs?.length > 0) {
+    ctx.fillStyle = "#ffb3c1";
+    ctx.font = "bold 28px 'Cinzel', serif";
+    ctx.fillText("✨ Our Beautiful Memories ✨", w/2, currentY + 30);
+    currentY += 80;
+
+    memoryImgs.forEach((mem, idx) => {
+      ctx.save();
+      const tilt = (idx % 2 === 0) ? -0.05 : 0.05;
+      const swayY = Math.sin(timeSec * 1.5 + idx) * 10;
+      ctx.translate(w/2, currentY + 180 + swayY);
+      ctx.rotate(tilt);
+
+      // Frame
+      ctx.shadowColor = "rgba(0,0,0,0.6)";
+      ctx.shadowBlur = 20;
+      ctx.fillStyle = "#ffffff";
+      roundRect(ctx, -160, -180, 320, 380, 16);
+      ctx.fill();
+      ctx.shadowColor = "transparent";
+
+      // Photo
+      drawCoverImage(ctx, mem.loadedImage, -145, -165, 290, 270, 8);
+
+      // Title & Date
+      ctx.fillStyle = "#1a0209";
+      ctx.font = "bold 20px Georgia, serif";
+      ctx.fillText(mem.title || "Our Memory", 0, 140);
+      
+      ctx.fillStyle = "#e61c5d";
+      ctx.font = "14px sans-serif";
+      ctx.fillText(mem.date || "", 0, 168);
+
+      ctx.restore();
+      currentY += 420;
+    });
+  }
+
+  ctx.restore(); // Restore the Y scrolling translation
+
+  // Fixed Progress bar ALWAYS at bottom of screen
   ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
   ctx.fillRect(50, 1220, (w - 100) * t, 6);
 }
