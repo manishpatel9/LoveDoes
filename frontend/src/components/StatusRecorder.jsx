@@ -547,8 +547,6 @@ export default function StatusRecorder({ page, photos }) {
             className="secondary-btn"
             href={blobUrl}
             download={downloadFileName}
-            target="_blank"
-            rel="noopener noreferrer"
             style={{ width: "100%", color: "rgba(255,255,255,0.9)", fontWeight: 600, padding: "10px", borderRadius: "30px", textDecoration: "none", textAlign: "center", display: "inline-block", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)" }}
           >
             📥 Manual Download ({downloadFileName})
@@ -579,8 +577,6 @@ export default function StatusRecorder({ page, photos }) {
             className="secondary-btn" 
             href={blobUrl} 
             download={downloadFileName} 
-            target="_blank"
-            rel="noopener noreferrer"
             style={{ width: "100%", color: "rgba(255,255,255,0.9)", fontWeight: 600, padding: "10px", borderRadius: "30px", textDecoration: "none", textAlign: "center", display: "inline-block", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)" }}
           >
             📥 Manual Download ({downloadFileName})
