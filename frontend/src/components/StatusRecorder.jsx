@@ -23,14 +23,16 @@ function loadImage(src) {
         return;
       }
       
-      // Fallback: Retry with aggressive cache-busting querying
+      // Fallback: Extremely aggressive CORS Stripping Proxy Tunneling
+      // If original storage URL strictly blocks Cross-Origin, we route it through an image proxy 
+      // that inherently returns "Access-Control-Allow-Origin: *" to force Canvas compliance!
       const fallbackImg = new Image();
       fallbackImg.crossOrigin = "anonymous";
       fallbackImg.onload = () => resolve(fallbackImg);
       fallbackImg.onerror = () => resolve(null);
       
-      const bust = src.includes("?") ? `&cb=${Date.now()}` : `?cb=${Date.now()}`;
-      fallbackImg.src = src + bust;
+      const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(src)}`;
+      fallbackImg.src = proxyUrl;
     };
     
     img.src = src;
