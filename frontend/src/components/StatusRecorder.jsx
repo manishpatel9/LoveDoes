@@ -89,16 +89,16 @@ export default function StatusRecorder({ page, photos }) {
       const selectedMime = getBestSupportedMimeType();
       const isMp4 = selectedMime.includes("mp4");
       const cleanBlobType = isMp4 ? "video/mp4" : "video/webm";
-      const ext = isMp4 ? "mp4" : "webm";
+      const ext = "mp4"; // Force .mp4 container extension, as H264 webm often plays perfectly when renamed
       
       const rawCreator = page?.creatorName || "Kumar";
       const rawPartner = page?.partnerName || "Bhumi";
       const cleanCreator = rawCreator.replace(/[^a-zA-Z0-9]/g, "_");
       const cleanPartner = rawPartner.replace(/[^a-zA-Z0-9]/g, "_");
-      const fileName = `Love_Sanctuary_Complete_Page_30s_${cleanCreator}_and_${cleanPartner}.${ext}`;
+      const fileName = `Love_Sanctuary_Desktop_30s_${cleanCreator}_and_${cleanPartner}.${ext}`;
 
       setDownloadFileName(fileName);
-      setFileFormatLabel(ext.toUpperCase());
+      setFileFormatLabel("MP4");
 
       // Attempt to mix page AudioContext directly if playing
       let mixed = stream;
@@ -180,12 +180,163 @@ export default function StatusRecorder({ page, photos }) {
 
     } catch (err) {
       console.error("Screen recording setup failed.", err);
-      // Fallback if they denied permission or it failed
-      await recordMobile();
+      await runCanvasFallbackRecording();
     }
   }
 
   async function recordMobile() {
+    setError("");
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+      await runCanvasFallbackRecording();
+      return;
+    }
+    
+    try {
+      setPhase("loading");
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: { displaySurface: "browser" },
+        audio: true,
+        preferCurrentTab: true
+      });
+
+      const videoEl = document.createElement("video");
+      videoEl.srcObject = new MediaStream(stream.getVideoTracks());
+      videoEl.muted = true;
+      videoEl.play();
+
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext("2d");
+      canvas.width = 720;
+      canvas.height = 1280;
+
+      const canvasStream = canvas.captureStream(30);
+
+      const selectedMime = getBestSupportedMimeType();
+      const isMp4 = selectedMime.includes("mp4");
+      const cleanBlobType = isMp4 ? "video/mp4" : "video/webm";
+      const ext = "mp4"; 
+      
+      const rawCreator = page?.creatorName || "Kumar";
+      const rawPartner = page?.partnerName || "Bhumi";
+      const cleanCreator = rawCreator.replace(/[^a-zA-Z0-9]/g, "_");
+      const cleanPartner = rawPartner.replace(/[^a-zA-Z0-9]/g, "_");
+      const fileName = `Love_Sanctuary_Mobile_30s_${cleanCreator}_and_${cleanPartner}.${ext}`;
+
+      setDownloadFileName(fileName);
+      setFileFormatLabel("MP4");
+
+      let mixed = canvasStream;
+      try {
+        if (page?.audioUrl && window.AudioContext) {
+          const audioEl = new Audio(page.audioUrl);
+          audioEl.crossOrigin = "anonymous";
+          audioEl.volume = 0.5;
+          await audioEl.play().catch(() => {});
+          const ac = new AudioContext();
+          const dest = ac.createMediaStreamDestination();
+          const src = ac.createMediaElementSource(audioEl);
+          src.connect(dest);
+          src.connect(ac.destination);
+          
+          if (stream.getAudioTracks().length > 0) {
+              const domAudio = ac.createMediaStreamSource(new MediaStream(stream.getAudioTracks()));
+              domAudio.connect(dest);
+          }
+          mixed = new MediaStream([...canvasStream.getVideoTracks(), ...dest.stream.getAudioTracks()]);
+          setTimeout(() => audioEl.pause(), 30500);
+        } else if (stream.getAudioTracks().length > 0) {
+            mixed = new MediaStream([...canvasStream.getVideoTracks(), ...stream.getAudioTracks()]);
+        }
+      } catch (err) {
+        console.warn("Audio mixing failed:", err);
+      }
+
+      const rec = new MediaRecorder(mixed, { mimeType: selectedMime });
+      const chunks = [];
+      rec.ondataavailable = (e) => {
+        if (e.data.size) chunks.push(e.data);
+      };
+
+      rec.onstop = () => {
+        const blob = new Blob(chunks, { type: cleanBlobType });
+        const file = new File([blob], fileName, { type: cleanBlobType });
+        setFinalFile(file);
+        
+        const url = URL.createObjectURL(blob);
+        setBlobUrl(url);
+        setPhase("ready");
+
+        videoEl.pause();
+        videoEl.srcObject = null;
+
+        try {
+          const link = document.createElement("a");
+          link.href = url;
+          link.setAttribute("download", fileName);
+          link.download = fileName;
+          document.body.appendChild(link);
+          link.click();
+          setTimeout(() => document.body.removeChild(link), 300);
+        } catch (e) {}
+      };
+
+      setPhase("recording");
+      rec.start();
+      
+      const start = performance.now();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+
+      const drawScrollTick = () => {
+        const elapsed = performance.now() - start;
+        const t = Math.min(1, Math.max(0, elapsed / 30000));
+        
+        setProgress(Math.round(t * 100));
+        
+        const maxScroll = Math.max(0, document.body.scrollHeight - window.innerHeight);
+        const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+        window.scrollTo(0, maxScroll * ease);
+        
+        // CROP VIDEO TO 9:16
+        const vw = videoEl.videoWidth;
+        const vh = videoEl.videoHeight;
+        if (vw && vh) {
+          const targetRatio = 720 / 1280;
+          const sourceRatio = vw / vh;
+          
+          let sx, sy, sw, sh;
+          if (sourceRatio > targetRatio) {
+            sh = vh;
+            sw = vh * targetRatio;
+            sx = (vw - sw) / 2;
+            sy = 0;
+          } else {
+            sw = vw;
+            sh = vw / targetRatio;
+            sx = 0;
+            sy = (vh - sh) / 2;
+          }
+          
+          ctx.drawImage(videoEl, sx, sy, sw, sh, 0, 0, 720, 1280);
+        }
+
+        if (t < 1) {
+          requestAnimationFrame(drawScrollTick);
+        } else {
+          rec.stop();
+          stream.getTracks().forEach(track => track.stop());
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      };
+      
+      requestAnimationFrame(drawScrollTick);
+
+    } catch (err) {
+      console.error("Mobile recording failed, retreating to fallback.", err);
+      await runCanvasFallbackRecording();
+    }
+  }
+
+  async function runCanvasFallbackRecording() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -256,11 +407,11 @@ export default function StatusRecorder({ page, photos }) {
     const selectedMime = getBestSupportedMimeType();
     const isMp4 = selectedMime.includes("mp4");
     const cleanBlobType = isMp4 ? "video/mp4" : "video/webm";
-    const ext = isMp4 ? "mp4" : "webm";
+    const ext = "mp4"; // force .mp4 extension fallback for mobile shareability
     const fileName = `Love_Sanctuary_Status_30s_${cleanCreator}_and_${cleanPartner}.${ext}`;
 
     setDownloadFileName(fileName);
-    setFileFormatLabel(ext.toUpperCase());
+    setFileFormatLabel("MP4");
 
     const rec = new MediaRecorder(mixed, { mimeType: selectedMime });
     const chunks = [];
