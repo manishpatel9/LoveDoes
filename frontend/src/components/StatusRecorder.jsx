@@ -45,6 +45,117 @@ export default function StatusRecorder({ page, photos }) {
 
   async function record() {
     setError("");
+
+    // Fallback: If getting a screen share stream is not supported (e.g. mobile iOS without flag)
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+      // Use the existing handcrafted Canvas animation as fallback
+      await runCanvasFallbackRecording();
+      return;
+    }
+
+    try {
+      setPhase("loading");
+      // Request exact screen share of current browser tab
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: { displaySurface: "browser" },
+        audio: true,
+        preferCurrentTab: true
+      });
+
+      const selectedMime = getBestSupportedMimeType();
+      const isMp4 = selectedMime.includes("mp4");
+      const cleanBlobType = isMp4 ? "video/mp4" : "video/webm";
+      const ext = isMp4 ? "mp4" : "webm";
+      
+      const rawCreator = page?.creatorName || "Kumar";
+      const rawPartner = page?.partnerName || "Bhumi";
+      const cleanCreator = rawCreator.replace(/[^a-zA-Z0-9]/g, "_");
+      const cleanPartner = rawPartner.replace(/[^a-zA-Z0-9]/g, "_");
+      const fileName = `Love_Sanctuary_Complete_Page_30s_${cleanCreator}_and_${cleanPartner}.${ext}`;
+
+      setDownloadFileName(fileName);
+      setFileFormatLabel(ext.toUpperCase());
+
+      // Attempt to mix page AudioContext directly if playing
+      let mixed = stream;
+      try {
+        if (page?.audioUrl && window.AudioContext) {
+          const audioEl = new Audio(page.audioUrl);
+          audioEl.crossOrigin = "anonymous";
+          audioEl.volume = 0.5; // lower volume to not overpower
+          await audioEl.play().catch(() => {});
+          const ac = new AudioContext();
+          const dest = ac.createMediaStreamDestination();
+          const src = ac.createMediaElementSource(audioEl);
+          src.connect(dest);
+          src.connect(ac.destination);
+          mixed = new MediaStream([...stream.getVideoTracks(), ...dest.stream.getAudioTracks()]);
+          setTimeout(() => audioEl.pause(), 30500);
+        }
+      } catch (err) {
+        console.warn("Audio mixing failed:", err);
+      }
+
+      const rec = new MediaRecorder(mixed, { mimeType: selectedMime });
+      const chunks = [];
+      rec.ondataavailable = (e) => {
+        if (e.data.size) chunks.push(e.data);
+      };
+
+      rec.onstop = () => {
+        const blob = new Blob(chunks, { type: cleanBlobType });
+        const url = URL.createObjectURL(blob);
+        setBlobUrl(url);
+        setPhase("ready");
+
+        // AUTOMATIC DIRECT DOWNLOAD TRIGGER WITH FULL SANCTUARY PAGE RECORDING
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", fileName);
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => document.body.removeChild(link), 100);
+      };
+
+      setPhase("recording");
+      rec.start();
+      
+      const start = performance.now();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+
+      // Automatically slowly scroll the complete page over 30s
+      const scrollTick = () => {
+        const elapsed = performance.now() - start;
+        const t = Math.min(1, Math.max(0, elapsed / 30000));
+        
+        setProgress(Math.round(t * 100));
+        
+        const maxScroll = Math.max(0, document.body.scrollHeight - window.innerHeight);
+        // Smooth easing for a cinematic scroll
+        const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+        
+        window.scrollTo(0, maxScroll * ease);
+        
+        if (t < 1) {
+          requestAnimationFrame(scrollTick);
+        } else {
+          rec.stop();
+          stream.getTracks().forEach(track => track.stop()); // Stop screen sharing
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      };
+      
+      requestAnimationFrame(scrollTick);
+
+    } catch (err) {
+      console.error("Screen recording setup failed.", err);
+      // Fallback if they denied permission or it failed
+      await runCanvasFallbackRecording();
+    }
+  }
+
+  async function runCanvasFallbackRecording() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -67,7 +178,7 @@ export default function StatusRecorder({ page, photos }) {
     const cleanPartner = rawPartner.replace(/[^a-zA-Z0-9]/g, "_");
 
     if (!supports) {
-      drawFrame(ctx, w, h, 1, { creator, partner, couple, page, certBgImg });
+      drawFrame(ctx, w, h, 1, 30, { creator, partner, couple, page, certBgImg });
       canvas.toBlob((blob) => {
         if (!blob) return;
         const url = URL.createObjectURL(blob);
@@ -77,10 +188,8 @@ export default function StatusRecorder({ page, photos }) {
         setFileFormatLabel("PNG");
         setPhase("image");
 
-        // Direct Download Fallback Image
         const a = document.createElement("a");
         a.href = url;
-        a.setAttribute("download", fileName);
         a.download = fileName;
         document.body.appendChild(a);
         a.click();
@@ -130,10 +239,8 @@ export default function StatusRecorder({ page, photos }) {
       setBlobUrl(url);
       setPhase("ready");
 
-      // AUTOMATIC DIRECT DOWNLOAD TRIGGER WITH FULL SANCTUARY PAGE RECORDING
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", fileName);
       link.download = fileName;
       document.body.appendChild(link);
       link.click();
@@ -145,7 +252,7 @@ export default function StatusRecorder({ page, photos }) {
     const start = performance.now();
 
     const tick = (now) => {
-      const elapsed = Math.max(0, now - start);
+      const elapsed = Math.max(0, performance.now() - start);
       const t = Math.min(1, elapsed / 30000);
       const timeSec = elapsed / 1000;
       
