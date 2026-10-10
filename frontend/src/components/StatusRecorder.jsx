@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import html2canvas from "html2canvas"; // If you use Tailwind v4 / oklch() colours: import html2canvas from "html2canvas-pro";
+import html2canvas from "html2canvas";
 import certBg from "../assets/cert_bg.png";
 
 const isMobileDevice = () =>
@@ -12,6 +12,7 @@ function loadImage(src) {
       resolve(null);
       return;
     }
+
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => resolve(img);
@@ -22,7 +23,8 @@ function loadImage(src) {
 
 function getBestSupportedMimeType() {
   if (typeof MediaRecorder === "undefined") return "video/webm";
-  const candidateTypes = [
+
+  const candidates = [
     "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
     "video/mp4;codecs=avc1",
     "video/mp4",
@@ -31,12 +33,29 @@ function getBestSupportedMimeType() {
     "video/webm;codecs=vp9",
     "video/webm"
   ];
-  for (const t of candidateTypes) {
-    if (MediaRecorder.isTypeSupported(t)) {
-      return t;
-    }
+
+  for (const type of candidates) {
+    if (MediaRecorder.isTypeSupported(type)) return type;
   }
+
   return "video/webm";
+}
+
+function downloadBlob(blob, fileName) {
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  link.style.display = "none";
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+
+  return url;
 }
 
 export default function StatusRecorder({ page, photos }) {
@@ -60,22 +79,21 @@ export default function StatusRecorder({ page, photos }) {
       } catch (err) {
         console.log("User cancelled share or share failed", err);
       }
-    } else {
-      // Fallback for browsers that don't support file sharing
-      const a = document.createElement("a");
-      a.href = blobUrl;
-      a.download = downloadFileName;
-      a.target = "_blank";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      return;
     }
+
+    const link = document.createElement("a");
+    link.href = blobUrl || "";
+    link.download = downloadFileName || "Love_Status_30s.mp4";
+    link.target = "_blank";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   async function recordDesktop() {
     setError("");
 
-    // Fallback: If getting a screen share stream is not supported (e.g. mobile browsers)
     if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
       await recordMobile();
       return;
@@ -83,7 +101,7 @@ export default function StatusRecorder({ page, photos }) {
 
     try {
       setPhase("loading");
-      // Request exact screen share of current browser tab
+
       const stream = await navigator.mediaDevices.getDisplayMedia({
         video: { displaySurface: "browser" },
         audio: true,
@@ -104,19 +122,19 @@ export default function StatusRecorder({ page, photos }) {
       setDownloadFileName(fileName);
       setFileFormatLabel(ext.toUpperCase());
 
-      // Attempt to mix page audio directly if playing
       let mixed = stream;
+
       try {
         if (page?.audioUrl && window.AudioContext) {
           const audioEl = new Audio(page.audioUrl);
           audioEl.crossOrigin = "anonymous";
-          audioEl.volume = 0.5; // lower volume to not overpower
+          audioEl.volume = 0.5;
           await audioEl.play().catch(() => { });
-          const ac = new AudioContext();
-          const dest = ac.createMediaStreamDestination();
-          const src = ac.createMediaElementSource(audioEl);
+          const audioContext = new AudioContext();
+          const dest = audioContext.createMediaStreamDestination();
+          const src = audioContext.createMediaElementSource(audioEl);
           src.connect(dest);
-          src.connect(ac.destination);
+          src.connect(audioContext.destination);
           mixed = new MediaStream([...stream.getVideoTracks(), ...dest.stream.getAudioTracks()]);
           setTimeout(() => audioEl.pause(), 30500);
         }
@@ -124,13 +142,14 @@ export default function StatusRecorder({ page, photos }) {
         console.warn("Audio mixing failed:", err);
       }
 
-      const rec = new MediaRecorder(mixed, { mimeType: selectedMime });
+      const recorder = new MediaRecorder(mixed, { mimeType: selectedMime });
       const chunks = [];
-      rec.ondataavailable = (e) => {
-        if (e.data.size) chunks.push(e.data);
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size) chunks.push(event.data);
       };
 
-      rec.onstop = () => {
+      recorder.onstop = () => {
         const blob = new Blob(chunks, { type: cleanBlobType });
         const file = new File([blob], fileName, { type: cleanBlobType });
         setFinalFile(file);
@@ -139,25 +158,19 @@ export default function StatusRecorder({ page, photos }) {
         setBlobUrl(url);
         setPhase("ready");
 
-        // Automatic direct download
         try {
-          const link = document.createElement("a");
-          link.href = url;
-          link.setAttribute("download", fileName);
-          link.download = fileName;
-          document.body.appendChild(link);
-          link.click();
-          setTimeout(() => document.body.removeChild(link), 300);
-        } catch (e) { }
+          downloadBlob(blob, fileName);
+        } catch (e) {
+          console.warn("Auto download failed:", e);
+        }
       };
 
       setPhase("recording");
-      rec.start();
+      recorder.start();
 
       const start = performance.now();
       window.scrollTo({ top: 0, behavior: "smooth" });
 
-      // Automatically slowly scroll the complete page over 30s
       const scrollTick = () => {
         const elapsed = performance.now() - start;
         const t = Math.min(1, Math.max(0, elapsed / 30000));
@@ -165,7 +178,6 @@ export default function StatusRecorder({ page, photos }) {
         setProgress(Math.round(t * 100));
 
         const maxScroll = Math.max(0, document.body.scrollHeight - window.innerHeight);
-        // Smooth easing for a cinematic scroll
         const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
 
         window.scrollTo(0, maxScroll * ease);
@@ -173,8 +185,8 @@ export default function StatusRecorder({ page, photos }) {
         if (t < 1) {
           requestAnimationFrame(scrollTick);
         } else {
-          rec.stop();
-          stream.getTracks().forEach((track) => track.stop()); // Stop screen sharing
+          recorder.stop();
+          stream.getTracks().forEach((track) => track.stop());
           window.scrollTo({ top: 0, behavior: "smooth" });
         }
       };
@@ -182,172 +194,251 @@ export default function StatusRecorder({ page, photos }) {
       requestAnimationFrame(scrollTick);
     } catch (err) {
       console.error("Screen recording setup failed.", err);
-      // Fallback if they denied permission or it failed
       await runCanvasFallbackRecording();
     }
   }
 
-  // Works on phones: snapshots the full page with html2canvas, then pans down it
-  // for 30 seconds into a 9:16 canvas and records that with MediaRecorder.
   async function recordMobile() {
     setError("");
     setProgress(0);
     setPhase("loading");
 
     let audioEl = null;
-    let ac = null;
-    let audioDest = null;
+    let audioContext = null;
+    let audioDestination = null;
+    let animationTimer = null;
+    let finished = false;
 
     try {
-      // Start audio FIRST, while we are still inside the user's tap
-      // (mobile browsers block audio started after a long await)
+      const canvas = canvasRef.current;
+
+      if (!canvas || !canvas.captureStream || typeof MediaRecorder === "undefined") {
+        throw new Error("This browser does not support video recording.");
+      }
+
       try {
         if (page?.audioUrl && window.AudioContext) {
           audioEl = new Audio();
-          audioEl.crossOrigin = "anonymous";
           audioEl.src = page.audioUrl;
+          audioEl.crossOrigin = "anonymous";
           audioEl.loop = true;
-          ac = new AudioContext();
-          if (ac.state === "suspended") await ac.resume();
-          audioDest = ac.createMediaStreamDestination();
-          const src = ac.createMediaElementSource(audioEl);
-          src.connect(audioDest);
-          await audioEl.play().catch(() => { });
+          audioEl.volume = 0.5;
+          audioEl.playsInline = true;
+
+          audioContext = new AudioContext();
+          if (audioContext.state === "suspended") {
+            await audioContext.resume();
+          }
+
+          audioDestination = audioContext.createMediaStreamDestination();
+
+          const source = audioContext.createMediaElementSource(audioEl);
+          source.connect(audioDestination);
+          source.connect(audioContext.destination);
+
+          await audioEl.play().catch(() => {
+            console.warn("Mobile audio playback was blocked.");
+          });
         }
-      } catch (e) {
-        console.warn("Audio setup failed:", e);
-        audioDest = null;
+      } catch (audioError) {
+        console.warn("Audio setup failed:", audioError);
+        audioEl = null;
+        audioContext = null;
+        audioDestination = null;
       }
 
-      // Snapshot the COMPLETE page (everything except this recorder UI)
-      const bodyBg = getComputedStyle(document.body).backgroundColor || "#1a0209";
-      const OUT_W = 720;
-      const OUT_H = 1280;
-      let scale = OUT_W / window.innerWidth;
-      const fullH = document.documentElement.scrollHeight;
-      // Keep the snapshot within mobile canvas memory limits
-      const MAX_PIXELS = 16000000;
-      if (OUT_W * (fullH * scale) > MAX_PIXELS) {
-        scale = Math.sqrt(MAX_PIXELS / (window.innerWidth * fullH)) * 0.95;
+      const pageWidth = Math.max(document.documentElement.clientWidth, window.innerWidth);
+      const pageHeight = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+
+      const outputWidth = 720;
+      const outputHeight = 1280;
+      const maxPixels = 16000000;
+
+      let snapshotScale = outputWidth / pageWidth;
+
+      if (pageWidth * pageHeight * snapshotScale * snapshotScale > maxPixels) {
+        snapshotScale = Math.sqrt(maxPixels / (pageWidth * pageHeight)) * 0.9;
       }
 
       const snapshot = await html2canvas(document.body, {
-        scale,
+        scale: snapshotScale,
         useCORS: true,
         allowTaint: false,
-        backgroundColor: bodyBg,
+        backgroundColor: getComputedStyle(document.body).backgroundColor || "#1a0209",
         logging: false,
+        width: pageWidth,
+        height: pageHeight,
+        windowWidth: pageWidth,
+        windowHeight: pageHeight,
         scrollX: 0,
         scrollY: -window.scrollY,
-        windowWidth: document.documentElement.clientWidth,
-        windowHeight: document.documentElement.scrollHeight,
-        ignoreElements: (el) =>
-          el.classList?.contains("status-recorder-wrapper") ||
-          el.tagName === "VIDEO"
+        ignoreElements: (element) => {
+          return (
+            element.classList?.contains("status-recorder-wrapper") ||
+            element.tagName === "VIDEO" ||
+            element.tagName === "CANVAS"
+          );
+        }
       });
 
-      // Scale snapshot so its width == 720 output pixels
-      const snapW = snapshot.width;
-      const snapH = snapshot.height;
-      const drawScale = OUT_W / snapW;
-      const pageHInOut = snapH * drawScale; // page height in output px
-      const maxScroll = Math.max(0, pageHInOut - OUT_H);
+      const ctx = canvas.getContext("2d", {
+        alpha: false,
+        desynchronized: true
+      });
 
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext("2d");
-      canvas.width = OUT_W;
-      canvas.height = OUT_H;
-
-      const canvasStream = canvas.captureStream(30);
-      let mixed = canvasStream;
-      if (audioDest && audioDest.stream.getAudioTracks().length) {
-        mixed = new MediaStream([
-          ...canvasStream.getVideoTracks(),
-          ...audioDest.stream.getAudioTracks()
-        ]);
+      if (!ctx) {
+        throw new Error("Unable to create drawing context.");
       }
+
+      canvas.width = outputWidth;
+      canvas.height = outputHeight;
+      canvas.style.display = "none";
+
+      const snapshotWidth = snapshot.width;
+      const snapshotHeight = snapshot.height;
+      const drawScale = outputWidth / snapshotWidth;
+      const renderedPageHeight = snapshotHeight * drawScale;
+      const maxScroll = Math.max(0, renderedPageHeight - outputHeight);
+
+      const bodyBg = getComputedStyle(document.body).backgroundColor || "#1a0209";
 
       const selectedMime = getBestSupportedMimeType();
       const isMp4 = selectedMime.includes("mp4");
-      const cleanBlobType = isMp4 ? "video/mp4" : "video/webm";
-      const ext = isMp4 ? "mp4" : "webm";
-      const cleanCreator = (page?.creatorName || "Kumar").replace(/[^a-zA-Z0-9]/g, "_");
-      const cleanPartner = (page?.partnerName || "Bhumi").replace(/[^a-zA-Z0-9]/g, "_");
-      const fileName = `Love_Sanctuary_Status_30s_${cleanCreator}_and_${cleanPartner}.${ext}`;
-      setDownloadFileName(fileName);
-      setFileFormatLabel(ext.toUpperCase());
+      const videoMimeType = isMp4 ? "video/mp4" : "video/webm";
+      const extension = isMp4 ? "mp4" : "webm";
 
-      const rec = new MediaRecorder(mixed, {
-        mimeType: selectedMime,
-        videoBitsPerSecond: 4000000
-      });
+      const creator = (page?.creatorName || "Kumar").replace(/[^a-zA-Z0-9]/g, "_");
+      const partner = (page?.partnerName || "Bhumi").replace(/[^a-zA-Z0-9]/g, "_");
+      const fileName = `Love_Sanctuary_Status_30s_${creator}_and_${partner}.${extension}`;
+
+      setDownloadFileName(fileName);
+      setFileFormatLabel(extension.toUpperCase());
+
+      const canvasStream = canvas.captureStream(30);
+      let mixedStream = canvasStream;
+
+      if (audioDestination && audioDestination.stream.getAudioTracks().length > 0) {
+        mixedStream = new MediaStream([
+          ...canvasStream.getVideoTracks(),
+          ...audioDestination.stream.getAudioTracks()
+        ]);
+      }
+
+      let recorder;
+      try {
+        recorder = new MediaRecorder(mixedStream, {
+          mimeType: selectedMime,
+          videoBitsPerSecond: 4000000
+        });
+      } catch {
+        recorder = new MediaRecorder(mixedStream);
+      }
+
       const chunks = [];
-      rec.ondataavailable = (e) => {
-        if (e.data.size) chunks.push(e.data);
+
+      recorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          chunks.push(event.data);
+        }
       };
 
-      rec.onstop = () => {
+      recorder.onstop = () => {
+        if (finished) return;
+        finished = true;
+
         try {
-          audioEl && audioEl.pause();
-          ac && ac.close();
-        } catch (e) { }
-        const blob = new Blob(chunks, { type: cleanBlobType });
-        const file = new File([blob], fileName, { type: cleanBlobType });
+          audioEl?.pause();
+          audioEl?.removeAttribute("src");
+          audioContext?.close();
+        } catch { }
+
+        canvasStream.getTracks().forEach((track) => track.stop());
+
+        if (!chunks.length) {
+          setError("No video data was generated. Please try again.");
+          setPhase("idle");
+          return;
+        }
+
+        const blob = new Blob(chunks, { type: videoMimeType });
+        const file = new File([blob], fileName, { type: videoMimeType });
         setFinalFile(file);
-        const url = URL.createObjectURL(blob);
-        setBlobUrl(url);
+
+        const objectUrl = URL.createObjectURL(blob);
+        setBlobUrl(objectUrl);
+        setProgress(100);
         setPhase("ready");
 
-        // Auto download (works on Android Chrome; iOS needs the Share button)
         try {
-          const link = document.createElement("a");
-          link.href = url;
-          link.download = fileName;
-          document.body.appendChild(link);
-          link.click();
-          setTimeout(() => document.body.removeChild(link), 300);
-        } catch (e) { }
+          downloadBlob(blob, fileName);
+        } catch (e) {
+          console.warn("Auto download failed:", e);
+        }
+      };
+
+      const drawFrame = (progressValue) => {
+        const scrollY = maxScroll * progressValue;
+
+        const sourceY = scrollY / drawScale;
+        const sourceHeight = Math.min(outputHeight / drawScale, snapshotHeight - sourceY);
+
+        ctx.fillStyle = bodyBg;
+        ctx.fillRect(0, 0, outputWidth, outputHeight);
+
+        ctx.drawImage(
+          snapshot,
+          0,
+          sourceY,
+          snapshotWidth,
+          sourceHeight,
+          0,
+          0,
+          outputWidth,
+          sourceHeight * drawScale
+        );
+
+        ctx.fillStyle = "rgba(255,255,255,0.6)";
+        ctx.fillRect(40, outputHeight - 42, (outputWidth - 80) * progressValue, 6);
       };
 
       const DURATION = 30000;
-      const HOLD = 1500; // pause at top and bottom so it feels natural
-      setPhase("recording");
-      rec.start(1000);
       const start = performance.now();
 
-      const tick = () => {
+      setPhase("recording");
+      recorder.start(250);
+
+      drawFrame(0);
+
+      animationTimer = window.setInterval(() => {
         const elapsed = performance.now() - start;
-        const t = Math.min(1, elapsed / DURATION);
-        setProgress(Math.round(t * 100));
+        const progressValue = Math.min(1, elapsed / DURATION);
 
-        // hold at top, ease-in-out scroll, hold at bottom
-        const scrollT = Math.min(1, Math.max(0, (elapsed - HOLD) / (DURATION - HOLD * 2)));
-        const ease = scrollT < 0.5 ? 2 * scrollT * scrollT : -1 + (4 - 2 * scrollT) * scrollT;
-        const scrollY = maxScroll * ease;
+        const eased =
+          progressValue < 0.5
+            ? 2 * progressValue * progressValue
+            : -1 + (4 - 2 * progressValue) * progressValue;
 
-        ctx.fillStyle = bodyBg;
-        ctx.fillRect(0, 0, OUT_W, OUT_H);
-        // source rect in snapshot pixels
-        const srcY = scrollY / drawScale;
-        const srcH = Math.min(OUT_H / drawScale, snapH - srcY);
-        ctx.drawImage(snapshot, 0, srcY, snapW, srcH, 0, 0, OUT_W, srcH * drawScale);
+        drawFrame(eased);
+        setProgress(Math.round(progressValue * 100));
 
-        // thin progress bar
-        ctx.fillStyle = "rgba(255,255,255,0.5)";
-        ctx.fillRect(40, OUT_H - 40, (OUT_W - 80) * t, 5);
-
-        if (t < 1) {
-          requestAnimationFrame(tick);
-        } else {
-          rec.stop();
+        if (elapsed >= DURATION) {
+          clearInterval(animationTimer);
+          animationTimer = null;
+          recorder.stop();
         }
-      };
-      requestAnimationFrame(tick);
+      }, 1000 / 30);
     } catch (err) {
-      console.error("Page snapshot recording failed, using fallback.", err);
+      console.error("Page snapshot recording failed:", err);
+
       try {
-        audioEl && audioEl.pause();
-      } catch (e) { }
+        audioEl?.pause();
+        audioContext?.close();
+      } catch { }
+
+      if (animationTimer) {
+        clearInterval(animationTimer);
+      }
+
       await runCanvasFallbackRecording();
     }
   }
@@ -355,6 +446,7 @@ export default function StatusRecorder({ page, photos }) {
   async function runCanvasFallbackRecording() {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
     const ctx = canvas.getContext("2d");
     const w = 720;
     const h = 1280;
@@ -362,6 +454,7 @@ export default function StatusRecorder({ page, photos }) {
     canvas.height = h;
 
     setPhase("loading");
+
     const creator = await loadImage(photos?.creator);
     const partner = await loadImage(photos?.partner);
     const couple = await loadImage(photos?.couple);
@@ -378,6 +471,7 @@ export default function StatusRecorder({ page, photos }) {
       drawFrame(ctx, w, h, 1, 30, { creator, partner, couple, page, certBgImg });
       canvas.toBlob((blob) => {
         if (!blob) return;
+
         const fileName = `Love_Sanctuary_Status_${cleanCreator}_and_${cleanPartner}.png`;
         const file = new File([blob], fileName, { type: "image/png" });
         setFinalFile(file);
@@ -408,11 +502,11 @@ export default function StatusRecorder({ page, photos }) {
         const audioEl = new Audio(page.audioUrl);
         audioEl.crossOrigin = "anonymous";
         await audioEl.play().catch(() => { });
-        const ac = new AudioContext();
-        const dest = ac.createMediaStreamDestination();
-        const src = ac.createMediaElementSource(audioEl);
+        const audioContext = new AudioContext();
+        const dest = audioContext.createMediaStreamDestination();
+        const src = audioContext.createMediaElementSource(audioEl);
         src.connect(dest);
-        src.connect(ac.destination);
+        src.connect(audioContext.destination);
         mixed = new MediaStream([...stream.getVideoTracks(), ...dest.stream.getAudioTracks()]);
         setTimeout(() => audioEl.pause(), 30500);
       }
@@ -423,19 +517,21 @@ export default function StatusRecorder({ page, photos }) {
     const selectedMime = getBestSupportedMimeType();
     const isMp4 = selectedMime.includes("mp4");
     const cleanBlobType = isMp4 ? "video/mp4" : "video/webm";
-    const ext = "mp4"; // force .mp4 extension fallback for mobile shareability
+    const ext = "mp4";
+
     const fileName = `Love_Sanctuary_Status_30s_${cleanCreator}_and_${cleanPartner}.${ext}`;
 
     setDownloadFileName(fileName);
     setFileFormatLabel("MP4");
 
-    const rec = new MediaRecorder(mixed, { mimeType: selectedMime });
+    const recorder = new MediaRecorder(mixed, { mimeType: selectedMime });
     const chunks = [];
-    rec.ondataavailable = (e) => {
-      if (e.data.size) chunks.push(e.data);
+
+    recorder.ondataavailable = (event) => {
+      if (event.data.size) chunks.push(event.data);
     };
 
-    rec.onstop = () => {
+    recorder.onstop = () => {
       const blob = new Blob(chunks, { type: cleanBlobType });
       const file = new File([blob], fileName, { type: cleanBlobType });
       setFinalFile(file);
@@ -445,17 +541,15 @@ export default function StatusRecorder({ page, photos }) {
       setPhase("ready");
 
       try {
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        setTimeout(() => document.body.removeChild(link), 300);
-      } catch (e) { }
+        downloadBlob(blob, fileName);
+      } catch (e) {
+        console.warn("Fallback download failed:", e);
+      }
     };
 
     setPhase("recording");
-    rec.start();
+    recorder.start();
+
     const start = performance.now();
 
     const tick = () => {
@@ -469,14 +563,23 @@ export default function StatusRecorder({ page, photos }) {
       if (t < 1) {
         requestAnimationFrame(tick);
       } else {
-        rec.stop();
+        recorder.stop();
       }
     };
+
     requestAnimationFrame(tick);
   }
 
   return (
-    <div className="status-recorder-wrapper" style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
+    <div
+      className="status-recorder-wrapper"
+      style={{
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center"
+      }}
+    >
       <canvas
         ref={canvasRef}
         className="status-canvas"
@@ -491,7 +594,23 @@ export default function StatusRecorder({ page, photos }) {
             className="target-primary-btn glow"
             type="button"
             onClick={recordMobile}
-            style={{ width: "100%", background: "linear-gradient(135deg, #e61c5d, #9e0c3b)", color: "#ffffff", fontWeight: 700, padding: "14px 20px", borderRadius: "30px", border: "none", cursor: "pointer", fontSize: "1.05rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", boxShadow: "0 10px 30px rgba(230, 28, 93, 0.4)", transition: "all 0.3s ease" }}
+            style={{
+              width: "100%",
+              background: "linear-gradient(135deg, #e61c5d, #9e0c3b)",
+              color: "#ffffff",
+              fontWeight: 700,
+              padding: "14px 20px",
+              borderRadius: "30px",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "1.05rem",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "10px",
+              boxShadow: "0 10px 30px rgba(230, 28, 93, 0.4)",
+              transition: "all 0.3s ease"
+            }}
           >
             <span className="btn-icon-left">📱</span>
             <span className="btn-text">
@@ -505,7 +624,23 @@ export default function StatusRecorder({ page, photos }) {
               className="target-primary-btn glow"
               type="button"
               onClick={recordDesktop}
-              style={{ width: "100%", background: "linear-gradient(135deg, #6d28d9, #4c1d95)", color: "#ffffff", fontWeight: 700, padding: "14px 20px", borderRadius: "30px", border: "none", cursor: "pointer", fontSize: "1.05rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", boxShadow: "0 10px 30px rgba(109, 40, 217, 0.4)", transition: "all 0.3s ease" }}
+              style={{
+                width: "100%",
+                background: "linear-gradient(135deg, #6d28d9, #4c1d95)",
+                color: "#ffffff",
+                fontWeight: 700,
+                padding: "14px 20px",
+                borderRadius: "30px",
+                border: "none",
+                cursor: "pointer",
+                fontSize: "1.05rem",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "10px",
+                boxShadow: "0 10px 30px rgba(109, 40, 217, 0.4)",
+                transition: "all 0.3s ease"
+              }}
             >
               <span className="btn-icon-left">💻</span>
               <span className="btn-text">Desktop Video (Full Screen)</span>
@@ -516,23 +651,62 @@ export default function StatusRecorder({ page, photos }) {
       )}
 
       {(phase === "loading" || phase === "recording") && (
-        <div style={{ width: "100%", background: "rgba(230, 28, 93, 0.15)", border: "1px solid rgba(230, 28, 93, 0.4)", borderRadius: "20px", padding: "16px", textAlign: "center", color: "#fff" }}>
+        <div
+          style={{
+            width: "100%",
+            background: "rgba(230, 28, 93, 0.15)",
+            border: "1px solid rgba(230, 28, 93, 0.4)",
+            borderRadius: "20px",
+            padding: "16px",
+            textAlign: "center",
+            color: "#fff"
+          }}
+        >
           <div style={{ fontSize: "1.1rem", fontWeight: 600, marginBottom: "8px" }}>
             {phase === "loading"
               ? "⏳ Preparing your page snapshot..."
               : `🎥 Recording 30s Sanctuary Page Status Video... ${progress}%`}
           </div>
-          <div style={{ width: "100%", height: "8px", background: "rgba(255,255,255,0.2)", borderRadius: "4px", overflow: "hidden" }}>
-            <div style={{ width: `${progress}%`, height: "100%", background: "linear-gradient(90deg, #ff4d8d, #ff75a0)", transition: "width 0.2s linear" }} />
+
+          <div
+            style={{
+              width: "100%",
+              height: "8px",
+              background: "rgba(255,255,255,0.2)",
+              borderRadius: "4px",
+              overflow: "hidden"
+            }}
+          >
+            <div
+              style={{
+                width: `${progress}%`,
+                height: "100%",
+                background: "linear-gradient(90deg, #ff4d8d, #ff75a0)",
+                transition: "width 0.2s linear"
+              }}
+            />
           </div>
+
           <div style={{ fontSize: "0.85rem", opacity: 0.85, marginTop: "8px" }}>
-            Downloading full sanctuary status video as <strong style={{ color: "#ffd166" }}>{downloadFileName || "Love_Status_30s.mp4"}</strong> ❤️
+            Downloading full sanctuary status video as{" "}
+            <strong style={{ color: "#ffd166" }}>
+              {downloadFileName || "Love_Status_30s.mp4"}
+            </strong>{" "}
+            ❤️
           </div>
         </div>
       )}
 
       {phase === "ready" && (
-        <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "10px"
+          }}
+        >
           <div style={{ color: "#4cd964", fontWeight: 600, textAlign: "center" }}>
             ✅ 30-Second Full Sanctuary Page Video Downloaded! ({fileFormatLabel})
           </div>
@@ -540,7 +714,20 @@ export default function StatusRecorder({ page, photos }) {
           <button
             className="target-primary-btn glow"
             onClick={handleMobileShare}
-            style={{ width: "100%", background: "linear-gradient(135deg, #10b981, #047857)", color: "#ffffff", fontWeight: 700, padding: "14px 20px", borderRadius: "30px", border: "none", cursor: "pointer", display: "inline-flex", justifyContent: "center", alignItems: "center", gap: "8px" }}
+            style={{
+              width: "100%",
+              background: "linear-gradient(135deg, #10b981, #047857)",
+              color: "#ffffff",
+              fontWeight: 700,
+              padding: "14px 20px",
+              borderRadius: "30px",
+              border: "none",
+              cursor: "pointer",
+              display: "inline-flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "8px"
+            }}
           >
             <span>📱</span> Share / Save to Gallery
           </button>
@@ -549,14 +736,33 @@ export default function StatusRecorder({ page, photos }) {
             className="secondary-btn"
             href={blobUrl}
             download={downloadFileName}
-            style={{ width: "100%", color: "rgba(255,255,255,0.9)", fontWeight: 600, padding: "10px", borderRadius: "30px", textDecoration: "none", textAlign: "center", display: "inline-block", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)" }}
+            style={{
+              width: "100%",
+              color: "rgba(255,255,255,0.9)",
+              fontWeight: 600,
+              padding: "10px",
+              borderRadius: "30px",
+              textDecoration: "none",
+              textAlign: "center",
+              display: "inline-block",
+              background: "rgba(255,255,255,0.1)",
+              border: "1px solid rgba(255,255,255,0.2)"
+            }}
           >
             📥 Manual Download ({downloadFileName})
           </a>
+
           <button
             type="button"
             onClick={() => setPhase("idle")}
-            style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.7)", cursor: "pointer", textDecoration: "underline", fontSize: "0.9rem" }}
+            style={{
+              background: "transparent",
+              border: "none",
+              color: "rgba(255,255,255,0.7)",
+              cursor: "pointer",
+              textDecoration: "underline",
+              fontSize: "0.9rem"
+            }}
           >
             Record Again
           </button>
@@ -564,13 +770,36 @@ export default function StatusRecorder({ page, photos }) {
       )}
 
       {phase === "image" && (
-        <div style={{ width: "100%", textAlign: "center", color: "#fff", display: "flex", flexDirection: "column", gap: "10px", alignItems: "center" }}>
+        <div
+          style={{
+            width: "100%",
+            textAlign: "center",
+            color: "#fff",
+            display: "flex",
+            flexDirection: "column",
+            gap: "10px",
+            alignItems: "center"
+          }}
+        >
           <p style={{ color: "#ffd166", fontWeight: 600 }}>✅ Story Card Image Downloaded!</p>
 
           <button
             className="target-primary-btn glow"
             onClick={handleMobileShare}
-            style={{ width: "100%", background: "linear-gradient(135deg, #10b981, #047857)", color: "#ffffff", fontWeight: 700, padding: "14px 20px", borderRadius: "30px", border: "none", cursor: "pointer", display: "inline-flex", justifyContent: "center", alignItems: "center", gap: "8px" }}
+            style={{
+              width: "100%",
+              background: "linear-gradient(135deg, #10b981, #047857)",
+              color: "#ffffff",
+              fontWeight: 700,
+              padding: "14px 20px",
+              borderRadius: "30px",
+              border: "none",
+              cursor: "pointer",
+              display: "inline-flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "8px"
+            }}
           >
             <span>📱</span> Share / Save to Gallery
           </button>
@@ -579,25 +808,43 @@ export default function StatusRecorder({ page, photos }) {
             className="secondary-btn"
             href={blobUrl}
             download={downloadFileName}
-            style={{ width: "100%", color: "rgba(255,255,255,0.9)", fontWeight: 600, padding: "10px", borderRadius: "30px", textDecoration: "none", textAlign: "center", display: "inline-block", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)" }}
+            style={{
+              width: "100%",
+              color: "rgba(255,255,255,0.9)",
+              fontWeight: 600,
+              padding: "10px",
+              borderRadius: "30px",
+              textDecoration: "none",
+              textAlign: "center",
+              display: "inline-block",
+              background: "rgba(255,255,255,0.1)",
+              border: "1px solid rgba(255,255,255,0.2)"
+            }}
           >
             📥 Manual Download ({downloadFileName})
           </a>
         </div>
       )}
 
-      {error ? <p className="error" style={{ color: "#ff4d4d", marginTop: "8px" }}>{error}</p> : null}
+      {error ? (
+        <p className="error" style={{ color: "#ff4d4d", marginTop: "8px" }}>
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }
 
 function drawCoverImage(ctx, img, x, y, w, h, radius = 0) {
   if (!img) return;
+
   ctx.save();
+
   if (radius > 0) {
     roundRect(ctx, x, y, w, h, radius);
     ctx.clip();
   }
+
   const imgRatio = img.width / img.height;
   const targetRatio = w / h;
   let sWidth, sHeight, sx, sy;
@@ -622,7 +869,6 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, cert
   const creatorName = page?.creatorName || "Rahul";
   const partnerName = page?.partnerName || "Priya";
 
-  // 1. FULL SCREEN DEEP ROYAL BURGUNDY GRADIENT BACKGROUND
   const g = ctx.createLinearGradient(0, -timeSec * 2, w, h + timeSec * 2);
   g.addColorStop(0, "#1a0209");
   g.addColorStop(0.25, "#3d0515");
@@ -631,7 +877,6 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, cert
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, w, h);
 
-  // Background Photo Overlay (Faint Background)
   if (couple) {
     ctx.save();
     ctx.globalAlpha = 0.12;
@@ -639,7 +884,6 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, cert
     ctx.restore();
   }
 
-  // 2. AMBIENT GLOW ORBS (Animate using timeSec)
   const orb1Y = 200 + Math.sin(timeSec) * 40;
   const rad1 = ctx.createRadialGradient(w / 2, orb1Y, 10, w / 2, orb1Y, 350);
   rad1.addColorStop(0, "rgba(230, 28, 93, 0.35)");
@@ -647,7 +891,6 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, cert
   ctx.fillStyle = rad1;
   ctx.fillRect(0, 0, w, h);
 
-  // 3. MULTILINGUAL FLOATING LOVE BUBBLES DRIFTING UP SIDES
   const bubbles = [
     { text: "I Love You 💕", x: 60, speedY: 450, seed: 1 },
     { text: "Ti amo 💖", x: 620, speedY: 520, seed: 2 },
@@ -663,6 +906,7 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, cert
   bubbles.forEach((b) => {
     const y = (h + 100 - ((timeSec * b.speedY * 0.5 + b.seed * 140) % (h + 200)));
     const waveX = b.x + Math.sin(timeSec * 0.8 + b.seed) * 20;
+
     ctx.save();
     ctx.fillStyle = "rgba(255, 255, 255, 0.18)";
     ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
@@ -678,11 +922,11 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, cert
     ctx.restore();
   });
 
-  // 4. DYNAMIC RAINING CONFETTI & ROSE PETALS
   for (let i = 0; i < 35; i++) {
     const cx = (i * 47 + timeSec * 35) % w;
     const cy = (i * 83 + timeSec * 150) % (h + 100);
     const size = 6 + (i % 6);
+
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(timeSec * 1.5 + i);
@@ -691,17 +935,14 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, cert
     ctx.restore();
   }
 
-  // 4b. CRAZY LOVE RAIN EMOJIS (Mirrors the webpage effect)
   const rainEmojis = ["💖", "💕", "✨", "💌", "🌹", "💖", "💕"];
   for (let j = 0; j < 15; j++) {
     const char = rainEmojis[j % rainEmojis.length];
-    // Gentle staggered fall simulation
     const fallSpeed = 35 + (j % 5) * 5;
     const dropY = (j * 110 + timeSec * fallSpeed) % (h + 100);
     const swayX = Math.sin(timeSec * 0.5 + j) * 40;
     const dropX = ((j * 85) % w) + swayX;
 
-    // Avoid drawing directly behind Center text
     if (dropX > w / 2 - 120 && dropX < w / 2 + 120 && dropY > 50 && dropY < 250) {
       continue;
     }
@@ -710,13 +951,11 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, cert
     ctx.font = "26px sans-serif";
     ctx.textAlign = "center";
     ctx.translate(dropX, dropY - 50);
-    ctx.rotate(Math.sin(timeSec * 0.8 + j) * 0.2); // Gentle sway rotation
+    ctx.rotate(Math.sin(timeSec * 0.8 + j) * 0.2);
     ctx.fillText(char, 0, 0);
     ctx.restore();
   }
 
-  // 5. SANCTUARY HEADER SECTION (Top)
-  // Badge: YOU SAID YES
   ctx.save();
   ctx.fillStyle = "rgba(230, 28, 93, 0.85)";
   ctx.shadowColor = "rgba(230, 28, 93, 0.6)";
@@ -729,35 +968,29 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, cert
   ctx.font = "bold 15px 'Cinzel', Georgia, serif";
   ctx.fillText("✨ YOU SAID YES! ✨", w / 2, 68);
 
-  // Main Header Title: You said YES!
   const pulseSize = 36 + Math.sin(timeSec * 3) * 1.5;
   ctx.font = `italic ${pulseSize}px 'Cormorant Garamond', Georgia, serif`;
   ctx.fillStyle = "#ffffff";
   ctx.fillText("You said YES!", w / 2, 115);
 
-  // Couple Names: Rahul ♡ Priya
   ctx.font = "normal 48px 'Pinyon Script', 'Great Vibes', cursive";
   ctx.fillStyle = "#ffb3c1";
   ctx.shadowColor = "rgba(0,0,0,0.4)";
   ctx.shadowBlur = 8;
   ctx.fillText(`${creatorName}  ♡  ${partnerName}`, w / 2, 168);
 
-  // Tagline: Two Hearts • One Story • Forever & Always
   ctx.shadowColor = "transparent";
   ctx.font = "bold 14px Georgia, serif";
   ctx.fillStyle = "#ffd1d9";
   ctx.fillText("Two Hearts  •  One Story  •  Forever & Always", w / 2, 202);
   ctx.restore();
 
-  // 6. POLAROID PHOTO FRAMES (Middle Section)
-  // Left Polaroid: Creator
   if (creator) {
     ctx.save();
     const driftY1 = Math.sin(timeSec * 1.4) * 8;
     ctx.translate(w / 2 - 130, 340 + driftY1);
-    ctx.rotate(-0.08); // -4.5deg tilt
+    ctx.rotate(-0.08);
 
-    // Shadow & Polaroid card body
     ctx.shadowColor = "rgba(0,0,0,0.5)";
     ctx.shadowBlur = 16;
     ctx.fillStyle = "#ffffff";
@@ -765,14 +998,11 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, cert
     ctx.fill();
     ctx.shadowColor = "transparent";
 
-    // Tape top
     ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
     ctx.fillRect(-35, -132, 70, 24);
 
-    // Photo inside frame
     drawCoverImage(ctx, creator, -88, -108, 176, 180, 0);
 
-    // Name Tag Pill
     ctx.fillStyle = "#e61c5d";
     roundRect(ctx, -60, 80, 120, 28, 14);
     ctx.fill();
@@ -783,14 +1013,12 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, cert
     ctx.restore();
   }
 
-  // Right Polaroid: Partner
   if (partner) {
     ctx.save();
     const driftY2 = Math.cos(timeSec * 1.6 + 1) * 8;
     ctx.translate(w / 2 + 130, 340 + driftY2);
-    ctx.rotate(0.08); // +4.5deg tilt
+    ctx.rotate(0.08);
 
-    // Shadow & Polaroid card body
     ctx.shadowColor = "rgba(0,0,0,0.5)";
     ctx.shadowBlur = 16;
     ctx.fillStyle = "#ffffff";
@@ -798,14 +1026,11 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, cert
     ctx.fill();
     ctx.shadowColor = "transparent";
 
-    // Tape top
     ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
     ctx.fillRect(-35, -132, 70, 24);
 
-    // Photo inside frame
     drawCoverImage(ctx, partner, -88, -108, 176, 180, 0);
 
-    // Name Tag Pill
     ctx.fillStyle = "#e61c5d";
     roundRect(ctx, -60, 80, 120, 28, 14);
     ctx.fill();
@@ -816,7 +1041,6 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, cert
     ctx.restore();
   }
 
-  // Center Crown & Heart badge between polaroids (Animate pulse with timeSec)
   ctx.save();
   const crownScale = 1 + Math.sin(timeSec * 2) * 0.08;
   ctx.translate(w / 2, 330);
@@ -830,7 +1054,6 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, cert
   ctx.fillText("❤️", 0, 30);
   ctx.restore();
 
-  // 7. EMBEDDED ROMANTIC CERTIFICATE CARD (Lower Section)
   const certW = 600;
   const certH = 500;
   const certX = (w - certW) / 2;
@@ -838,11 +1061,9 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, cert
   const certY = 530 + certDriftY;
 
   ctx.save();
-  // Card Shadow & Glow
   ctx.shadowColor = "rgba(230, 28, 93, 0.5)";
   ctx.shadowBlur = 24;
 
-  // Render Certificate Background Image if loaded, or parchment fallback
   if (certBgImg) {
     roundRect(ctx, certX, certY, certW, certH, 20);
     ctx.clip();
@@ -855,43 +1076,35 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, cert
     roundRect(ctx, certX, certY, certW, certH, 20);
     ctx.fill();
   }
-  ctx.shadowColor = "transparent";
 
-  // Certificate Card Typography Overlay
+  ctx.shadowColor = "transparent";
   ctx.textAlign = "center";
 
-  // — THE OFFICIAL —
   ctx.fillStyle = "#70101f";
   ctx.font = "bold 14px 'Cinzel', Georgia, serif";
   ctx.fillText("— THE OFFICIAL —", w / 2, certY + 55);
 
-  // CERTIFICATE OF
   ctx.fillStyle = "#4a0913";
   ctx.font = "bold 26px 'Cinzel', Georgia, serif";
   ctx.fillText("CERTIFICATE OF", w / 2, certY + 95);
 
-  // ETERNAL LOVE
   ctx.font = "900 38px 'Cinzel', Georgia, serif";
   ctx.fillStyle = "#4a0913";
   ctx.fillText("ETERNAL L❤️VE", w / 2, certY + 140);
 
-  // THIS CERTIFIES THAT
   ctx.fillStyle = "#70101f";
   ctx.font = "700 13px 'Cinzel', Georgia, serif";
   ctx.fillText("— THIS CERTIFIES THAT —", w / 2, certY + 175);
 
-  // Couple Names Row: Rahul ♥ Priya
   ctx.font = "normal 52px 'Pinyon Script', 'Great Vibes', cursive";
   ctx.fillStyle = "#660714";
   ctx.fillText(`${creatorName}   ❤️   ${partnerName}`, w / 2, certY + 240);
 
-  // Declaration Body
   ctx.font = "italic 16px 'Cormorant Garamond', Georgia, serif";
   ctx.fillStyle = "#1a1012";
   ctx.fillText("are hereby declared to be forever bound in love,", w / 2, certY + 280);
   ctx.fillText("in heart, in soul and in every lifetime.", w / 2, certY + 305);
 
-  // Certification Paragraph
   ctx.font = "italic 18px 'Pinyon Script', cursive";
   ctx.fillStyle = "#8a0c1e";
   ctx.fillText("This bond is certified as timeless, unconditional, and everlasting,", w / 2, certY + 345);
@@ -900,24 +1113,20 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, cert
   ctx.fillStyle = "#1a1012";
   ctx.fillText("sealed with trust, respect, care and a love that grows stronger.", w / 2, certY + 375);
 
-  // Together Forever Calligraphy
   ctx.font = "normal 32px 'Pinyon Script', cursive";
   ctx.fillStyle = "#5c0d18";
   ctx.fillText("Together Forever", w / 2, certY + 425);
 
-  // Wax Seal Emblem
   ctx.font = "32px sans-serif";
   ctx.fillText("❤️", w / 2, certY + 465);
 
   ctx.restore();
 
-  // 8. BOTTOM TAGLINE NOTE
   ctx.font = "italic 18px Georgia, serif";
   ctx.fillStyle = "#ffb3c1";
   ctx.textAlign = "center";
   ctx.fillText("💕 A digital love story, created just for the two of you. 💕", w / 2, 1070);
 
-  // 9. VIDEO RECORDING PROGRESS BAR OVERLAY AT BOTTOM
   ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
   ctx.fillRect(50, 1220, (w - 100) * t, 6);
 }
@@ -936,13 +1145,17 @@ function wrapText(ctx, text, x, y, max, line) {
   const words = text.split(" ");
   let row = "";
   let yy = y;
+
   words.forEach((word) => {
     const test = `${row}${word} `;
     if (ctx.measureText(test).width > max) {
       ctx.fillText(row, x, yy);
       row = `${word} `;
       yy += line;
-    } else row = test;
+    } else {
+      row = test;
+    }
   });
+
   ctx.fillText(row, x, yy);
 }
