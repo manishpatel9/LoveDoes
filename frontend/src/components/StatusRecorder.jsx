@@ -1,5 +1,10 @@
 import { useRef, useState } from "react";
+import html2canvas from "html2canvas"; // If you use Tailwind v4 / oklch() colours: import html2canvas from "html2canvas-pro";
 import certBg from "../assets/cert_bg.png";
+
+const isMobileDevice = () =>
+  /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+  (navigator.maxTouchPoints > 1 && window.innerWidth < 900);
 
 function loadImage(src) {
   return new Promise((resolve) => {
@@ -56,23 +61,22 @@ export default function StatusRecorder({ page, photos }) {
         console.log("User cancelled share or share failed", err);
       }
     } else {
-       // Fallback for browsers that don't support file sharing
-       const a = document.createElement("a");
-       a.href = blobUrl;
-       a.download = downloadFileName;
-       a.target = "_blank";
-       document.body.appendChild(a);
-       a.click();
-       document.body.removeChild(a);
+      // Fallback for browsers that don't support file sharing
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = downloadFileName;
+      a.target = "_blank";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
   };
 
   async function recordDesktop() {
     setError("");
 
-    // Fallback: If getting a screen share stream is not supported (e.g. mobile iOS without flag)
+    // Fallback: If getting a screen share stream is not supported (e.g. mobile browsers)
     if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
-      // Use the existing handcrafted Canvas animation as fallback
       await recordMobile();
       return;
     }
@@ -90,7 +94,7 @@ export default function StatusRecorder({ page, photos }) {
       const isMp4 = selectedMime.includes("mp4");
       const cleanBlobType = isMp4 ? "video/mp4" : "video/webm";
       const ext = isMp4 ? "mp4" : "webm";
-      
+
       const rawCreator = page?.creatorName || "Kumar";
       const rawPartner = page?.partnerName || "Bhumi";
       const cleanCreator = rawCreator.replace(/[^a-zA-Z0-9]/g, "_");
@@ -98,16 +102,16 @@ export default function StatusRecorder({ page, photos }) {
       const fileName = `Love_Sanctuary_Desktop_30s_${cleanCreator}_and_${cleanPartner}.${ext}`;
 
       setDownloadFileName(fileName);
-      setFileFormatLabel("MP4");
+      setFileFormatLabel(ext.toUpperCase());
 
-      // Attempt to mix page AudioContext directly if playing
+      // Attempt to mix page audio directly if playing
       let mixed = stream;
       try {
         if (page?.audioUrl && window.AudioContext) {
           const audioEl = new Audio(page.audioUrl);
           audioEl.crossOrigin = "anonymous";
           audioEl.volume = 0.5; // lower volume to not overpower
-          await audioEl.play().catch(() => {});
+          await audioEl.play().catch(() => { });
           const ac = new AudioContext();
           const dest = ac.createMediaStreamDestination();
           const src = ac.createMediaElementSource(audioEl);
@@ -130,13 +134,12 @@ export default function StatusRecorder({ page, photos }) {
         const blob = new Blob(chunks, { type: cleanBlobType });
         const file = new File([blob], fileName, { type: cleanBlobType });
         setFinalFile(file);
-        
+
         const url = URL.createObjectURL(blob);
         setBlobUrl(url);
         setPhase("ready");
 
-        // AUTOMATIC DIRECT DOWNLOAD TRIGGER WITH FULL SANCTUARY PAGE RECORDING
-        // On mobile, this often gets blocked silently. The user will use the share button.
+        // Automatic direct download
         try {
           const link = document.createElement("a");
           link.href = url;
@@ -145,12 +148,12 @@ export default function StatusRecorder({ page, photos }) {
           document.body.appendChild(link);
           link.click();
           setTimeout(() => document.body.removeChild(link), 300);
-        } catch (e) {}
+        } catch (e) { }
       };
 
       setPhase("recording");
       rec.start();
-      
+
       const start = performance.now();
       window.scrollTo({ top: 0, behavior: "smooth" });
 
@@ -158,26 +161,25 @@ export default function StatusRecorder({ page, photos }) {
       const scrollTick = () => {
         const elapsed = performance.now() - start;
         const t = Math.min(1, Math.max(0, elapsed / 30000));
-        
+
         setProgress(Math.round(t * 100));
-        
+
         const maxScroll = Math.max(0, document.body.scrollHeight - window.innerHeight);
         // Smooth easing for a cinematic scroll
         const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-        
+
         window.scrollTo(0, maxScroll * ease);
-        
+
         if (t < 1) {
           requestAnimationFrame(scrollTick);
         } else {
           rec.stop();
-          stream.getTracks().forEach(track => track.stop()); // Stop screen sharing
+          stream.getTracks().forEach((track) => track.stop()); // Stop screen sharing
           window.scrollTo({ top: 0, behavior: "smooth" });
         }
       };
-      
-      requestAnimationFrame(scrollTick);
 
+      requestAnimationFrame(scrollTick);
     } catch (err) {
       console.error("Screen recording setup failed.", err);
       // Fallback if they denied permission or it failed
@@ -185,173 +187,167 @@ export default function StatusRecorder({ page, photos }) {
     }
   }
 
+  // Works on phones: snapshots the full page with html2canvas, then pans down it
+  // for 30 seconds into a 9:16 canvas and records that with MediaRecorder.
   async function recordMobile() {
     setError("");
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
-      await runCanvasFallbackRecording();
-      return;
-    }
-    
+    setProgress(0);
+    setPhase("loading");
+
+    let audioEl = null;
+    let ac = null;
+    let audioDest = null;
+
     try {
-      setPhase("loading");
-      const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: { displaySurface: "browser" },
-        audio: true,
-        preferCurrentTab: true
+      // Start audio FIRST, while we are still inside the user's tap
+      // (mobile browsers block audio started after a long await)
+      try {
+        if (page?.audioUrl && window.AudioContext) {
+          audioEl = new Audio();
+          audioEl.crossOrigin = "anonymous";
+          audioEl.src = page.audioUrl;
+          audioEl.loop = true;
+          ac = new AudioContext();
+          if (ac.state === "suspended") await ac.resume();
+          audioDest = ac.createMediaStreamDestination();
+          const src = ac.createMediaElementSource(audioEl);
+          src.connect(audioDest);
+          await audioEl.play().catch(() => { });
+        }
+      } catch (e) {
+        console.warn("Audio setup failed:", e);
+        audioDest = null;
+      }
+
+      // Snapshot the COMPLETE page (everything except this recorder UI)
+      const bodyBg = getComputedStyle(document.body).backgroundColor || "#1a0209";
+      const OUT_W = 720;
+      const OUT_H = 1280;
+      let scale = OUT_W / window.innerWidth;
+      const fullH = document.documentElement.scrollHeight;
+      // Keep the snapshot within mobile canvas memory limits
+      const MAX_PIXELS = 16000000;
+      if (OUT_W * (fullH * scale) > MAX_PIXELS) {
+        scale = Math.sqrt(MAX_PIXELS / (window.innerWidth * fullH)) * 0.95;
+      }
+
+      const snapshot = await html2canvas(document.body, {
+        scale,
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: bodyBg,
+        logging: false,
+        scrollX: 0,
+        scrollY: -window.scrollY,
+        windowWidth: document.documentElement.clientWidth,
+        windowHeight: document.documentElement.scrollHeight,
+        ignoreElements: (el) =>
+          el.classList?.contains("status-recorder-wrapper") ||
+          el.tagName === "VIDEO"
       });
 
-      const videoEl = document.createElement("video");
-      videoEl.srcObject = new MediaStream(stream.getVideoTracks());
-      videoEl.muted = true;
-      videoEl.play();
+      // Scale snapshot so its width == 720 output pixels
+      const snapW = snapshot.width;
+      const snapH = snapshot.height;
+      const drawScale = OUT_W / snapW;
+      const pageHInOut = snapH * drawScale; // page height in output px
+      const maxScroll = Math.max(0, pageHInOut - OUT_H);
 
       const canvas = canvasRef.current;
       const ctx = canvas.getContext("2d");
-      canvas.width = 720;
-      canvas.height = 1280;
+      canvas.width = OUT_W;
+      canvas.height = OUT_H;
 
       const canvasStream = canvas.captureStream(30);
+      let mixed = canvasStream;
+      if (audioDest && audioDest.stream.getAudioTracks().length) {
+        mixed = new MediaStream([
+          ...canvasStream.getVideoTracks(),
+          ...audioDest.stream.getAudioTracks()
+        ]);
+      }
 
       const selectedMime = getBestSupportedMimeType();
       const isMp4 = selectedMime.includes("mp4");
       const cleanBlobType = isMp4 ? "video/mp4" : "video/webm";
-      const ext = isMp4 ? "mp4" : "webm"; 
-      
-      const rawCreator = page?.creatorName || "Kumar";
-      const rawPartner = page?.partnerName || "Bhumi";
-      const cleanCreator = rawCreator.replace(/[^a-zA-Z0-9]/g, "_");
-      const cleanPartner = rawPartner.replace(/[^a-zA-Z0-9]/g, "_");
-      const fileName = `Love_Sanctuary_Mobile_30s_${cleanCreator}_and_${cleanPartner}.${ext}`;
-
+      const ext = isMp4 ? "mp4" : "webm";
+      const cleanCreator = (page?.creatorName || "Kumar").replace(/[^a-zA-Z0-9]/g, "_");
+      const cleanPartner = (page?.partnerName || "Bhumi").replace(/[^a-zA-Z0-9]/g, "_");
+      const fileName = `Love_Sanctuary_Status_30s_${cleanCreator}_and_${cleanPartner}.${ext}`;
       setDownloadFileName(fileName);
-      setFileFormatLabel("MP4");
+      setFileFormatLabel(ext.toUpperCase());
 
-      let mixed = canvasStream;
-      try {
-        if (page?.audioUrl && window.AudioContext) {
-          const audioEl = new Audio(page.audioUrl);
-          audioEl.crossOrigin = "anonymous";
-          audioEl.volume = 0.5;
-          await audioEl.play().catch(() => {});
-          const ac = new AudioContext();
-          const dest = ac.createMediaStreamDestination();
-          const src = ac.createMediaElementSource(audioEl);
-          src.connect(dest);
-          src.connect(ac.destination);
-          
-          if (stream.getAudioTracks().length > 0) {
-              const domAudio = ac.createMediaStreamSource(new MediaStream(stream.getAudioTracks()));
-              domAudio.connect(dest);
-          }
-          mixed = new MediaStream([...canvasStream.getVideoTracks(), ...dest.stream.getAudioTracks()]);
-          setTimeout(() => audioEl.pause(), 30500);
-        } else if (stream.getAudioTracks().length > 0) {
-            mixed = new MediaStream([...canvasStream.getVideoTracks(), ...stream.getAudioTracks()]);
-        }
-      } catch (err) {
-        console.warn("Audio mixing failed:", err);
-      }
-
-      const rec = new MediaRecorder(mixed, { mimeType: selectedMime });
+      const rec = new MediaRecorder(mixed, {
+        mimeType: selectedMime,
+        videoBitsPerSecond: 4000000
+      });
       const chunks = [];
       rec.ondataavailable = (e) => {
         if (e.data.size) chunks.push(e.data);
       };
 
       rec.onstop = () => {
+        try {
+          audioEl && audioEl.pause();
+          ac && ac.close();
+        } catch (e) { }
         const blob = new Blob(chunks, { type: cleanBlobType });
         const file = new File([blob], fileName, { type: cleanBlobType });
         setFinalFile(file);
-        
         const url = URL.createObjectURL(blob);
         setBlobUrl(url);
         setPhase("ready");
 
-        videoEl.pause();
-        videoEl.srcObject = null;
-
+        // Auto download (works on Android Chrome; iOS needs the Share button)
         try {
           const link = document.createElement("a");
           link.href = url;
-          link.setAttribute("download", fileName);
           link.download = fileName;
           document.body.appendChild(link);
           link.click();
           setTimeout(() => document.body.removeChild(link), 300);
-        } catch (e) {}
+        } catch (e) { }
       };
 
+      const DURATION = 30000;
+      const HOLD = 1500; // pause at top and bottom so it feels natural
       setPhase("recording");
-      rec.start();
-      
+      rec.start(1000);
       const start = performance.now();
-      window.scrollTo({ top: 0, behavior: "smooth" });
 
-      const drawScrollTick = () => {
+      const tick = () => {
         const elapsed = performance.now() - start;
-        const t = Math.min(1, Math.max(0, elapsed / 30000));
-        
+        const t = Math.min(1, elapsed / DURATION);
         setProgress(Math.round(t * 100));
-        
-        const maxScroll = Math.max(0, document.body.scrollHeight - window.innerHeight);
-        const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-        window.scrollTo(0, maxScroll * ease);
-        
-        // CINEMATIC BLURRED LETTERBOX COMPOSITION FOR 9:16 MOBILE
-        const vw = videoEl.videoWidth;
-        const vh = videoEl.videoHeight;
-        if (vw && vh) {
-          // 1. Draw severely blurred background filling the canvas
-          ctx.filter = "blur(40px) brightness(0.4)";
-          
-          const sourceRatio = vw / vh;
-          const targetRatio = 720 / 1280;
-          let bx, by, bw, bh;
-          if (sourceRatio > targetRatio) {
-            bh = vh;
-            bw = vh * targetRatio;
-            bx = (vw - bw) / 2;
-            by = 0;
-          } else {
-            bw = vw;
-            bh = vw / targetRatio;
-            bx = 0;
-            by = (vh - bh) / 2;
-          }
-          ctx.drawImage(videoEl, bx, by, bw, bh, 0, 0, 720, 1280);
 
-          // 2. Draw perfectly scaled, uncropped screen in the center (Object-Fit: Contain)
-          ctx.filter = "none";
-          let drawW, drawH, drawX, drawY;
-          if (sourceRatio > targetRatio) {
-            // Input is wider than 9:16 (e.g. desktop monitor) - clamp width, center vertically
-            drawW = 720;
-            drawH = 720 * (vh / vw);
-            drawX = 0;
-            drawY = (1280 - drawH) / 2;
-          } else {
-            // Input is narrower than 9:16 (e.g. real mobile phone) - clamp height, center horizontally
-            drawH = 1280;
-            drawW = 1280 * (vw / vh);
-            drawX = (720 - drawW) / 2;
-            drawY = 0;
-          }
-          ctx.drawImage(videoEl, 0, 0, vw, vh, drawX, drawY, drawW, drawH);
-        }
+        // hold at top, ease-in-out scroll, hold at bottom
+        const scrollT = Math.min(1, Math.max(0, (elapsed - HOLD) / (DURATION - HOLD * 2)));
+        const ease = scrollT < 0.5 ? 2 * scrollT * scrollT : -1 + (4 - 2 * scrollT) * scrollT;
+        const scrollY = maxScroll * ease;
+
+        ctx.fillStyle = bodyBg;
+        ctx.fillRect(0, 0, OUT_W, OUT_H);
+        // source rect in snapshot pixels
+        const srcY = scrollY / drawScale;
+        const srcH = Math.min(OUT_H / drawScale, snapH - srcY);
+        ctx.drawImage(snapshot, 0, srcY, snapW, srcH, 0, 0, OUT_W, srcH * drawScale);
+
+        // thin progress bar
+        ctx.fillStyle = "rgba(255,255,255,0.5)";
+        ctx.fillRect(40, OUT_H - 40, (OUT_W - 80) * t, 5);
 
         if (t < 1) {
-          requestAnimationFrame(drawScrollTick);
+          requestAnimationFrame(tick);
         } else {
           rec.stop();
-          stream.getTracks().forEach(track => track.stop());
-          window.scrollTo({ top: 0, behavior: "smooth" });
         }
       };
-      
-      requestAnimationFrame(drawScrollTick);
-
+      requestAnimationFrame(tick);
     } catch (err) {
-      console.error("Mobile recording failed, retreating to fallback.", err);
+      console.error("Page snapshot recording failed, using fallback.", err);
+      try {
+        audioEl && audioEl.pause();
+      } catch (e) { }
       await runCanvasFallbackRecording();
     }
   }
@@ -385,7 +381,7 @@ export default function StatusRecorder({ page, photos }) {
         const fileName = `Love_Sanctuary_Status_${cleanCreator}_and_${cleanPartner}.png`;
         const file = new File([blob], fileName, { type: "image/png" });
         setFinalFile(file);
-        
+
         const url = URL.createObjectURL(blob);
         setBlobUrl(url);
         setDownloadFileName(fileName);
@@ -399,7 +395,7 @@ export default function StatusRecorder({ page, photos }) {
           document.body.appendChild(a);
           a.click();
           setTimeout(() => document.body.removeChild(a), 300);
-        } catch (e) {}
+        } catch (e) { }
       }, "image/png");
       return;
     }
@@ -411,7 +407,7 @@ export default function StatusRecorder({ page, photos }) {
       if (page?.audioUrl && window.AudioContext) {
         const audioEl = new Audio(page.audioUrl);
         audioEl.crossOrigin = "anonymous";
-        await audioEl.play().catch(() => {});
+        await audioEl.play().catch(() => { });
         const ac = new AudioContext();
         const dest = ac.createMediaStreamDestination();
         const src = ac.createMediaElementSource(audioEl);
@@ -443,7 +439,7 @@ export default function StatusRecorder({ page, photos }) {
       const blob = new Blob(chunks, { type: cleanBlobType });
       const file = new File([blob], fileName, { type: cleanBlobType });
       setFinalFile(file);
-      
+
       const url = URL.createObjectURL(blob);
       setBlobUrl(url);
       setPhase("ready");
@@ -455,21 +451,21 @@ export default function StatusRecorder({ page, photos }) {
         document.body.appendChild(link);
         link.click();
         setTimeout(() => document.body.removeChild(link), 300);
-      } catch (e) {}
+      } catch (e) { }
     };
 
     setPhase("recording");
     rec.start();
     const start = performance.now();
 
-    const tick = (now) => {
+    const tick = () => {
       const elapsed = Math.max(0, performance.now() - start);
       const t = Math.min(1, elapsed / 30000);
       const timeSec = elapsed / 1000;
-      
+
       setProgress(Math.round(t * 100));
       drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, certBgImg });
-      
+
       if (t < 1) {
         requestAnimationFrame(tick);
       } else {
@@ -498,27 +494,33 @@ export default function StatusRecorder({ page, photos }) {
             style={{ width: "100%", background: "linear-gradient(135deg, #e61c5d, #9e0c3b)", color: "#ffffff", fontWeight: 700, padding: "14px 20px", borderRadius: "30px", border: "none", cursor: "pointer", fontSize: "1.05rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", boxShadow: "0 10px 30px rgba(230, 28, 93, 0.4)", transition: "all 0.3s ease" }}
           >
             <span className="btn-icon-left">📱</span>
-            <span className="btn-text">Mobile Status (9:16 Video)</span>
+            <span className="btn-text">
+              {isMobileDevice() ? "Download Status (30s Video)" : "Mobile Status (9:16 Video)"}
+            </span>
             <span className="btn-icon-right">→</span>
           </button>
-          
-          <button
-            className="target-primary-btn glow"
-            type="button"
-            onClick={recordDesktop}
-            style={{ width: "100%", background: "linear-gradient(135deg, #6d28d9, #4c1d95)", color: "#ffffff", fontWeight: 700, padding: "14px 20px", borderRadius: "30px", border: "none", cursor: "pointer", fontSize: "1.05rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", boxShadow: "0 10px 30px rgba(109, 40, 217, 0.4)", transition: "all 0.3s ease" }}
-          >
-            <span className="btn-icon-left">💻</span>
-            <span className="btn-text">Desktop Video (Full Screen)</span>
-            <span className="btn-icon-right">→</span>
-          </button>
+
+          {!isMobileDevice() && (
+            <button
+              className="target-primary-btn glow"
+              type="button"
+              onClick={recordDesktop}
+              style={{ width: "100%", background: "linear-gradient(135deg, #6d28d9, #4c1d95)", color: "#ffffff", fontWeight: 700, padding: "14px 20px", borderRadius: "30px", border: "none", cursor: "pointer", fontSize: "1.05rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", boxShadow: "0 10px 30px rgba(109, 40, 217, 0.4)", transition: "all 0.3s ease" }}
+            >
+              <span className="btn-icon-left">💻</span>
+              <span className="btn-text">Desktop Video (Full Screen)</span>
+              <span className="btn-icon-right">→</span>
+            </button>
+          )}
         </div>
       )}
 
       {(phase === "loading" || phase === "recording") && (
         <div style={{ width: "100%", background: "rgba(230, 28, 93, 0.15)", border: "1px solid rgba(230, 28, 93, 0.4)", borderRadius: "20px", padding: "16px", textAlign: "center", color: "#fff" }}>
           <div style={{ fontSize: "1.1rem", fontWeight: 600, marginBottom: "8px" }}>
-            🎥 Recording 30s Sanctuary Page Status Video... {progress}%
+            {phase === "loading"
+              ? "⏳ Preparing your page snapshot..."
+              : `🎥 Recording 30s Sanctuary Page Status Video... ${progress}%`}
           </div>
           <div style={{ width: "100%", height: "8px", background: "rgba(255,255,255,0.2)", borderRadius: "4px", overflow: "hidden" }}>
             <div style={{ width: `${progress}%`, height: "100%", background: "linear-gradient(90deg, #ff4d8d, #ff75a0)", transition: "width 0.2s linear" }} />
@@ -534,7 +536,7 @@ export default function StatusRecorder({ page, photos }) {
           <div style={{ color: "#4cd964", fontWeight: 600, textAlign: "center" }}>
             ✅ 30-Second Full Sanctuary Page Video Downloaded! ({fileFormatLabel})
           </div>
-          
+
           <button
             className="target-primary-btn glow"
             onClick={handleMobileShare}
@@ -564,7 +566,7 @@ export default function StatusRecorder({ page, photos }) {
       {phase === "image" && (
         <div style={{ width: "100%", textAlign: "center", color: "#fff", display: "flex", flexDirection: "column", gap: "10px", alignItems: "center" }}>
           <p style={{ color: "#ffd166", fontWeight: 600 }}>✅ Story Card Image Downloaded!</p>
-          
+
           <button
             className="target-primary-btn glow"
             onClick={handleMobileShare}
@@ -572,11 +574,11 @@ export default function StatusRecorder({ page, photos }) {
           >
             <span>📱</span> Share / Save to Gallery
           </button>
-          
-          <a 
-            className="secondary-btn" 
-            href={blobUrl} 
-            download={downloadFileName} 
+
+          <a
+            className="secondary-btn"
+            href={blobUrl}
+            download={downloadFileName}
             style={{ width: "100%", color: "rgba(255,255,255,0.9)", fontWeight: 600, padding: "10px", borderRadius: "30px", textDecoration: "none", textAlign: "center", display: "inline-block", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)" }}
           >
             📥 Manual Download ({downloadFileName})
@@ -698,9 +700,9 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, cert
     const dropY = (j * 110 + timeSec * fallSpeed) % (h + 100);
     const swayX = Math.sin(timeSec * 0.5 + j) * 40;
     const dropX = ((j * 85) % w) + swayX;
-    
+
     // Avoid drawing directly behind Center text
-    if (dropX > w/2 - 120 && dropX < w/2 + 120 && dropY > 50 && dropY < 250) {
+    if (dropX > w / 2 - 120 && dropX < w / 2 + 120 && dropY > 50 && dropY < 250) {
       continue;
     }
 
@@ -767,7 +769,7 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, cert
     ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
     ctx.fillRect(-35, -132, 70, 24);
 
-    // Photo inside frame (USE FIXED COVER IMAGE RESING WITHOUT DISTORTION)
+    // Photo inside frame
     drawCoverImage(ctx, creator, -88, -108, 176, 180, 0);
 
     // Name Tag Pill
@@ -800,7 +802,7 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, cert
     ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
     ctx.fillRect(-35, -132, 70, 24);
 
-    // Photo inside frame (USE FIXED COVER IMAGE RESING WITHOUT DISTORTION)
+    // Photo inside frame
     drawCoverImage(ctx, partner, -88, -108, 176, 180, 0);
 
     // Name Tag Pill
