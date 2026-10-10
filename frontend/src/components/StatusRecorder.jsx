@@ -195,6 +195,12 @@ export default function StatusRecorder({ page, photos }) {
       console.error("Screen recording setup failed.", err);
       await runCanvasFallbackRecording();
     }
+  }
+
+  async function recordMobile() {
+    setError("");
+    setProgress(0);
+    setPhase("loading");
     await runCanvasFallbackRecording();
   }
 
