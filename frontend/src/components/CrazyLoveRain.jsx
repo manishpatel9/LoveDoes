@@ -1,10 +1,42 @@
 import React, { useMemo } from "react";
 
 // Highly biased towards emojis! (Less than 10% chance of getting a word)
+
 const EMOJI_PALETTE = [
-  "💖", "💖", "💖", "💕", "💕", "💕", "✨", "✨", 
-  "💌", "🌹", "💖", "💕", "✨", "💕", "💖", 
-  "I Love You", "Forever"
+  "💖", "💖", "💖", "💕", "💕", "💕", "✨", "✨",
+  "💌", "🌹", "💖", "💕", "✨", "💕", "💖",
+  "❤️", "💗", "💓", "💞", "💘", "💝", "💟",
+  "😍", "🥰", "😘", "💋", "🫶", "💑", "👩‍❤️‍👨",
+  "💏", "🌹", "🌷", "🌸", "🦋", "🌙", "⭐", "🕊️",
+
+  "❤️ I Love You ❤️",
+  "Forever", "♾️ Forever ♾️",
+  "My Forever 💖",
+  "In Every Lifetime ♾️",
+  "My Soulmate 💕",
+  "My Safe Place 🫶",
+  "Only You ❤️",
+  "My Everything 💗",
+  "Forever Yours 💍",
+  "Two Hearts, One Soul 💞",
+  "My Always 💖",
+  "Endless Us ♾️",
+  "💕 You & Me 💕",
+  "💖 My Love 💖",
+  "😘 Sweetheart",
+  "🥰 My Person",
+  "💋 True Love",
+  "🌹 Beloved",
+  "💍 Soulmates",
+  "🫶 Together Forever",
+  "❤️ My Heart",
+  "✨ My Destiny",
+  "💞 Better Together",
+  "♾️ Eternal Love",
+  "💌 Just Us",
+  "💗 My World",
+  "🌹 Always Yours",
+  "💖 Endless Love"
 ];
 
 export default function CrazyLoveRain() {
@@ -13,16 +45,16 @@ export default function CrazyLoveRain() {
       const text = EMOJI_PALETTE[Math.floor(Math.random() * EMOJI_PALETTE.length)];
       const delay = Math.random() * 10;
       const duration = 14 + Math.random() * 8;
-      
+
       let left = Math.random() * 100;
       if (left > 40 && left < 60) {
         left += (Math.random() > 0.5 ? 20 : -20);
       }
 
-      const isText = text.length > 2; 
+      const isText = text.length > 2;
       const size = isText ? (0.9 + Math.random() * 0.3) : (1.1 + Math.random() * 0.5);
       const swayType = Math.random() > 0.5 ? "love-rain-sway-left" : "love-rain-sway-right";
-      
+
       return { id: i, text, left, delay, duration, isText, size, swayType };
     });
   }, []);
@@ -78,7 +110,7 @@ export default function CrazyLoveRain() {
           100% { transform: translate3d(-10px, 110vh, 0) rotate(-2deg); opacity: 0; }
         }
       `}</style>
-      
+
       <div className="love-rain-overlay">
         {drops.map(drop => (
           <div
