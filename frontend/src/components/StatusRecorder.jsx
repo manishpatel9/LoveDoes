@@ -246,37 +246,46 @@ export default function StatusRecorder({ page, photos }) {
         audioContext = null;
         audioDestination = null;
       }
+      
+      // CRITICAL FIX: Ensure viewport is entirely reset to top before taking snapshot
+      // html2canvas fails or renders a black box if the page is mid-scroll.
+      window.scrollTo(0, 0);
+      await new Promise((r) => setTimeout(r, 600)); // allow DOM reflows to settle
 
-      const pageWidth = Math.max(document.documentElement.clientWidth, window.innerWidth);
-      const pageHeight = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+      // Target the exact content shell to bypass body gradient/fixed position bugs
+      const targetElement = document.querySelector(".love-shell") || document.body;
+      const pageWidth = targetElement.scrollWidth || window.innerWidth;
+      const pageHeight = targetElement.scrollHeight || window.innerHeight;
 
       const outputWidth = 720;
       const outputHeight = 1280;
-      const maxPixels = 16000000;
+      const maxPixels = 12000000; // Safe limit for older Android/iOS WebKit WebGL planes
 
-      let snapshotScale = outputWidth / pageWidth;
+      let snapshotScale = outputWidth / Math.max(pageWidth, 300);
 
       if (pageWidth * pageHeight * snapshotScale * snapshotScale > maxPixels) {
         snapshotScale = Math.sqrt(maxPixels / (pageWidth * pageHeight)) * 0.9;
       }
 
-      const snapshot = await html2canvas(document.body, {
-        scale: snapshotScale,
+      const snapshot = await html2canvas(targetElement, {
+        scale: Math.max(0.5, snapshotScale),
         useCORS: true,
         allowTaint: false,
-        backgroundColor: getComputedStyle(document.body).backgroundColor || "#1a0209",
+        backgroundColor: "#1a0610", // hardcode pure background to bypass gradient errors
         logging: false,
         width: pageWidth,
         height: pageHeight,
         windowWidth: pageWidth,
         windowHeight: pageHeight,
+        scrollY: 0,
         scrollX: 0,
-        scrollY: -window.scrollY,
         ignoreElements: (element) => {
           return (
             element.classList?.contains("status-recorder-wrapper") ||
             element.tagName === "VIDEO" ||
-            element.tagName === "CANVAS"
+            element.tagName === "CANVAS" ||
+            element.classList?.contains("ambient") || // Ignore fixed ambient wrappers
+            element.classList?.contains("sparkle-layer")
           );
         }
       });
