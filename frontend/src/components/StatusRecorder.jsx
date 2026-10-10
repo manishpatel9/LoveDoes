@@ -317,22 +317,27 @@ export default function StatusRecorder({ page, photos }) {
 
     const start = performance.now();
 
-    const tick = () => {
+    const DURATION_SCROLL = 30000;
+    const DURATION_RECORD = 30500; // Extra 500ms padding to guarantee 0:30s output in galleries
+
+    const tickId = setInterval(() => {
       const elapsed = Math.max(0, performance.now() - start);
-      const t = Math.min(1, elapsed / 30000);
+      
+      // 't' controls the animation completion (0 to 1) over 30s
+      const t = Math.min(1, elapsed / DURATION_SCROLL);
       const timeSec = elapsed / 1000;
 
+      // Update UI percent specifically up to 100%
       setProgress(Math.round(t * 100));
+      
       drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, certBgImg, memoryImgs });
 
-      if (t < 1) {
-        requestAnimationFrame(tick);
-      } else {
+      // Stop once we surpass the guaranteed recording padded duration
+      if (elapsed >= DURATION_RECORD) {
+        clearInterval(tickId);
         recorder.stop();
       }
-    };
-
-    requestAnimationFrame(tick);
+    }, 1000 / 30); // Force strictly paced 30 FPS pumping
   }
 
   return (
