@@ -282,7 +282,7 @@ export default function StatusRecorder({ page, photos }) {
     const selectedMime = getBestSupportedMimeType();
     const isMp4 = selectedMime.includes("mp4");
     const cleanBlobType = isMp4 ? "video/mp4" : "video/webm";
-    const ext = "mp4";
+    const ext = isMp4 ? "mp4" : "webm"; // CRITICAL: NEVER spoof WebM as MP4. Android fails to decode the video track!
 
     const fileName = `Love_Sanctuary_Status_30s_${cleanCreator}_and_${cleanPartner}.${ext}`;
 
@@ -350,7 +350,7 @@ export default function StatusRecorder({ page, photos }) {
         className="status-canvas"
         width="720"
         height="1280"
-        style={{ display: "none" }}
+        style={{ position: "absolute", left: "-9999px", top: "-9999px", visibility: "hidden" }}
       />
 
       {phase === "idle" && (
