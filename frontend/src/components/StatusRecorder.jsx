@@ -41,7 +41,31 @@ export default function StatusRecorder({ page, photos }) {
   const [downloadFileName, setDownloadFileName] = useState("");
   const [fileFormatLabel, setFileFormatLabel] = useState("MP4");
   const [error, setError] = useState("");
+  const [finalFile, setFinalFile] = useState(null);
   const canvasRef = useRef(null);
+
+  const handleMobileShare = async () => {
+    if (finalFile && navigator.canShare && navigator.canShare({ files: [finalFile] })) {
+      try {
+        await navigator.share({
+          files: [finalFile],
+          title: "Our Love Status",
+          text: "💕 Here is our beautiful love status!"
+        });
+      } catch (err) {
+        console.log("User cancelled share or share failed", err);
+      }
+    } else {
+       // Fallback for browsers that don't support file sharing
+       const a = document.createElement("a");
+       a.href = blobUrl;
+       a.download = downloadFileName;
+       a.target = "_blank";
+       document.body.appendChild(a);
+       a.click();
+       document.body.removeChild(a);
+    }
+  };
 
   async function record() {
     setError("");
@@ -104,18 +128,24 @@ export default function StatusRecorder({ page, photos }) {
 
       rec.onstop = () => {
         const blob = new Blob(chunks, { type: cleanBlobType });
+        const file = new File([blob], fileName, { type: cleanBlobType });
+        setFinalFile(file);
+        
         const url = URL.createObjectURL(blob);
         setBlobUrl(url);
         setPhase("ready");
 
         // AUTOMATIC DIRECT DOWNLOAD TRIGGER WITH FULL SANCTUARY PAGE RECORDING
-        const link = document.createElement("a");
-        link.href = url;
-        link.setAttribute("download", fileName);
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        setTimeout(() => document.body.removeChild(link), 100);
+        // On mobile, this often gets blocked silently. The user will use the share button.
+        try {
+          const link = document.createElement("a");
+          link.href = url;
+          link.setAttribute("download", fileName);
+          link.download = fileName;
+          document.body.appendChild(link);
+          link.click();
+          setTimeout(() => document.body.removeChild(link), 300);
+        } catch (e) {}
       };
 
       setPhase("recording");
@@ -181,19 +211,24 @@ export default function StatusRecorder({ page, photos }) {
       drawFrame(ctx, w, h, 1, 30, { creator, partner, couple, page, certBgImg });
       canvas.toBlob((blob) => {
         if (!blob) return;
-        const url = URL.createObjectURL(blob);
         const fileName = `Love_Sanctuary_Status_${cleanCreator}_and_${cleanPartner}.png`;
+        const file = new File([blob], fileName, { type: "image/png" });
+        setFinalFile(file);
+        
+        const url = URL.createObjectURL(blob);
         setBlobUrl(url);
         setDownloadFileName(fileName);
         setFileFormatLabel("PNG");
         setPhase("image");
 
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => document.body.removeChild(a), 100);
+        try {
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => document.body.removeChild(a), 300);
+        } catch (e) {}
       }, "image/png");
       return;
     }
@@ -235,16 +270,21 @@ export default function StatusRecorder({ page, photos }) {
 
     rec.onstop = () => {
       const blob = new Blob(chunks, { type: cleanBlobType });
+      const file = new File([blob], fileName, { type: cleanBlobType });
+      setFinalFile(file);
+      
       const url = URL.createObjectURL(blob);
       setBlobUrl(url);
       setPhase("ready");
 
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      setTimeout(() => document.body.removeChild(link), 100);
+      try {
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => document.body.removeChild(link), 300);
+      } catch (e) {}
     };
 
     setPhase("recording");
@@ -310,13 +350,24 @@ export default function StatusRecorder({ page, photos }) {
           <div style={{ color: "#4cd964", fontWeight: 600, textAlign: "center" }}>
             ✅ 30-Second Full Sanctuary Page Video Downloaded! ({fileFormatLabel})
           </div>
-          <a
+          
+          <button
             className="target-primary-btn glow"
+            onClick={handleMobileShare}
+            style={{ width: "100%", background: "linear-gradient(135deg, #10b981, #047857)", color: "#ffffff", fontWeight: 700, padding: "14px 20px", borderRadius: "30px", border: "none", cursor: "pointer", display: "inline-flex", justifyContent: "center", alignItems: "center", gap: "8px" }}
+          >
+            <span>📱</span> Share / Save to Gallery
+          </button>
+
+          <a
+            className="secondary-btn"
             href={blobUrl}
             download={downloadFileName}
-            style={{ width: "100%", background: "linear-gradient(135deg, #10b981, #047857)", color: "#ffffff", fontWeight: 700, padding: "14px 20px", borderRadius: "30px", textDecoration: "none", textAlign: "center", display: "inline-block" }}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ width: "100%", color: "rgba(255,255,255,0.9)", fontWeight: 600, padding: "10px", borderRadius: "30px", textDecoration: "none", textAlign: "center", display: "inline-block", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)" }}
           >
-            📥 Download Sanctuary Status Video ({downloadFileName})
+            📥 Manual Download ({downloadFileName})
           </a>
           <button
             type="button"
@@ -329,10 +380,26 @@ export default function StatusRecorder({ page, photos }) {
       )}
 
       {phase === "image" && (
-        <div style={{ width: "100%", textAlign: "center", color: "#fff" }}>
-          <p style={{ color: "#ffd166" }}>Story Card Image Downloaded!</p>
-          <a className="btn glow" href={blobUrl} download={downloadFileName}>
-            Re-download Story Card ({downloadFileName})
+        <div style={{ width: "100%", textAlign: "center", color: "#fff", display: "flex", flexDirection: "column", gap: "10px", alignItems: "center" }}>
+          <p style={{ color: "#ffd166", fontWeight: 600 }}>✅ Story Card Image Downloaded!</p>
+          
+          <button
+            className="target-primary-btn glow"
+            onClick={handleMobileShare}
+            style={{ width: "100%", background: "linear-gradient(135deg, #10b981, #047857)", color: "#ffffff", fontWeight: 700, padding: "14px 20px", borderRadius: "30px", border: "none", cursor: "pointer", display: "inline-flex", justifyContent: "center", alignItems: "center", gap: "8px" }}
+          >
+            <span>📱</span> Share / Save to Gallery
+          </button>
+          
+          <a 
+            className="secondary-btn" 
+            href={blobUrl} 
+            download={downloadFileName} 
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ width: "100%", color: "rgba(255,255,255,0.9)", fontWeight: 600, padding: "10px", borderRadius: "30px", textDecoration: "none", textAlign: "center", display: "inline-block", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)" }}
+          >
+            📥 Manual Download ({downloadFileName})
           </a>
         </div>
       )}
