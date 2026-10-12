@@ -1149,175 +1149,115 @@ function drawAvatarFallback(ctx, x, y, w, h, name = "Love", radius = 0) {
   ctx.restore();
 }
 
-// Background Ambient Rain (slanted streaks, floating rose petals, and fireflies)
+// Background Ambient Rain (soft subtle streaks)
 function drawLoveRainBackground(ctx, w, h, timeSec) {
   ctx.save();
-  // 40 slanted rain streaks
-  ctx.strokeStyle = "rgba(255, 220, 235, 0.24)";
+  // 18 subtle slanted rain streaks
+  ctx.strokeStyle = "rgba(255, 220, 235, 0.18)";
   ctx.lineWidth = 1.2;
-  for (let i = 0; i < 40; i++) {
-    const rx = (i * 37 + timeSec * 48) % (w + 40) - 20;
-    const ry = (i * 79 + timeSec * 430) % (h + 80) - 40;
-    const rLen = 22 + (i % 4) * 8;
+  for (let i = 0; i < 18; i++) {
+    const rx = (i * 41 + timeSec * 45) % (w + 40) - 20;
+    const ry = (i * 89 + timeSec * 380) % (h + 80) - 40;
+    const rLen = 20 + (i % 3) * 6;
     ctx.beginPath();
     ctx.moveTo(rx, ry);
-    ctx.lineTo(rx + 6, ry + rLen);
+    ctx.lineTo(rx + 5, ry + rLen);
     ctx.stroke();
-  }
-
-  // Soft floating background petals
-  const BG_PETALS = ["🌸", "🌹", "✨", "💖", "🌸", "🌹"];
-  for (let p = 0; p < 18; p++) {
-    const char = BG_PETALS[p % BG_PETALS.length];
-    const py = (p * 85 + timeSec * (35 + (p % 4) * 10)) % (h + 100) - 50;
-    const px = ((p * 71) % w) + Math.sin(timeSec * 0.7 + p) * 30;
-    ctx.save();
-    ctx.font = "16px sans-serif";
-    ctx.textAlign = "center";
-    ctx.globalAlpha = 0.35 + Math.sin(timeSec * 1.5 + p) * 0.2;
-    ctx.translate(px, py);
-    ctx.rotate(Math.sin(timeSec * 0.6 + p) * 0.4);
-    ctx.fillText(char, 0, 0);
-    ctx.restore();
   }
   ctx.restore();
 }
 
-// Foreground Cascading Love Rain & Words (Plentiful Emojis, Floating Romantic Quotes, Rising Hearts)
+// Foreground Love Rain & Words (Gentle, elegant, 12 emojis & only 2 words at a time for smooth 60fps)
 function drawLoveRainForeground(ctx, w, h, timeSec) {
   ctx.save();
 
-  // 1. Slanted glistening rain streaks
-  ctx.save();
-  for (let k = 0; k < 32; k++) {
-    const rx = (k * 43 + timeSec * 58) % (w + 50) - 25;
-    const ry = (k * 79 + timeSec * 500) % (h + 90) - 45;
-    const rLen = 20 + (k % 4) * 8;
-    const alpha = 0.2 + (k % 3) * 0.14;
-    ctx.strokeStyle = `rgba(255, 235, 248, ${alpha})`;
-    ctx.lineWidth = 1.3;
+  // 1. Subtle, lightweight rain streaks (16 streaks)
+  ctx.strokeStyle = "rgba(255, 235, 248, 0.16)";
+  ctx.lineWidth = 1.1;
+  for (let k = 0; k < 16; k++) {
+    const rx = (k * 47 + timeSec * 50) % (w + 40) - 20;
+    const ry = (k * 83 + timeSec * 420) % (h + 80) - 40;
+    const rLen = 18 + (k % 3) * 6;
     ctx.beginPath();
     ctx.moveTo(rx, ry);
-    ctx.lineTo(rx + 6, ry + rLen);
+    ctx.lineTo(rx + 5, ry + rLen);
     ctx.stroke();
   }
-  ctx.restore();
 
-  // 2. Rising Love Particles / Floating Ascending Hearts (Depth effect)
-  const RISE_EMOJIS = ["💖", "💕", "✨", "💗", "💓", "🌸", "⭐", "🫶", "💞", "💘"];
-  for (let j = 0; j < 20; j++) {
-    const riseEmoji = RISE_EMOJIS[j % RISE_EMOJIS.length];
-    const riseSpeed = 38 + (j % 5) * 12;
-    const riseY = (h + 60) - ((j * 75 + timeSec * riseSpeed) % (h + 120));
-    const riseSway = Math.sin(timeSec * 1.6 + j * 0.9) * 16;
-    const riseX = ((j * 67 + 25) % (w - 50)) + 25 + riseSway;
-    const riseSize = 15 + (j % 3) * 4;
-    const riseAlpha = 0.45 + Math.sin(timeSec * 2 + j) * 0.25;
+  // 2. Exactly 12 Elegant Falling Emojis (spaced gently away from center polaroids)
+  const EMOJIS = ["💖", "💕", "✨", "🌹", "💌", "❤️", "💞", "🌸", "🫶", "✨", "💖", "💕"];
+  for (let i = 0; i < EMOJIS.length; i++) {
+    const emoji = EMOJIS[i];
+    const speed = 72 + (i % 4) * 16;
+    const cycleH = h + 120;
+    const y = (i * (cycleH / EMOJIS.length) + timeSec * speed) % cycleH - 60;
 
-    ctx.save();
-    ctx.font = `${riseSize}px sans-serif`;
-    ctx.textAlign = "center";
-    ctx.globalAlpha = Math.max(0.2, riseAlpha);
-    ctx.shadowColor = "rgba(255, 79, 129, 0.7)";
-    ctx.shadowBlur = 8;
-    ctx.translate(riseX, riseY);
-    ctx.fillText(riseEmoji, 0, 0);
-    ctx.restore();
-  }
+    // Distribute towards outer left and right sides so polaroid photos & faces stay clear
+    const isLeft = i % 2 === 0;
+    const baseOffset = isLeft ? 55 + (i * 29) % 150 : w - 205 + (i * 29) % 150;
+    const sway = Math.sin(timeSec * 1.4 + i * 0.9) * 18;
+    const x = baseOffset + sway;
 
-  // 3. Many Cascading & Swaying Love Emojis (64 active animated emojis)
-  const EMOJIS = [
-    "💖", "💕", "✨", "🌹", "💌", "❤️", "💗", "💓", "💞", "💘",
-    "💝", "💟", "😍", "🥰", "😘", "💋", "🫶", "💑", "💍", "👑",
-    "🌸", "🌷", "🦋", "⭐", "🕊️", "💐", "💏", "💖", "💕", "✨",
-    "❤️", "💗", "💓", "💞", "💘", "🌹", "💌", "🥰", "🫶", "💋"
-  ];
-
-  for (let i = 0; i < 64; i++) {
-    const emoji = EMOJIS[i % EMOJIS.length];
-    const speed = 65 + (i % 7) * 20; // 65px/s to 185px/s varied speeds
-    const y = (i * 58 + timeSec * speed) % (h + 140) - 70;
-    const swayAmp = 20 + (i % 5) * 5;
-    const sway = Math.sin(timeSec * (1.2 + (i % 3) * 0.4) + i * 0.75) * swayAmp;
-    const x = ((i * 47 + 20) % (w - 40)) + 20 + sway;
-    const baseSize = 20 + (i % 5) * 4; // 20px to 36px
-    const pulseScale = 1 + Math.sin(timeSec * 2.8 + i * 1.4) * 0.12;
-    const rot = Math.sin(timeSec * 1.4 + i) * 0.26;
+    const size = 22 + (i % 3) * 4;
+    const rot = Math.sin(timeSec * 1.2 + i) * 0.2;
 
     ctx.save();
-    ctx.font = `${Math.round(baseSize * pulseScale)}px sans-serif`;
+    ctx.font = `${size}px sans-serif`;
     ctx.textAlign = "center";
-    ctx.shadowColor = i % 2 === 0 ? "rgba(255, 42, 117, 0.75)" : "rgba(255, 209, 102, 0.75)";
-    ctx.shadowBlur = 10;
     ctx.translate(x, y);
     ctx.rotate(rot);
     ctx.fillText(emoji, 0, 0);
     ctx.restore();
   }
 
-  // 4. Many Animating Romantic Love Words (28 active animated phrases matching CrazyLoveRain)
-  const PHRASES = [
-    "❤️ I Love You ❤️",
+  // 3. Exactly 2 Words on Screen at a Time (Smooth cycling, positioned on outer flanks)
+  const WORDS_POOL = [
+    "❤️ I Love You",
     "Forever & Always ♾️",
     "My Soulmate 💕",
-    "💕 You & Me 💕",
     "Together Forever 🫶",
-    "My Forever 💖",
-    "Only You ❤️",
     "Two Hearts, One Soul 💞",
-    "My Safe Place 🫶",
     "In Every Lifetime ♾️",
-    "My Everything 💗",
-    "Forever Yours 💍",
-    "💖 My Love 💖",
-    "🥰 My Person",
-    "✨ My Destiny",
-    "💋 True Love",
-    "♾️ Eternal Love",
-    "💗 My World",
-    "🌹 Always Yours",
-    "💞 Better Together",
-    "💍 Soulmates",
-    "💌 Just Us",
-    "💖 Endless Love",
-    "❤️ My Heart",
-    "😘 Sweetheart",
-    "🌹 Beloved",
-    "👑 Forever Bound 👑",
-    "🕊️ Soul Connected"
+    "My Everything 💖",
+    "Only You ❤️",
+    "✨ Pure Love ✨",
+    "Eternal Love ♾️"
   ];
 
-  for (let p = 0; p < PHRASES.length; p++) {
-    const phrase = PHRASES[p];
-    const speed = 46 + (p % 4) * 12; // gentle, graceful float (46px/s to 82px/s)
-    const y = (p * 85 + timeSec * speed) % (h + 160) - 70;
-    const sway = Math.sin(timeSec * 0.85 + p * 1.2) * 18;
-    const x = ((p * 115 + 35) % (w - 230)) + 25 + sway;
-    const tilt = Math.sin(timeSec * 0.9 + p) * 0.08;
-    const shimmerAlpha = 0.8 + Math.sin(timeSec * 2.5 + p) * 0.18;
+  const WORD_SLOTS = 2;
+  const wordCycleH = h + 240;
+  const wordSpeed = 50;
+
+  for (let s = 0; s < WORD_SLOTS; s++) {
+    const totalDistance = timeSec * wordSpeed + s * (wordCycleH / WORD_SLOTS);
+    const y = (totalDistance % wordCycleH) - 100;
+
+    const cycleCount = Math.floor(totalDistance / wordCycleH);
+    const phraseIdx = (s + cycleCount * WORD_SLOTS) % WORDS_POOL.length;
+    const phrase = WORDS_POOL[phraseIdx];
+
+    // Slot 0 on left flank (~115px), Slot 1 on right flank (~w - 115px) - NEVER blocking photos
+    const sway = Math.sin(timeSec * 0.9 + s * 1.5) * 14;
+    const x = s === 0 ? 115 + sway : (w - 115) + sway;
+    const tilt = Math.sin(timeSec * 0.8 + s) * 0.05;
 
     ctx.save();
-    ctx.font = "italic 600 13.5px 'Playfair Display', Georgia, serif";
+    ctx.font = "italic 600 13px 'Playfair Display', Georgia, serif";
     ctx.textAlign = "center";
     const txtW = ctx.measureText(phrase).width;
 
     ctx.translate(x, y);
     ctx.rotate(tilt);
 
-    // Romantic translucent glass pill
-    ctx.fillStyle = `rgba(32, 5, 20, ${0.72 * shimmerAlpha})`;
-    ctx.strokeStyle = `rgba(255, 130, 185, ${0.65 * shimmerAlpha})`;
-    ctx.lineWidth = 1.1;
-    ctx.shadowColor = "rgba(255, 42, 117, 0.65)";
-    ctx.shadowBlur = 10;
-    roundRect(ctx, -txtW / 2 - 12, -16, txtW + 24, 25, 12.5);
+    // Clean, lightweight translucent glass pill
+    ctx.fillStyle = "rgba(25, 4, 15, 0.72)";
+    ctx.strokeStyle = "rgba(255, 120, 175, 0.55)";
+    ctx.lineWidth = 1;
+    roundRect(ctx, -txtW / 2 - 10, -14, txtW + 20, 24, 12);
     ctx.fill();
     ctx.stroke();
 
-    // Glowing romantic text
-    ctx.shadowColor = "rgba(0, 0, 0, 0.9)";
-    ctx.shadowBlur = 4;
-    ctx.fillStyle = p % 2 === 0 ? "#ffd1dc" : "#ffe0e9";
+    ctx.fillStyle = "#ffd3df";
     ctx.fillText(phrase, 0, 2);
     ctx.restore();
   }
