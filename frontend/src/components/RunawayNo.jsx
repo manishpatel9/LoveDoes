@@ -12,26 +12,26 @@ const TAUNTS = [
 ];
 
 const NO_LABELS = [
-  "NO 😜",
-  "Nope 🙈",
-  "Maybe? 🥺",
-  "Can't click! 💨",
-  "Wait... 😳",
-  "Try again! 🏃",
+  "No way 😜",
+  "Nope! 🙈",
+  "Too fast! 💨",
+  "Try YES! 🥰",
+  "Can't catch! 🏃",
+  "Not an option 💍",
 ];
 
 export default function RunawayNo({ onTaunt }) {
   const areaRef = useRef(null);
   const [pos, setPos] = useState({ left: "auto", right: "14px", top: "calc(50% - 24px)" });
-  const [label, setLabel] = useState("NO 😜");
+  const [label, setLabel] = useState("No 😜");
 
   function flee() {
     const area = areaRef.current;
     if (!area) return;
     const w = area.clientWidth;
     const h = area.clientHeight;
-    const bw = 118;
-    const bh = 52;
+    const bw = 115;
+    const bh = 46;
 
     let left = 12;
     let top = 10;
@@ -73,7 +73,8 @@ export default function RunawayNo({ onTaunt }) {
         }}
         aria-label="No — it might wander away"
       >
-        {label}
+        <span className="no-btn-icon">🏃</span>
+        <span className="no-btn-text">{label}</span>
       </button>
     </div>
   );
