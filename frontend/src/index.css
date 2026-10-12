@@ -2896,31 +2896,47 @@ main {
   filter: drop-shadow(0 0 6px #ffd166);
 }
 
-/* PLAYFUL FROSTED RUNAWAY NO BUTTON */
+/* HIGH-VISIBILITY, ATTRACTIVE, MODERN FROSTED CRYSTAL NO BUTTON */
 .no-btn {
   position: absolute !important;
-  background: rgba(35, 7, 24, 0.88) !important;
-  backdrop-filter: blur(14px) !important;
-  -webkit-backdrop-filter: blur(14px) !important;
-  border: 1.8px solid rgba(255, 130, 185, 0.7) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  /* Luminous Frosted Crystal / Pearlescent Glass Background */
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 220, 235, 0.18) 100%) !important;
+  backdrop-filter: blur(20px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(200%) !important;
+  /* Radiant White & Rose Gold Border */
+  border: 2px solid rgba(255, 255, 255, 0.9) !important;
   border-radius: 999px !important;
-  padding: 12px 26px !important;
-  color: #ffb8cd !important;
+  padding: 13px 30px !important;
+  /* Crystal Clear, High-Contrast Typography */
+  color: #ffffff !important;
   font-family: 'Poppins', sans-serif !important;
-  font-size: 0.98rem !important;
+  font-size: 1.05rem !important;
   font-weight: 700 !important;
-  letter-spacing: 0.03em !important;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.55), 0 0 18px rgba(255, 42, 117, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.4) !important;
+  letter-spacing: 0.04em !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.65), 0 0 12px rgba(255, 126, 168, 0.8) !important;
+  /* Luminous Outer Bloom & Glass Reflex Inner Shadow */
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 28px rgba(255, 255, 255, 0.45), 0 0 15px rgba(255, 79, 129, 0.4), inset 0 2px 3px rgba(255, 255, 255, 0.85), inset 0 -2px 6px rgba(0, 0, 0, 0.2) !important;
   cursor: pointer !important;
   pointer-events: auto !important;
   z-index: 4 !important;
-  transition: left 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.2s ease !important;
+  transition: left 0.34s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.34s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.22s ease, box-shadow 0.22s ease !important;
   white-space: nowrap !important;
+  user-select: none !important;
 }
 
 .no-btn:hover {
-  transform: scale(1.08) !important;
-  border-color: rgba(255, 255, 255, 0.9) !important;
+  transform: scale(1.1) !important;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 230, 245, 0.3) 100%) !important;
+  border-color: #ffffff !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 35px rgba(255, 255, 255, 0.7), 0 0 25px rgba(255, 79, 129, 0.6), inset 0 2px 4px rgba(255, 255, 255, 1) !important;
+}
+
+.no-btn:active {
+  transform: scale(0.96) !important;
 }
 
 /* BOTTOM PEDESTAL GUARANTEE SEAL */

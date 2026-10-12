@@ -22,7 +22,7 @@ const NO_LABELS = [
 
 export default function RunawayNo({ onTaunt }) {
   const areaRef = useRef(null);
-  const [pos, setPos] = useState({ left: "calc(50% + 145px)", top: "calc(50% - 22px)" });
+  const [pos, setPos] = useState({ left: "auto", right: "14px", top: "calc(50% - 24px)" });
   const [label, setLabel] = useState("NO 😜");
 
   function flee() {
@@ -30,22 +30,26 @@ export default function RunawayNo({ onTaunt }) {
     if (!area) return;
     const w = area.clientWidth;
     const h = area.clientHeight;
-    const bw = 115;
-    const bh = 50;
+    const bw = 118;
+    const bh = 52;
 
-    let left = 8;
-    let top = 8;
-    for (let i = 0; i < 20; i += 1) {
-      left = 8 + Math.random() * Math.max(8, w - bw - 16);
-      top = 8 + Math.random() * Math.max(8, h - bh - 16);
+    let left = 12;
+    let top = 10;
+    for (let i = 0; i < 24; i += 1) {
+      left = 12 + Math.random() * Math.max(12, w - bw - 24);
+      top = 10 + Math.random() * Math.max(10, h - bh - 20);
       const cx = w / 2;
       const cy = h / 2;
       // Keep clear of the center YES button
-      const coversYes = Math.abs(left + bw / 2 - cx) < 110 && Math.abs(top + bh / 2 - cy) < 45;
+      const coversYes = Math.abs(left + bw / 2 - cx) < 115 && Math.abs(top + bh / 2 - cy) < 48;
       if (!coversYes) break;
     }
 
-    setPos({ left: `${left}px`, top: `${top}px` });
+    // Strict clamping to keep 100% visible within arena borders
+    left = Math.max(10, Math.min(left, w - bw - 10));
+    top = Math.max(8, Math.min(top, h - bh - 8));
+
+    setPos({ left: `${left}px`, right: "auto", top: `${top}px` });
     setLabel(NO_LABELS[Math.floor(Math.random() * NO_LABELS.length)]);
     onTaunt?.(TAUNTS[Math.floor(Math.random() * TAUNTS.length)]);
   }
@@ -55,7 +59,7 @@ export default function RunawayNo({ onTaunt }) {
       <button
         type="button"
         className="btn no-btn"
-        style={{ left: pos.left, top: pos.top }}
+        style={{ left: pos.left, right: pos.right, top: pos.top }}
         onMouseEnter={flee}
         onPointerDown={(e) => {
           e.preventDefault();
