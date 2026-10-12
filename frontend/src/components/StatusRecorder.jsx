@@ -677,11 +677,7 @@ export default function StatusRecorder({ page, photos }) {
       
       drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, sunsetBgImg, page, certBgImg, memoryImgs });
 
-      if (videoTrack && typeof videoTrack.requestFrame === "function") {
-        try {
-          videoTrack.requestFrame();
-        } catch { }
-      }
+      // Canvas captureStream(30) automatically pushes 30 FPS frames into the stream.
 
       // Stop once we surpass the guaranteed recording padded duration
       if (elapsed >= DURATION_RECORD) {
@@ -1184,22 +1180,22 @@ function drawLoveRainForeground(ctx, w, h, timeSec) {
     ctx.stroke();
   }
 
-  // 2. Exactly 12 Elegant Falling Emojis (spaced gently away from center polaroids)
+  // 2. Exactly 12 Elegant Falling Emojis (smooth continuous cascading flow)
   const EMOJIS = ["💖", "💕", "✨", "🌹", "💌", "❤️", "💞", "🌸", "🫶", "✨", "💖", "💕"];
   for (let i = 0; i < EMOJIS.length; i++) {
     const emoji = EMOJIS[i];
-    const speed = 72 + (i % 4) * 16;
+    const speed = 125 + (i % 4) * 22; // Smooth, lively falling speed (125 - 191 px/sec)
     const cycleH = h + 120;
     const y = (i * (cycleH / EMOJIS.length) + timeSec * speed) % cycleH - 60;
 
     // Distribute towards outer left and right sides so polaroid photos & faces stay clear
     const isLeft = i % 2 === 0;
     const baseOffset = isLeft ? 55 + (i * 29) % 150 : w - 205 + (i * 29) % 150;
-    const sway = Math.sin(timeSec * 1.4 + i * 0.9) * 18;
+    const sway = Math.sin(timeSec * 1.8 + i * 0.9) * 18;
     const x = baseOffset + sway;
 
     const size = 22 + (i % 3) * 4;
-    const rot = Math.sin(timeSec * 1.2 + i) * 0.2;
+    const rot = Math.sin(timeSec * 1.5 + i) * 0.22;
 
     ctx.save();
     ctx.font = `${size}px sans-serif`;
@@ -1210,7 +1206,7 @@ function drawLoveRainForeground(ctx, w, h, timeSec) {
     ctx.restore();
   }
 
-  // 3. Exactly 2 Words on Screen at a Time (Smooth cycling, positioned on outer flanks)
+  // 3. Exactly 2-3 Words on Screen at a Time (Continuously moving at ~105px/sec, no pauses)
   const WORDS_POOL = [
     "❤️ I Love You",
     "Forever & Always ♾️",
@@ -1224,9 +1220,9 @@ function drawLoveRainForeground(ctx, w, h, timeSec) {
     "Eternal Love ♾️"
   ];
 
-  const WORD_SLOTS = 2;
-  const wordCycleH = h + 240;
-  const wordSpeed = 50;
+  const WORD_SLOTS = 3;
+  const wordCycleH = h + 220; // 1500px
+  const wordSpeed = 105; // 105 px/sec: smooth, graceful ~14s full transit
 
   for (let s = 0; s < WORD_SLOTS; s++) {
     const totalDistance = timeSec * wordSpeed + s * (wordCycleH / WORD_SLOTS);
@@ -1236,10 +1232,11 @@ function drawLoveRainForeground(ctx, w, h, timeSec) {
     const phraseIdx = (s + cycleCount * WORD_SLOTS) % WORDS_POOL.length;
     const phrase = WORDS_POOL[phraseIdx];
 
-    // Slot 0 on left flank (~115px), Slot 1 on right flank (~w - 115px) - NEVER blocking photos
-    const sway = Math.sin(timeSec * 0.9 + s * 1.5) * 14;
-    const x = s === 0 ? 115 + sway : (w - 115) + sway;
-    const tilt = Math.sin(timeSec * 0.8 + s) * 0.05;
+    // Left flank (~115px), right flank (~w - 115px), or alternating: NEVER blocking photos
+    const isLeft = (s + cycleCount) % 2 === 0;
+    const sway = Math.sin(timeSec * 1.2 + s * 1.4) * 14;
+    const x = isLeft ? 115 + sway : (w - 115) + sway;
+    const tilt = Math.sin(timeSec * 1.1 + s) * 0.05;
 
     ctx.save();
     ctx.font = "italic 600 13px 'Playfair Display', Georgia, serif";
@@ -1319,35 +1316,43 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, sunsetBgIm
   // Ambient Background Rain & Falling Petals
   drawLoveRainBackground(ctx, w, h, timeSec);
 
-  // 2. CAMERA SCROLL TIMING (Shows Celebration Screen first, then Certificate)
+  // 2. CAMERA SCROLL TIMING (Continuous Cinematic Floating Movement - No Dead Pauses)
   const SCENE_OFFSET = 1280;
   let camY = 0;
 
   if (!hasExtra) {
-    if (timeSec < 12.5) {
-      camY = 0; // Scene 1: Celebration Card
+    if (timeSec < 12.0) {
+      // Scene 1: Subtle, cinematic continuous drift down so it never feels frozen
+      const p = timeSec / 12.0;
+      camY = p * 40;
     } else if (timeSec < 15.5) {
-      const p = (timeSec - 12.5) / 3.0;
+      // Seamless cinematic glide to Certificate
+      const p = (timeSec - 12.0) / 3.5;
       const ease = p < 0.5 ? 2 * p * p : -1 + (4 - 2 * p) * p;
-      camY = SCENE_OFFSET * ease;
+      camY = 40 + (SCENE_OFFSET - 40) * ease;
     } else {
-      camY = SCENE_OFFSET; // Scene 2: Official Certificate
+      // Scene 2: Continuous royal pan across the certificate
+      const p = (timeSec - 15.5) / 15.0;
+      camY = SCENE_OFFSET + p * 50;
     }
   } else {
-    if (timeSec < 10) {
-      camY = 0;
+    if (timeSec < 9.5) {
+      const p = timeSec / 9.5;
+      camY = p * 30;
     } else if (timeSec < 12.5) {
-      const p = (timeSec - 10) / 2.5;
+      const p = (timeSec - 9.5) / 3.0;
       const ease = p < 0.5 ? 2 * p * p : -1 + (4 - 2 * p) * p;
-      camY = SCENE_OFFSET * ease;
-    } else if (timeSec < 21) {
-      camY = SCENE_OFFSET;
-    } else if (timeSec < 23.5) {
-      const p = (timeSec - 21) / 2.5;
+      camY = 30 + (SCENE_OFFSET - 30) * ease;
+    } else if (timeSec < 21.0) {
+      const p = (timeSec - 12.5) / 8.5;
+      camY = SCENE_OFFSET + p * 35;
+    } else if (timeSec < 24.0) {
+      const p = (timeSec - 21.0) / 3.0;
       const ease = p < 0.5 ? 2 * p * p : -1 + (4 - 2 * p) * p;
-      camY = SCENE_OFFSET + SCENE_OFFSET * ease;
+      camY = (SCENE_OFFSET + 35) + (SCENE_OFFSET - 35) * ease;
     } else {
-      camY = SCENE_OFFSET * 2;
+      const p = (timeSec - 24.0) / 6.5;
+      camY = SCENE_OFFSET * 2 + p * 30;
     }
   }
 

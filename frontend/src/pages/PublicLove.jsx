@@ -353,8 +353,8 @@ export default function PublicLove() {
   const memories = page.memories || [];
   const gallery = [
     creator && { src: creator.file_url, title: page.creatorName },
-    partner && { src: partner.file_url, title: page.partnerName },
     couple && { src: couple.file_url, title: "Us Together" },
+    partner && { src: partner.file_url, title: page.partnerName },
     ...memories.filter((m) => m.photo_url).map((m) => ({ src: m.photo_url, title: m.title })),
   ].filter(Boolean);
 
@@ -728,30 +728,70 @@ export default function PublicLove() {
             </ScreenFade>
           )}
 
-          {/* ───────── 6. PROPOSAL SCREEN ───────── */}
+          {/* ───────── 6. PROPOSAL SCREEN (LUXURY & ULTRA-MODERN) ───────── */}
           {screen === "proposal" && (
             <ScreenFade screenKey="proposal">
-              <div className="glass-panel target-exact-welcome-card compact-one-page">
-                <motion.div
-                  className="compact-proposal-heart"
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 1.2, repeat: Infinity }}
-                >
-                  💖
-                </motion.div>
-                <h1 className="compact-proposal-headline">Will you be my Valentine?</h1>
-                <p className="taunt love-taunt">{taunt}</p>
-                <div className="proposal-actions">
-                  <motion.button
-                    className="target-start-story-btn compact-btn yes-glow"
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); setScreen("finale"); }}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
+              <div className="glass-panel target-exact-welcome-card compact-one-page proposal-luxury-card">
+                {/* Top Glowing Halo & 3D Proposal Jewel */}
+                <div className="proposal-heart-stage">
+                  <div className="proposal-heart-halo" />
+                  <motion.div
+                    className="compact-proposal-heart"
+                    animate={{
+                      scale: [1, 1.18, 1],
+                      filter: [
+                        "drop-shadow(0 0 25px rgba(255, 42, 117, 0.8))",
+                        "drop-shadow(0 0 50px rgba(255, 42, 117, 1)) drop-shadow(0 0 20px #ffd166)",
+                        "drop-shadow(0 0 25px rgba(255, 42, 117, 0.8))",
+                      ],
+                    }}
+                    transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
                   >
-                    YES ❤️
-                  </motion.button>
-                  <RunawayNo onTaunt={setTaunt} />
+                    💖
+                  </motion.div>
+                </div>
+
+                {/* Eyebrow Ribbon Badge */}
+                <div className="target-pill-badge proposal-eyebrow-pill">
+                  <span className="badge-heart">✨</span>
+                  <span className="badge-text">A QUESTION FOR YOUR HEART</span>
+                  <span className="badge-heart">✨</span>
+                </div>
+
+                {/* Romantic Headline */}
+                <h1 className="compact-proposal-headline">Will you be my Valentine?</h1>
+
+                {/* Playful Interactive Taunt / Subtitle Pill */}
+                <div className="proposal-taunt-pill">
+                  <span className="taunt-sparkle">💕</span>
+                  <p className="taunt love-taunt">{taunt || "Choose carefully... Your heart already knows ❤️"}</p>
+                  <span className="taunt-sparkle">💕</span>
+                </div>
+
+                {/* ─── BOTTOM SECTION: ULTRA ATTRACTIVE & MODERN BUTTONS ─── */}
+                <div className="proposal-actions-container">
+                  <div className="proposal-actions">
+                    <motion.button
+                      className="proposal-yes-btn-luxury"
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setScreen("finale"); }}
+                      whileHover={{ scale: 1.08 }}
+                      whileTap={{ scale: 0.94 }}
+                    >
+                      <span className="yes-btn-shine-sweep" />
+                      <span className="yes-btn-icon">💖</span>
+                      <span className="yes-btn-text">YES, FOREVER!</span>
+                      <span className="yes-btn-sparkle">✨</span>
+                    </motion.button>
+                    <RunawayNo onTaunt={setTaunt} />
+                  </div>
+
+                  {/* Bottom Pedestal Guarantee Tag */}
+                  <div className="proposal-bottom-seal">
+                    <span className="seal-dot">♾️</span>
+                    <span>Only one choice leads to eternal happiness</span>
+                    <span className="seal-dot">💖</span>
+                  </div>
                 </div>
               </div>
             </ScreenFade>
