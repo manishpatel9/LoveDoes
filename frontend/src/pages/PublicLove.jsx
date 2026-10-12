@@ -775,13 +775,12 @@ export default function PublicLove() {
                       className="proposal-yes-btn-luxury"
                       type="button"
                       onClick={(e) => { e.stopPropagation(); setScreen("finale"); }}
-                      whileHover={{ scale: 1.08 }}
+                      whileHover={{ scale: 1.06 }}
                       whileTap={{ scale: 0.94 }}
                     >
                       <span className="yes-btn-shine-sweep" />
                       <span className="yes-btn-icon">💖</span>
-                      <span className="yes-btn-text">YES, FOREVER!</span>
-                      <span className="yes-btn-sparkle">✨</span>
+                      <span className="yes-btn-text">YES ❤️</span>
                     </motion.button>
                     <RunawayNo onTaunt={setTaunt} />
                   </div>
