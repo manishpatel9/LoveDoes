@@ -9427,66 +9427,50 @@ main {
   width: 100%;
 }
 
-.cert-100-twin-hearts {
-  font-size: clamp(0.65rem, 1.4vw, 1.1rem);
-  color: #c8a356;
-  line-height: 1;
-  margin-bottom: 1px;
-  filter: drop-shadow(0 1px 2px rgba(200, 163, 86, 0.5));
-}
-
 .cert-100-kicker {
-  font-family: 'Cinzel', 'Georgia', serif;
-  font-size: clamp(0.5rem, 0.95vw, 0.75rem);
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: clamp(0.52rem, 0.95vw, 0.76rem);
   font-weight: 700;
-  letter-spacing: 0.4em;
-  color: #70101f;
+  letter-spacing: 0.35em;
+  color: #c8a356;
   text-transform: uppercase;
-  margin-bottom: 1px;
+  margin-bottom: 2px;
 }
 
 .cert-100-sub-title {
-  font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
-  font-size: clamp(0.68rem, 1.5vw, 1.25rem);
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: clamp(0.72rem, 1.55vw, 1.25rem);
   font-weight: 700;
   color: #4a0913;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.16em;
   margin: 1px 0 0 0;
-  line-height: 1.1;
+  line-height: 1.15;
   text-transform: uppercase;
 }
 
 .cert-100-title {
   font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
-  font-size: clamp(1.25rem, 3.1vw, 2.5rem);
+  font-size: clamp(1.35rem, 3.2vw, 2.6rem);
   font-weight: 900;
   color: #4a0913;
-  letter-spacing: 0.05em;
-  margin: 0 0 2px 0;
+  letter-spacing: 0.08em;
+  margin: 0 0 4px 0;
   line-height: 1.1;
   white-space: nowrap;
   display: flex;
   align-items: center;
   justify-content: center;
-  text-shadow: 0 3px 6px rgba(74, 9, 19, 0.35), 0 0 2px rgba(200, 163, 86, 0.5);
-}
-
-.cert-title-heart {
-  font-size: 0.85em;
-  margin: -3px 2px 0 2px;
-  display: inline-flex;
-  align-items: center;
-  vertical-align: middle;
-  filter: drop-shadow(0 2px 6px rgba(184, 13, 34, 0.5));
+  text-shadow: 0 2px 5px rgba(74, 9, 19, 0.25), 0 0 1px rgba(200, 163, 86, 0.3);
 }
 
 .cert-100-divider {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
+  margin-bottom: 2px;
 }
 
 .cert-line {
@@ -9496,18 +9480,12 @@ main {
 }
 
 .cert-div-text {
-  font-family: 'Cinzel', 'Georgia', serif;
-  font-size: clamp(0.48rem, 0.9vw, 0.68rem);
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: clamp(0.48rem, 0.88vw, 0.68rem);
   font-weight: 700;
   letter-spacing: 0.32em;
   color: #70101f;
   text-transform: uppercase;
-}
-
-.cert-100-small-heart {
-  font-size: clamp(0.55rem, 0.95vw, 0.75rem);
-  color: #aa1024;
-  margin-top: 1px;
 }
 
 .cert-100-envelope-text {
@@ -9518,8 +9496,8 @@ main {
   display: flex;
   flex-direction: column;
   align-items: center;
-  font-family: 'Pinyon Script', 'Great Vibes', 'Caveat', cursive;
-  font-size: clamp(0.7rem, 1.4vw, 1.15rem);
+  font-family: 'Alex Brush', 'Great Vibes', cursive;
+  font-size: clamp(0.75rem, 1.5vw, 1.2rem);
   color: #2a1c15;
   line-height: 1.15;
   pointer-events: none;
@@ -9527,7 +9505,7 @@ main {
 }
 
 .cert-100-envelope-text .env-heart {
-  font-size: 0.8em;
+  font-size: 0.85em;
   color: #aa1024;
   margin-top: 1px;
 }
@@ -9537,30 +9515,28 @@ main {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 14px;
   width: 100%;
-  margin: 1px 0;
-}
-
-.cert-name-flourish {
-  font-size: clamp(0.9rem, 1.8vw, 1.4rem);
-  color: #c8a356;
+  margin: 2px 0;
 }
 
 .cert-100-script-name {
-  font-family: 'Pinyon Script', 'Great Vibes', 'Alex Brush', cursive;
-  font-size: clamp(2.1rem, 4.8vw, 4rem);
+  font-family: 'Alex Brush', 'Great Vibes', cursive;
+  font-size: clamp(2.3rem, 5.2vw, 4.3rem);
   font-weight: 400;
-  color: #660714;
+  color: #5c0816;
   line-height: 1;
-  text-shadow: 0 3px 14px rgba(102, 7, 20, 0.35), 0 0 1px rgba(200, 163, 86, 0.3);
+  text-shadow: 0 2px 6px rgba(92, 8, 22, 0.22);
 }
 
-.cert-100-heart-emblem {
-  font-size: clamp(1.1rem, 2.2vw, 1.9rem);
-  display: grid;
-  place-items: center;
-  filter: drop-shadow(0 4px 12px rgba(184, 13, 34, 0.5));
+.cert-100-ampersand {
+  font-family: 'Alex Brush', 'Great Vibes', cursive;
+  font-size: clamp(1.8rem, 3.8vw, 3.2rem);
+  font-style: italic;
+  color: #c8a356;
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(200, 163, 86, 0.4));
+  margin: 0 4px;
 }
 
 /* DECLARATION BODY */
@@ -9568,40 +9544,31 @@ main {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  max-width: 520px;
+  gap: 3px;
+  max-width: 530px;
 }
 
 .cert-100-p {
-  font-family: 'Cormorant Garamond', 'Georgia', serif;
+  font-family: 'Cormorant Garamond', Georgia, serif;
   font-style: italic;
-  font-size: clamp(0.68rem, 1.25vw, 0.98rem);
-  font-weight: 600;
-  color: #1a1012;
-  line-height: 1.35;
+  font-size: clamp(0.74rem, 1.3vw, 1.02rem);
+  font-weight: 500;
+  color: #2c161a;
+  line-height: 1.55;
   margin: 0;
-  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
-}
-
-.cert-script-highlight {
-  font-family: 'Pinyon Script', 'Great Vibes', 'Alex Brush', cursive;
-  font-style: normal;
-  font-size: 1.35em;
-  color: #8a0c1e;
-  font-weight: 400;
-  text-shadow: 0 1px 4px rgba(138, 12, 30, 0.2);
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.4);
 }
 
 .cert-100-together-forever {
-  font-family: 'Pinyon Script', 'Great Vibes', 'Alex Brush', cursive;
-  font-size: clamp(1.4rem, 2.8vw, 2.3rem);
+  font-family: 'Alex Brush', 'Great Vibes', cursive;
+  font-size: clamp(1.5rem, 3.1vw, 2.5rem);
   color: #5c0d18;
-  margin-top: 1px;
-  text-shadow: 0 2px 8px rgba(92, 13, 24, 0.25);
+  margin-top: 2px;
+  text-shadow: 0 1px 4px rgba(92, 13, 24, 0.2);
 }
 
 .cert-tf-flourish {
-  font-size: clamp(0.5rem, 0.85vw, 0.75rem);
+  font-size: clamp(0.48rem, 0.8vw, 0.72rem);
   color: #c8a356;
 }
 
@@ -9611,51 +9578,38 @@ main {
   align-items: flex-end;
   justify-content: space-between;
   width: 100%;
-  max-width: 440px;
-  margin-top: 1px;
+  max-width: 450px;
+  margin-top: 2px;
 }
 
 .cert-100-sig-col {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 140px;
+  width: 145px;
 }
 
 .cert-100-sig-script {
-  font-family: 'Pinyon Script', 'Great Vibes', 'Alex Brush', cursive;
-  font-size: clamp(1.2rem, 2.4vw, 1.85rem);
+  font-family: 'Alex Brush', 'Great Vibes', cursive;
+  font-size: clamp(1.35rem, 2.6vw, 2.1rem);
   color: #1a1a1a;
   margin-bottom: 2px;
   white-space: nowrap;
 }
 
 .cert-100-sig-line {
-  position: relative;
   width: 100%;
-  height: 1.5px;
-  background: #8b0d1e;
+  height: 1.2px;
+  background: #b89047;
   margin-bottom: 4px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.sig-heart-dot {
-  position: absolute;
-  top: -7px;
-  font-size: 0.62rem;
-  color: #8b0d1e;
-  background: #fdf7e7;
-  padding: 0 4px;
 }
 
 .cert-100-sig-role {
-  font-family: 'Georgia', serif;
-  font-size: clamp(0.48rem, 0.9vw, 0.68rem);
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: clamp(0.46rem, 0.82vw, 0.65rem);
   font-weight: 700;
-  letter-spacing: 0.16em;
-  color: #4a0812;
+  letter-spacing: 0.22em;
+  color: #5a101b;
 }
 
 .cert-100-sig-sub {

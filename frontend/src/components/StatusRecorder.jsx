@@ -1787,150 +1787,127 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, sunsetBgIm
   ctx.textAlign = "center";
 
   ctx.fillStyle = "#c8a356";
-  ctx.font = "normal 22px Georgia, serif";
-  ctx.fillText("─── ༺ ♥ ༻ ───", w / 2, certY + 68);
-
-  ctx.fillStyle = "#70101f";
-  ctx.font = "700 14px 'Cinzel', Georgia, serif";
-  ctx.fillText("— THE OFFICIAL —", w / 2, certY + 104);
+  ctx.font = "normal 14px 'Cinzel', Georgia, serif";
+  ctx.letterSpacing = "4px";
+  ctx.fillText("✦ THE OFFICIAL ✦", w / 2, certY + 95);
 
   ctx.fillStyle = "#4a0913";
-  ctx.font = "bold 28px 'Cinzel', 'Playfair Display', Georgia, serif";
-  ctx.fillText("CERTIFICATE OF", w / 2, certY + 146);
+  ctx.font = "bold 26px 'Cinzel', 'Playfair Display', Georgia, serif";
+  ctx.letterSpacing = "3px";
+  ctx.fillText("CERTIFICATE OF", w / 2, certY + 140);
 
-  // ETERNAL L❤️VE
-  ctx.font = "900 44px 'Cinzel', Georgia, serif";
-  const part1 = "ETERNAL L";
-  const part2 = "VE";
-  const w1 = ctx.measureText(part1).width;
-  const w2 = ctx.measureText(part2).width;
-  const heartW = 38;
-  const totalCertTitleW = w1 + heartW + w2;
-  const startCertTitleX = w / 2 - totalCertTitleW / 2;
-
-  ctx.textAlign = "left";
-  ctx.fillStyle = "#4a0913";
-  ctx.fillText(part1, startCertTitleX, certY + 208);
-
-  ctx.font = "38px sans-serif";
-  ctx.fillText("❤️", startCertTitleX + w1 - 2, certY + 204);
-
-  ctx.font = "900 44px 'Cinzel', Georgia, serif";
-  ctx.fillText(part2, startCertTitleX + w1 + heartW - 4, certY + 208);
+  // ETERNAL LOVE (Clean, majestic typography)
+  ctx.font = "900 42px 'Cinzel', 'Playfair Display', Georgia, serif";
+  ctx.letterSpacing = "5px";
+  ctx.fillText("ETERNAL LOVE", w / 2, certY + 195);
 
   // — THIS CERTIFIES THAT —
   ctx.textAlign = "center";
   ctx.strokeStyle = "#c8a356";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(w / 2 - 190, certY + 252);
-  ctx.lineTo(w / 2 - 90, certY + 252);
+  ctx.moveTo(w / 2 - 180, certY + 240);
+  ctx.lineTo(w / 2 - 80, certY + 240);
   ctx.stroke();
 
   ctx.beginPath();
-  ctx.moveTo(w / 2 + 90, certY + 252);
-  ctx.lineTo(w / 2 + 190, certY + 252);
+  ctx.moveTo(w / 2 + 80, certY + 240);
+  ctx.lineTo(w / 2 + 180, certY + 240);
   ctx.stroke();
 
   ctx.fillStyle = "#70101f";
   ctx.font = "700 13px 'Cinzel', Georgia, serif";
-  ctx.fillText("THIS CERTIFIES THAT", w / 2, certY + 256);
+  ctx.letterSpacing = "4px";
+  ctx.fillText("THIS CERTIFIES THAT", w / 2, certY + 244);
 
-  ctx.font = "16px sans-serif";
-  ctx.fillStyle = "#aa1024";
-  ctx.fillText("♥", w / 2, certY + 280);
-
-  // Couple Names Row: Creator ❤️ Partner
-  ctx.font = "normal 52px 'Pinyon Script', 'Great Vibes', cursive";
-  ctx.fillStyle = "#660714";
+  // Couple Names Row: Creator & Partner
+  ctx.font = "normal 52px 'Alex Brush', 'Great Vibes', cursive";
+  ctx.fillStyle = "#5c0816";
   ctx.shadowColor = "rgba(110, 9, 23, 0.25)";
   ctx.shadowBlur = 10;
 
   const leftNW = ctx.measureText(creatorName).width;
   const rightNW = ctx.measureText(partnerName).width;
-  const spacing = 55;
+  const ampersandSpacing = 40;
 
-  ctx.fillText(creatorName, w / 2 - (spacing + leftNW / 2), certY + 360);
+  ctx.fillText(creatorName, w / 2 - (ampersandSpacing + leftNW / 2), certY + 340);
 
-  ctx.font = "34px sans-serif";
-  ctx.fillStyle = "#b80d22";
-  ctx.shadowBlur = 12;
-  ctx.fillText("❤️", w / 2, certY + 352);
+  // Center Golden Ampersand
+  ctx.shadowBlur = 0;
+  ctx.font = "italic 40px 'Great Vibes', 'Alex Brush', cursive";
+  ctx.fillStyle = "#c8a356";
+  ctx.fillText("&", w / 2, certY + 338);
 
-  ctx.font = "normal 52px 'Pinyon Script', 'Great Vibes', cursive";
-  ctx.fillStyle = "#660714";
+  ctx.font = "normal 52px 'Alex Brush', 'Great Vibes', cursive";
+  ctx.fillStyle = "#5c0816";
   ctx.shadowBlur = 10;
-  ctx.fillText(partnerName, w / 2 + (spacing + rightNW / 2), certY + 360);
+  ctx.fillText(partnerName, w / 2 + (ampersandSpacing + rightNW / 2), certY + 340);
   ctx.shadowBlur = 0;
 
-  // Declaration Body Paragraphs
+  // Declaration Body Paragraphs (Harmonious Editorial Typography)
   ctx.font = "italic 17px 'Cormorant Garamond', Georgia, serif";
-  ctx.fillStyle = "#1f1614";
-  ctx.fillText("are hereby declared to be forever bound in love,", w / 2, certY + 425);
-  ctx.fillText("in heart, in soul and in every lifetime.", w / 2, certY + 455);
+  ctx.fillStyle = "#2c161a";
+  ctx.fillText("are hereby declared to be forever united in sacred love,", w / 2, certY + 410);
+  ctx.fillText("in heart, in soul, and in every lifetime.", w / 2, certY + 438);
 
-  ctx.font = "italic 21px 'Pinyon Script', 'Great Vibes', cursive";
-  ctx.fillStyle = "#8a0c1e";
-  ctx.fillText("This bond is certified as timeless, unconditional, and everlasting,", w / 2, certY + 508);
-
-  ctx.font = "italic 16px 'Cormorant Garamond', Georgia, serif";
-  ctx.fillStyle = "#1f1614";
-  ctx.fillText("sealed with trust, respect, care and a love that grows stronger", w / 2, certY + 545);
-  ctx.fillText("with every heartbeat.", w / 2, certY + 572);
+  ctx.fillText("This bond is certified as timeless, unconditional, and everlasting —", w / 2, certY + 490);
+  ctx.fillText("sealed with profound devotion, trust, and a love that deepens", w / 2, certY + 518);
+  ctx.fillText("with every heartbeat.", w / 2, certY + 544);
 
   // Together Forever Calligraphy
-  ctx.font = "normal 44px 'Pinyon Script', 'Great Vibes', cursive";
+  ctx.font = "normal 42px 'Alex Brush', 'Great Vibes', cursive";
   ctx.fillStyle = "#5c0d18";
-  ctx.fillText("Together Forever", w / 2, certY + 638);
+  ctx.fillText("Together Forever", w / 2, certY + 615);
+
+  ctx.strokeStyle = "#c8a356";
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(w / 2 - 120, certY + 640);
+  ctx.lineTo(w / 2 + 120, certY + 640);
+  ctx.stroke();
 
   ctx.fillStyle = "#c8a356";
-  ctx.font = "normal 18px Georgia, serif";
-  ctx.fillText("─── ༺ ♥ ༻ ───", w / 2, certY + 672);
+  ctx.font = "11px 'Cinzel', Georgia, serif";
+  ctx.fillText("❖", w / 2, certY + 644);
 
   // Signatures Row
   // Left: Creator
-  ctx.font = "normal 34px 'Pinyon Script', 'Great Vibes', cursive";
+  ctx.font = "normal 34px 'Alex Brush', 'Great Vibes', cursive";
   ctx.fillStyle = "#1a1a1a";
-  ctx.fillText(creatorName, w / 2 - 165, certY + 750);
+  ctx.fillText(creatorName, w / 2 - 165, certY + 730);
 
-  ctx.strokeStyle = "#8b0d1e";
-  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = "#b89047";
+  ctx.lineWidth = 1.2;
   ctx.beginPath();
-  ctx.moveTo(w / 2 - 240, certY + 772);
-  ctx.lineTo(w / 2 - 90, certY + 772);
+  ctx.moveTo(w / 2 - 240, certY + 750);
+  ctx.lineTo(w / 2 - 90, certY + 750);
   ctx.stroke();
 
-  ctx.font = "12px sans-serif";
-  ctx.fillStyle = "#aa1024";
-  ctx.fillText("♥", w / 2 - 165, certY + 776);
-
-  ctx.font = "bold 12px 'Cinzel', Georgia, serif";
-  ctx.fillStyle = "#4a0812";
-  ctx.fillText("PARTNER IN LIFE", w / 2 - 165, certY + 796);
+  ctx.font = "bold 11px 'Cinzel', Georgia, serif";
+  ctx.fillStyle = "#5a101b";
+  ctx.letterSpacing = "2px";
+  ctx.fillText("SOULMATE & PARTNER", w / 2 - 165, certY + 772);
 
   // Right: Partner
-  ctx.font = "normal 34px 'Pinyon Script', 'Great Vibes', cursive";
+  ctx.font = "normal 34px 'Alex Brush', 'Great Vibes', cursive";
   ctx.fillStyle = "#1a1a1a";
-  ctx.fillText(partnerName, w / 2 + 165, certY + 750);
+  ctx.fillText(partnerName, w / 2 + 165, certY + 730);
 
   ctx.beginPath();
-  ctx.moveTo(w / 2 + 90, certY + 772);
-  ctx.lineTo(w / 2 + 240, certY + 772);
+  ctx.moveTo(w / 2 + 90, certY + 750);
+  ctx.lineTo(w / 2 + 240, certY + 750);
   ctx.stroke();
 
-  ctx.font = "12px sans-serif";
-  ctx.fillStyle = "#aa1024";
-  ctx.fillText("♥", w / 2 + 165, certY + 776);
-
-  ctx.font = "bold 12px 'Cinzel', Georgia, serif";
-  ctx.fillStyle = "#4a0812";
-  ctx.fillText("PARTNER IN LIFE", w / 2 + 165, certY + 796);
+  ctx.font = "bold 11px 'Cinzel', Georgia, serif";
+  ctx.fillStyle = "#5a101b";
+  ctx.letterSpacing = "2px";
+  ctx.fillText("SOULMATE & PARTNER", w / 2 + 165, certY + 772);
 
   // Envelope Note (Bottom Left Corner)
   ctx.save();
   ctx.translate(certX + 110, certY + 865);
   ctx.rotate((-12 * Math.PI) / 180);
-  ctx.font = "normal 22px 'Pinyon Script', 'Great Vibes', cursive";
+  ctx.font = "normal 22px 'Alex Brush', 'Great Vibes', cursive";
   ctx.fillStyle = "#2a1c15";
   ctx.fillText("Forever Looks Better With You ♡", 0, 0);
   ctx.restore();
