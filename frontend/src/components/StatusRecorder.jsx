@@ -13,37 +13,258 @@ function loadImage(src) {
       return;
     }
 
+    let resolved = false;
+    const timer = setTimeout(() => {
+      if (!resolved) {
+        resolved = true;
+        resolve(null);
+      }
+    }, 4000);
+
+    const done = (img) => {
+      if (!resolved) {
+        resolved = true;
+        clearTimeout(timer);
+        resolve(img);
+      }
+    };
+
+    let fullSrc = src;
+    if (typeof src === "string" && src.startsWith("/")) {
+      fullSrc = `${window.location.origin}${src}`;
+    }
+
     const img = new Image();
     img.crossOrigin = "anonymous";
-    
-    img.onload = () => resolve(img);
-    
+    img.onload = () => done(img);
+
     img.onerror = () => {
       if (src.startsWith("data:") || src.startsWith("blob:")) {
-        resolve(null);
+        done(null);
         return;
       }
 
-      if (!src.startsWith("http")) {
-        const localImg = new Image();
-        localImg.crossOrigin = "anonymous";
-        localImg.onload = () => resolve(localImg);
-        localImg.onerror = () => resolve(null);
-        localImg.src = src;
-        return;
-      }
-      
-      const fallbackImg = new Image();
-      fallbackImg.crossOrigin = "anonymous";
-      fallbackImg.onload = () => resolve(fallbackImg);
-      fallbackImg.onerror = () => resolve(null);
-      
-      const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(src)}`;
-      fallbackImg.src = proxyUrl;
+      const retryImg = new Image();
+      retryImg.onload = () => done(retryImg);
+      retryImg.onerror = () => {
+        if (src.startsWith("http")) {
+          const proxyImg = new Image();
+          proxyImg.crossOrigin = "anonymous";
+          proxyImg.onload = () => done(proxyImg);
+          proxyImg.onerror = () => done(null);
+          proxyImg.src = `https://corsproxy.io/?${encodeURIComponent(src)}`;
+        } else {
+          done(null);
+        }
+      };
+      retryImg.src = fullSrc;
     };
-    
-    img.src = src;
+
+    img.src = fullSrc;
   });
+}
+
+// Romantic Synthesizer Score Engine (Pure Web Audio API, Zero External Dependencies)
+function startRomanticMusicSynth(audioContext, dest) {
+  const masterGain = audioContext.createGain();
+  masterGain.gain.setValueAtTime(0.28, audioContext.currentTime);
+  masterGain.connect(dest);
+
+  // Monitor gain so user hears music live during recording
+  const monitorGain = audioContext.createGain();
+  monitorGain.gain.setValueAtTime(0.18, audioContext.currentTime);
+  masterGain.connect(monitorGain);
+  try {
+    monitorGain.connect(audioContext.destination);
+  } catch {}
+
+  const activeNodes = [];
+  let isStopped = false;
+
+  // 4-chord romantic progression: Cmaj7 -> Am7 -> Fmaj7 -> Gsus4
+  const CHORDS = [
+    { bass: 130.81, pads: [261.63, 329.63, 392.00, 493.88] },
+    { bass: 110.00, pads: [220.00, 261.63, 329.63, 392.00] },
+    { bass: 87.31,  pads: [174.61, 261.63, 329.63, 440.00] },
+    { bass: 98.00,  pads: [196.00, 293.66, 392.00, 523.25] },
+  ];
+
+  // Sweet Arpeggio Melody notes (Harp / Acoustic music box)
+  const MELODY_SEQUENCE = [
+    523.25, 659.25, 783.99, 987.77, 1046.50, 783.99, 659.25, 523.25,
+    440.00, 523.25, 659.25, 783.99, 880.00,  659.25, 523.25, 440.00,
+    349.23, 440.00, 523.25, 659.25, 698.46,  523.25, 440.00, 349.23,
+    392.00, 493.88, 587.33, 783.99, 880.00,  587.33, 493.88, 392.00
+  ];
+
+  const startTime = audioContext.currentTime + 0.05;
+  const chordDuration = 3.8;
+  const totalChords = 9;
+
+  for (let c = 0; c < totalChords; c++) {
+    const chord = CHORDS[c % CHORDS.length];
+    const cTime = startTime + c * chordDuration;
+
+    // Bass note
+    const bassOsc = audioContext.createOscillator();
+    const bassGain = audioContext.createGain();
+    bassOsc.type = "sine";
+    bassOsc.frequency.setValueAtTime(chord.bass, cTime);
+    bassGain.gain.setValueAtTime(0.001, cTime);
+    bassGain.gain.linearRampToValueAtTime(0.2, cTime + 0.4);
+    bassGain.gain.exponentialRampToValueAtTime(0.001, cTime + chordDuration);
+    bassOsc.connect(bassGain);
+    bassGain.connect(masterGain);
+    bassOsc.start(cTime);
+    bassOsc.stop(cTime + chordDuration);
+    activeNodes.push(bassOsc);
+
+    // Warm pad chords
+    chord.pads.forEach((padFreq, pIdx) => {
+      const padOsc = audioContext.createOscillator();
+      const padGain = audioContext.createGain();
+      padOsc.type = "triangle";
+      padOsc.frequency.setValueAtTime(padFreq, cTime);
+      padGain.gain.setValueAtTime(0.001, cTime);
+      padGain.gain.linearRampToValueAtTime(0.05 / (pIdx + 1), cTime + 0.6);
+      padGain.gain.exponentialRampToValueAtTime(0.001, cTime + chordDuration);
+      padOsc.connect(padGain);
+      padGain.connect(masterGain);
+      padOsc.start(cTime);
+      padOsc.stop(cTime + chordDuration);
+      activeNodes.push(padOsc);
+    });
+  }
+
+  // Twinkling arpeggios
+  const noteDuration = 0.45;
+  const totalNotes = Math.floor(33 / noteDuration);
+
+  for (let n = 0; n < totalNotes; n++) {
+    const freq = MELODY_SEQUENCE[n % MELODY_SEQUENCE.length];
+    const nTime = startTime + n * noteDuration;
+
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(freq, nTime);
+
+    gain.gain.setValueAtTime(0.001, nTime);
+    gain.gain.linearRampToValueAtTime(0.11, nTime + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.0001, nTime + 0.7);
+
+    osc.connect(gain);
+    gain.connect(masterGain);
+    osc.start(nTime);
+    osc.stop(nTime + 0.7);
+    activeNodes.push(osc);
+  }
+
+  return () => {
+    if (isStopped) return;
+    isStopped = true;
+    try {
+      masterGain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.3);
+    } catch {}
+    setTimeout(() => {
+      activeNodes.forEach((node) => {
+        try { node.stop(); node.disconnect(); } catch {}
+      });
+      try { masterGain.disconnect(); } catch {}
+    }, 350);
+  };
+}
+
+async function setupRecordingAudioStream(page, videoStream) {
+  const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtxClass) {
+    return { stream: videoStream, cleanup: () => {} };
+  }
+
+  let audioContext;
+  try {
+    audioContext = new AudioCtxClass();
+    if (audioContext.state === "suspended") {
+      await audioContext.resume();
+    }
+  } catch (e) {
+    console.warn("AudioContext init error:", e);
+    return { stream: videoStream, cleanup: () => {} };
+  }
+
+  const dest = audioContext.createMediaStreamDestination();
+  const cleanupFns = [];
+
+  const rawAudioSrc = page?.audioUrl || page?.audio_url || page?.music?.fileUrl || page?.music?.url;
+  let customAudioPlaying = false;
+
+  if (rawAudioSrc) {
+    try {
+      let fullUrl = rawAudioSrc;
+      if (typeof rawAudioSrc === "string" && rawAudioSrc.startsWith("/")) {
+        fullUrl = `${window.location.origin}${rawAudioSrc}`;
+      }
+      const audioEl = new Audio();
+      audioEl.crossOrigin = "anonymous";
+      audioEl.src = fullUrl;
+      audioEl.loop = true;
+      audioEl.volume = 0.8;
+
+      await audioEl.play();
+      customAudioPlaying = true;
+
+      const srcNode = audioContext.createMediaElementSource(audioEl);
+      srcNode.connect(dest);
+
+      const monitorGain = audioContext.createGain();
+      monitorGain.gain.value = 0.3;
+      srcNode.connect(monitorGain);
+      try {
+        monitorGain.connect(audioContext.destination);
+      } catch {}
+
+      cleanupFns.push(() => {
+        try {
+          audioEl.pause();
+          audioEl.src = "";
+        } catch {}
+      });
+    } catch (err) {
+      console.warn("Custom audio playback failed, falling back to romantic synth score:", err);
+      customAudioPlaying = false;
+    }
+  }
+
+  // If no custom audio or playback failed: generate guaranteed romantic music synth score!
+  if (!customAudioPlaying) {
+    try {
+      const synthCleanup = startRomanticMusicSynth(audioContext, dest);
+      cleanupFns.push(synthCleanup);
+    } catch (err) {
+      console.warn("Synth score error:", err);
+    }
+  }
+
+  const audioTracks = dest.stream.getAudioTracks();
+  if (audioTracks && audioTracks.length > 0) {
+    const mixedStream = new MediaStream([
+      ...videoStream.getVideoTracks(),
+      ...audioTracks
+    ]);
+    return {
+      stream: mixedStream,
+      cleanup: () => {
+        cleanupFns.forEach((fn) => fn());
+        setTimeout(() => {
+          try {
+            audioContext.close();
+          } catch {}
+        }, 300);
+      }
+    };
+  }
+
+  return { stream: videoStream, cleanup: () => {} };
 }
 
 function getBestSupportedMimeType() {
@@ -164,23 +385,13 @@ export default function StatusRecorder({ page, photos }) {
       setFileFormatLabel(mimeInfo.label);
 
       let mixed = stream;
-
+      let cleanupDesktopAudio = () => {};
       try {
-        if (page?.audioUrl && window.AudioContext) {
-          const audioEl = new Audio(page.audioUrl);
-          audioEl.crossOrigin = "anonymous";
-          audioEl.volume = 0.5;
-          await audioEl.play().catch(() => { });
-          const audioContext = new AudioContext();
-          const dest = audioContext.createMediaStreamDestination();
-          const src = audioContext.createMediaElementSource(audioEl);
-          src.connect(dest);
-          src.connect(audioContext.destination);
-          mixed = new MediaStream([...stream.getVideoTracks(), ...dest.stream.getAudioTracks()]);
-          setTimeout(() => audioEl.pause(), 30500);
-        }
+        const audioSetup = await setupRecordingAudioStream(page, stream);
+        mixed = audioSetup.stream;
+        cleanupDesktopAudio = audioSetup.cleanup;
       } catch (err) {
-        console.warn("Audio mixing failed:", err);
+        console.warn("Desktop audio setup failed:", err);
       }
 
       const recorder = new MediaRecorder(mixed, { mimeType: selectedMime });
@@ -191,6 +402,9 @@ export default function StatusRecorder({ page, photos }) {
       };
 
       recorder.onstop = () => {
+        try {
+          cleanupDesktopAudio();
+        } catch { }
         const blob = new Blob(chunks, { type: cleanBlobType });
         const file = new File([blob], fileName, { type: cleanBlobType });
         setFinalFile(file);
@@ -258,10 +472,10 @@ export default function StatusRecorder({ page, photos }) {
       } catch { }
     }
 
-    const sunsetBgImg = await loadImage(photos?.bg || page?.theme?.bgUrl || page?.theme?.bg_url || sunsetBg);
-    const creator = await loadImage(photos?.creator);
-    const partner = await loadImage(photos?.partner);
-    const couple = await loadImage(photos?.couple);
+    const sunsetBgImg = await loadImage(photos?.bg || page?.theme?.bgUrl || page?.theme?.bg_url || "/image.png" || sunsetBg);
+    const creator = await loadImage(photos?.creator || page?.photos?.find((p) => p.type === "creator" || p.category === "creator")?.file_url || "/creator_avatar.png");
+    const partner = await loadImage(photos?.partner || page?.photos?.find((p) => p.type === "partner" || p.category === "partner")?.file_url || "/partner_avatar.png");
+    const couple = await loadImage(photos?.couple || page?.photos?.find((p) => p.type === "couple" || p.category === "couple")?.file_url || "/romantic_sunset_deck_bg.png");
     const certBgImg = await loadImage(certBg);
 
     const memoryImgs = [];
@@ -322,10 +536,10 @@ export default function StatusRecorder({ page, photos }) {
       } catch { }
     }
 
-    const sunsetBgImg = await loadImage(photos?.bg || page?.theme?.bgUrl || page?.theme?.bg_url || sunsetBg);
-    const creator = await loadImage(photos?.creator);
-    const partner = await loadImage(photos?.partner);
-    const couple = await loadImage(photos?.couple);
+    const sunsetBgImg = await loadImage(photos?.bg || page?.theme?.bgUrl || page?.theme?.bg_url || "/image.png" || sunsetBg);
+    const creator = await loadImage(photos?.creator || page?.photos?.find((p) => p.type === "creator" || p.category === "creator")?.file_url || "/creator_avatar.png");
+    const partner = await loadImage(photos?.partner || page?.photos?.find((p) => p.type === "partner" || p.category === "partner")?.file_url || "/partner_avatar.png");
+    const couple = await loadImage(photos?.couple || page?.photos?.find((p) => p.type === "couple" || p.category === "couple")?.file_url || "/romantic_sunset_deck_bg.png");
     const certBgImg = await loadImage(certBg);
 
     const memoryImgs = [];
@@ -382,24 +596,9 @@ export default function StatusRecorder({ page, photos }) {
         videoTrack.requestFrame();
       } catch { }
     }
-    let mixed = stream;
 
-    try {
-      if (page?.audioUrl && window.AudioContext) {
-        const audioEl = new Audio(page.audioUrl);
-        audioEl.crossOrigin = "anonymous";
-        await audioEl.play().catch(() => { });
-        const audioContext = new AudioContext();
-        const dest = audioContext.createMediaStreamDestination();
-        const src = audioContext.createMediaElementSource(audioEl);
-        src.connect(dest);
-        src.connect(audioContext.destination);
-        mixed = new MediaStream([...stream.getVideoTracks(), ...dest.stream.getAudioTracks()]);
-        setTimeout(() => audioEl.pause(), 30500);
-      }
-    } catch {
-      mixed = stream;
-    }
+    // Set up guaranteed romantic audio stream (custom audio + synth fallback)
+    const { stream: mixed, cleanup: cleanupAudio } = await setupRecordingAudioStream(page, stream);
 
     const mimeInfo = getBestSupportedMimeType();
     const selectedMime = mimeInfo.mimeType;
@@ -414,9 +613,17 @@ export default function StatusRecorder({ page, photos }) {
 
     let recorder;
     try {
-      recorder = new MediaRecorder(mixed, { mimeType: selectedMime });
+      recorder = new MediaRecorder(mixed, {
+        mimeType: selectedMime,
+        videoBitsPerSecond: 2500000,
+        audioBitsPerSecond: 128000
+      });
     } catch (e) {
-      recorder = new MediaRecorder(mixed);
+      try {
+        recorder = new MediaRecorder(mixed, { mimeType: selectedMime });
+      } catch (e2) {
+        recorder = new MediaRecorder(mixed);
+      }
     }
     const chunks = [];
 
@@ -426,7 +633,13 @@ export default function StatusRecorder({ page, photos }) {
 
     recorder.onstop = () => {
       try {
+        cleanupAudio();
+      } catch { }
+      try {
         stream.getTracks().forEach((track) => track.stop());
+      } catch { }
+      try {
+        mixed.getTracks().forEach((track) => track.stop());
       } catch { }
 
       const blob = new Blob(chunks, { type: cleanBlobType });
@@ -473,6 +686,9 @@ export default function StatusRecorder({ page, photos }) {
       // Stop once we surpass the guaranteed recording padded duration
       if (elapsed >= DURATION_RECORD) {
         clearInterval(tickId);
+        try {
+          cleanupAudio();
+        } catch { }
         if (recorder.state !== "inactive") {
           recorder.stop();
         }
@@ -933,6 +1149,108 @@ function drawAvatarFallback(ctx, x, y, w, h, name = "Love", radius = 0) {
   ctx.restore();
 }
 
+// Background Ambient Rain (soft slanted rain streaks & fireflies)
+function drawLoveRainBackground(ctx, w, h, timeSec) {
+  ctx.save();
+  // 35 slanted rain streaks
+  ctx.strokeStyle = "rgba(255, 220, 235, 0.22)";
+  ctx.lineWidth = 1.2;
+  for (let i = 0; i < 35; i++) {
+    const rx = (i * 37 + timeSec * 45) % (w + 40) - 20;
+    const ry = (i * 83 + timeSec * 420) % (h + 80) - 40;
+    const rLen = 22 + (i % 4) * 8;
+    ctx.beginPath();
+    ctx.moveTo(rx, ry);
+    ctx.lineTo(rx + 5, ry + rLen);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// Foreground Cascading Love Rain (Matching CrazyLoveRain: Falling Emojis, Floating Quotes, Splash droplets)
+function drawLoveRainForeground(ctx, w, h, timeSec) {
+  ctx.save();
+
+  // 1. Slanted glistening rain streaks
+  ctx.save();
+  for (let k = 0; k < 28; k++) {
+    const rx = (k * 43 + timeSec * 55) % (w + 50) - 25;
+    const ry = (k * 79 + timeSec * 480) % (h + 90) - 45;
+    const rLen = 20 + (k % 4) * 8;
+    const alpha = 0.22 + (k % 3) * 0.15;
+    ctx.strokeStyle = `rgba(255, 235, 248, ${alpha})`;
+    ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    ctx.moveTo(rx, ry);
+    ctx.lineTo(rx + 6, ry + rLen);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // 2. Cascading Love Rain Emojis
+  const EMOJIS = ["💖", "💕", "✨", "🌹", "💌", "❤️", "💗", "💞", "🌸", "👑", "💘", "🥰", "🫶", "💋"];
+  for (let i = 0; i < 26; i++) {
+    const emoji = EMOJIS[i % EMOJIS.length];
+    const speed = 75 + (i % 5) * 22; // smooth falling speed
+    const y = (i * 98 + timeSec * speed) % (h + 120) - 60;
+    const sway = Math.sin(timeSec * 1.5 + i * 0.9) * 22;
+    const x = ((i * 59 + 25) % (w - 50)) + sway;
+    const size = 20 + (i % 4) * 4;
+
+    ctx.save();
+    ctx.font = `${size}px sans-serif`;
+    ctx.textAlign = "center";
+    ctx.shadowColor = "rgba(255, 42, 117, 0.75)";
+    ctx.shadowBlur = 10;
+    ctx.translate(x, y);
+    ctx.rotate(Math.sin(timeSec * 1.1 + i) * 0.2);
+    ctx.fillText(emoji, 0, 0);
+    ctx.restore();
+  }
+
+  // 3. Floating Glowing Romantic Quotes / Phrases
+  const PHRASES = [
+    "❤️ I Love You",
+    "Forever & Always",
+    "My Soulmate 💕",
+    "💕 You & Me 💕",
+    "Together Forever",
+    "♾️ Eternal Love",
+    "Two Hearts, One Soul 💞",
+    "My Everything 💖"
+  ];
+
+  for (let p = 0; p < PHRASES.length; p++) {
+    const phrase = PHRASES[p];
+    const speed = 52 + (p % 3) * 14;
+    const y = (p * 185 + timeSec * speed) % (h + 160) - 60;
+    const sway = Math.sin(timeSec * 0.85 + p * 1.3) * 18;
+    const x = ((p * 115 + 45) % (w - 240)) + 30 + sway;
+
+    ctx.save();
+    ctx.font = "italic 600 14px 'Playfair Display', Georgia, serif";
+    ctx.textAlign = "center";
+    const txtW = ctx.measureText(phrase).width;
+
+    ctx.fillStyle = "rgba(35, 6, 22, 0.72)";
+    ctx.strokeStyle = "rgba(255, 120, 180, 0.6)";
+    ctx.lineWidth = 1;
+    ctx.shadowColor = "rgba(255, 42, 117, 0.5)";
+    ctx.shadowBlur = 8;
+    roundRect(ctx, x - txtW / 2 - 12, y - 17, txtW + 24, 25, 12.5);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.shadowColor = "rgba(0, 0, 0, 0.85)";
+    ctx.shadowBlur = 4;
+    ctx.fillStyle = "#ffd1d9";
+    ctx.fillText(phrase, x, y);
+    ctx.restore();
+  }
+
+  ctx.restore();
+}
+
 function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, sunsetBgImg, page, certBgImg, memoryImgs }) {
   const creatorName = page?.creatorName || "Kumar";
   const partnerName = page?.partnerName || "Lucky Patel";
@@ -984,25 +1302,8 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, sunsetBgIm
     ctx.fill();
   }
 
-  // Floating Confetti & Rose Petals
-  const emojis = ["💖", "💕", "✨", "🌹", "💌", "🌸", "✨"];
-  for (let j = 0; j < 14; j++) {
-    const char = emojis[j % emojis.length];
-    const dropY = (j * 115 + timeSec * (38 + (j % 4) * 6)) % (h + 120);
-    const swayX = Math.sin(timeSec * 0.6 + j) * 35;
-    const dropX = ((j * 73) % w) + swayX;
-
-    // Keep away from central focal text
-    if (dropX > 160 && dropX < 560 && dropY > 200 && dropY < 480) continue;
-
-    ctx.save();
-    ctx.font = "24px sans-serif";
-    ctx.textAlign = "center";
-    ctx.translate(dropX, dropY - 50);
-    ctx.rotate(Math.sin(timeSec * 0.8 + j) * 0.25);
-    ctx.fillText(char, 0, 0);
-    ctx.restore();
-  }
+  // Ambient Background Rain & Falling Petals
+  drawLoveRainBackground(ctx, w, h, timeSec);
 
   // 2. CAMERA SCROLL TIMING (Shows Celebration Screen first, then Certificate)
   const SCENE_OFFSET = 1280;
@@ -1310,36 +1611,96 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, sunsetBgIm
   ctx.fillText(partnerName, 0, 99);
   ctx.restore();
 
-  // Center Seal: Crown & "Forever" Heart
-  ctx.save();
-  const crownScale = 1 + Math.sin(timeSec * 2.2) * 0.06;
-  ctx.translate(w / 2, polaroidCenterY);
-  ctx.scale(crownScale, crownScale);
+  // Center Showcase: Couple Photo Cameo or Crown & "Forever" Heart Seal
+  if (couple) {
+    ctx.save();
+    const coupleScale = 1 + Math.sin(timeSec * 2) * 0.03;
+    ctx.translate(w / 2, polaroidCenterY);
+    ctx.scale(coupleScale, coupleScale);
 
-  ctx.font = "32px sans-serif";
-  ctx.shadowColor = "rgba(255, 209, 102, 0.7)";
-  ctx.shadowBlur = 14;
-  ctx.textAlign = "center";
-  ctx.fillText("👑", 0, -32);
+    // Glowing Outer Halo
+    ctx.beginPath();
+    ctx.arc(0, 0, 52, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(255, 79, 129, 0.35)";
+    ctx.shadowColor = "rgba(255, 79, 129, 0.85)";
+    ctx.shadowBlur = 20;
+    ctx.fill();
 
-  // 3D Heart with "Forever"
-  const heartSealG = ctx.createRadialGradient(-6, -6, 2, 0, 0, 28);
-  heartSealG.addColorStop(0, "#ff5e98");
-  heartSealG.addColorStop(1, "#c9184a");
-  ctx.fillStyle = heartSealG;
-  ctx.shadowColor = "rgba(201, 24, 74, 0.65)";
-  ctx.shadowBlur = 16;
-  roundRect(ctx, -27, -6, 54, 52, 26);
-  ctx.fill();
-  ctx.shadowColor = "transparent";
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
-  ctx.lineWidth = 1.2;
-  ctx.stroke();
+    // Gold Bezel
+    ctx.beginPath();
+    ctx.arc(0, 0, 48, 0, Math.PI * 2);
+    ctx.fillStyle = "#ffffff";
+    ctx.shadowColor = "rgba(255, 209, 102, 0.8)";
+    ctx.shadowBlur = 12;
+    ctx.fill();
+    ctx.strokeStyle = "#ffd166";
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
 
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "normal 17px 'Great Vibes', cursive";
-  ctx.fillText("Forever", 0, 26);
-  ctx.restore();
+    // Circular Clipped Couple Photo
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(0, 0, 45, 0, Math.PI * 2);
+    ctx.clip();
+    drawCoverImage(ctx, couple, -45, -45, 90, 90);
+    ctx.restore();
+
+    // Top Royal Crown
+    ctx.font = "26px sans-serif";
+    ctx.textAlign = "center";
+    ctx.shadowColor = "rgba(255, 209, 102, 0.9)";
+    ctx.shadowBlur = 10;
+    ctx.fillText("👑", 0, -50);
+
+    // Bottom Pill: Us Together 💕
+    const coupPillG = ctx.createLinearGradient(-50, 42, 50, 66);
+    coupPillG.addColorStop(0, "#ff2a75");
+    coupPillG.addColorStop(1, "#c9184a");
+    ctx.fillStyle = coupPillG;
+    ctx.shadowColor = "rgba(201, 24, 74, 0.5)";
+    ctx.shadowBlur = 8;
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.75)";
+    ctx.lineWidth = 1;
+    roundRect(ctx, -52, 42, 104, 24, 12);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 11px Georgia, serif";
+    ctx.fillText("Us Together 💕", 0, 58);
+    ctx.restore();
+  } else {
+    // Center Seal: Crown & "Forever" Heart
+    ctx.save();
+    const crownScale = 1 + Math.sin(timeSec * 2.2) * 0.06;
+    ctx.translate(w / 2, polaroidCenterY);
+    ctx.scale(crownScale, crownScale);
+
+    ctx.font = "32px sans-serif";
+    ctx.shadowColor = "rgba(255, 209, 102, 0.7)";
+    ctx.shadowBlur = 14;
+    ctx.textAlign = "center";
+    ctx.fillText("👑", 0, -32);
+
+    // 3D Heart with "Forever"
+    const heartSealG = ctx.createRadialGradient(-6, -6, 2, 0, 0, 28);
+    heartSealG.addColorStop(0, "#ff5e98");
+    heartSealG.addColorStop(1, "#c9184a");
+    ctx.fillStyle = heartSealG;
+    ctx.shadowColor = "rgba(201, 24, 74, 0.65)";
+    ctx.shadowBlur = 16;
+    roundRect(ctx, -27, -6, 54, 52, 26);
+    ctx.fill();
+    ctx.shadowColor = "transparent";
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "normal 17px 'Great Vibes', cursive";
+    ctx.fillText("Forever", 0, 26);
+    ctx.restore();
+  }
 
   // Floating Side Pill: "💕 You & Me 💕"
   ctx.save();
@@ -1555,6 +1916,68 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, sunsetBgIm
   ctx.fillText("Forever Looks Better With You ♡", 0, 0);
   ctx.restore();
 
+  // Official Royal 3D Wax Seal Stamp (Center Bottom of Certificate)
+  ctx.save();
+  const sealX = w / 2;
+  const sealY = certY + 830;
+  ctx.translate(sealX, sealY);
+
+  // Wax Seal Ribbons
+  ctx.fillStyle = "#8a0c1e";
+  ctx.beginPath();
+  ctx.moveTo(-16, 12);
+  ctx.lineTo(-28, 48);
+  ctx.lineTo(-14, 42);
+  ctx.lineTo(-6, 48);
+  ctx.lineTo(-8, 16);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(16, 12);
+  ctx.lineTo(28, 48);
+  ctx.lineTo(14, 42);
+  ctx.lineTo(6, 48);
+  ctx.lineTo(8, 16);
+  ctx.fill();
+
+  // Outer Gold Scalloped Rim
+  ctx.shadowColor = "rgba(200, 163, 86, 0.6)";
+  ctx.shadowBlur = 10;
+  ctx.beginPath();
+  ctx.arc(0, 0, 36, 0, Math.PI * 2);
+  ctx.fillStyle = "#c8a356";
+  ctx.fill();
+
+  // Inner Deep Crimson Wax Circle
+  const waxG = ctx.createRadialGradient(-6, -6, 3, 0, 0, 32);
+  waxG.addColorStop(0, "#aa1024");
+  waxG.addColorStop(0.7, "#700b18");
+  waxG.addColorStop(1, "#45050e");
+  ctx.fillStyle = waxG;
+  ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
+  ctx.shadowBlur = 8;
+  ctx.beginPath();
+  ctx.arc(0, 0, 31, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Gold Inner Rim
+  ctx.strokeStyle = "rgba(255, 215, 120, 0.75)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(0, 0, 26, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Center Seal Text & Crown
+  ctx.font = "18px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("👑", 0, -4);
+
+  ctx.font = "bold 9px 'Cinzel', serif";
+  ctx.fillStyle = "#ffd166";
+  ctx.fillText("CERTIFIED", 0, 11);
+  ctx.fillText("LOVE", 0, 21);
+  ctx.restore();
+
   ctx.restore();
 
   // ─────────────────────────────────────────────────────────────
@@ -1619,6 +2042,11 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, sunsetBgIm
   }
 
   ctx.restore(); // Restore camera translation
+
+  // ─────────────────────────────────────────────────────────────
+  // ─── FOREGROUND CASCADING LOVE RAIN (CRAZY LOVE RAIN MATCH) ──
+  // ─────────────────────────────────────────────────────────────
+  drawLoveRainForeground(ctx, w, h, timeSec);
 
   // ─────────────────────────────────────────────────────────────
   // ─── FIXED VIEWPORT OVERLAYS (PROGRESS BAR) ──────────────────
