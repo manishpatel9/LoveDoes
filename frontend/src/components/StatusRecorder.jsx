@@ -26,6 +26,7 @@ function loadImage(src) {
 
       if (!src.startsWith("http")) {
         const localImg = new Image();
+        localImg.crossOrigin = "anonymous";
         localImg.onload = () => resolve(localImg);
         localImg.onerror = () => resolve(null);
         localImg.src = src;
@@ -46,23 +47,38 @@ function loadImage(src) {
 }
 
 function getBestSupportedMimeType() {
-  if (typeof MediaRecorder === "undefined") return "video/webm";
-
-  const candidates = [
-    "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
-    "video/mp4;codecs=avc1",
-    "video/mp4",
-    "video/webm;codecs=h264",
-    "video/webm;codecs=vp8,opus",
-    "video/webm;codecs=vp9",
-    "video/webm"
-  ];
-
-  for (const type of candidates) {
-    if (MediaRecorder.isTypeSupported(type)) return type;
+  if (typeof MediaRecorder === "undefined") {
+    return { mimeType: "video/webm", ext: "webm", label: "WEBM" };
   }
 
-  return "video/webm";
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+  // On iOS, MP4 is standard. On Android and Chromium browsers, WebM with VP8/Opus is rock-solid
+  // and natively handles Canvas + Web Audio without dropping video tracks.
+  const candidates = isIOS
+    ? [
+        { mimeType: "video/mp4;codecs=avc1.42E01E,mp4a.40.2", ext: "mp4", label: "MP4" },
+        { mimeType: "video/mp4;codecs=avc1", ext: "mp4", label: "MP4" },
+        { mimeType: "video/mp4", ext: "mp4", label: "MP4" },
+        { mimeType: "video/webm;codecs=vp8,opus", ext: "webm", label: "WEBM" },
+        { mimeType: "video/webm", ext: "webm", label: "WEBM" }
+      ]
+    : [
+        { mimeType: "video/webm;codecs=vp8,opus", ext: "webm", label: "WEBM" },
+        { mimeType: "video/webm;codecs=vp8", ext: "webm", label: "WEBM" },
+        { mimeType: "video/webm;codecs=h264,opus", ext: "webm", label: "WEBM" },
+        { mimeType: "video/webm", ext: "webm", label: "WEBM" },
+        { mimeType: "video/mp4;codecs=avc1,mp4a.40.2", ext: "mp4", label: "MP4" },
+        { mimeType: "video/mp4", ext: "mp4", label: "MP4" }
+      ];
+
+  for (const item of candidates) {
+    if (MediaRecorder.isTypeSupported(item.mimeType)) {
+      return item;
+    }
+  }
+
+  return { mimeType: "video/webm", ext: "webm", label: "WEBM" };
 }
 
 function downloadBlob(blob, fileName) {
@@ -132,10 +148,11 @@ export default function StatusRecorder({ page, photos }) {
         preferCurrentTab: true
       });
 
-      const selectedMime = getBestSupportedMimeType();
-      const isMp4 = selectedMime.includes("mp4");
+      const mimeInfo = getBestSupportedMimeType();
+      const selectedMime = mimeInfo.mimeType;
+      const ext = mimeInfo.ext;
+      const isMp4 = ext === "mp4";
       const cleanBlobType = isMp4 ? "video/mp4" : "video/webm";
-      const ext = isMp4 ? "mp4" : "webm";
 
       const rawCreator = page?.creatorName || "Kumar";
       const rawPartner = page?.partnerName || "Bhumi";
@@ -144,7 +161,7 @@ export default function StatusRecorder({ page, photos }) {
       const fileName = `Love_Sanctuary_Desktop_30s_${cleanCreator}_and_${cleanPartner}.${ext}`;
 
       setDownloadFileName(fileName);
-      setFileFormatLabel(ext.toUpperCase());
+      setFileFormatLabel(mimeInfo.label);
 
       let mixed = stream;
 
@@ -222,6 +239,64 @@ export default function StatusRecorder({ page, photos }) {
     }
   }
 
+  async function downloadStoryCardImage() {
+    setError("");
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    const w = 720;
+    const h = 1280;
+    canvas.width = w;
+    canvas.height = h;
+
+    setPhase("loading");
+
+    if (document.fonts && document.fonts.ready) {
+      try {
+        await document.fonts.ready;
+      } catch { }
+    }
+
+    const sunsetBgImg = await loadImage(photos?.bg || page?.theme?.bgUrl || page?.theme?.bg_url || sunsetBg);
+    const creator = await loadImage(photos?.creator);
+    const partner = await loadImage(photos?.partner);
+    const couple = await loadImage(photos?.couple);
+    const certBgImg = await loadImage(certBg);
+
+    const memoryImgs = [];
+    if (page?.memories?.length > 0) {
+      for (const m of page.memories) {
+        if (m.photo || m.photo_url) {
+          const loaded = await loadImage(m.photo || m.photo_url);
+          if (loaded) memoryImgs.push({ ...m, loadedImage: loaded });
+        }
+      }
+    }
+
+    const rawCreator = page?.creatorName || "Kumar";
+    const rawPartner = page?.partnerName || "Bhumi";
+    const cleanCreator = rawCreator.replace(/[^a-zA-Z0-9]/g, "_");
+    const cleanPartner = rawPartner.replace(/[^a-zA-Z0-9]/g, "_");
+
+    drawFrame(ctx, w, h, 0.5, 14, { creator, partner, couple, sunsetBgImg, page, certBgImg, memoryImgs });
+
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const fileName = `Love_Sanctuary_Card_${cleanCreator}_and_${cleanPartner}.png`;
+      const file = new File([blob], fileName, { type: "image/png" });
+      setFinalFile(file);
+      const url = URL.createObjectURL(blob);
+      setBlobUrl(url);
+      setDownloadFileName(fileName);
+      setFileFormatLabel("PNG");
+      setPhase("image");
+      try {
+        downloadBlob(blob, fileName);
+      } catch (e) { }
+    }, "image/png");
+  }
+
   async function recordMobile() {
     setError("");
     setProgress(0);
@@ -270,6 +345,9 @@ export default function StatusRecorder({ page, photos }) {
     const cleanCreator = rawCreator.replace(/[^a-zA-Z0-9]/g, "_");
     const cleanPartner = rawPartner.replace(/[^a-zA-Z0-9]/g, "_");
 
+    // Prime the canvas surface with frame 0 BEFORE captureStream
+    drawFrame(ctx, w, h, 0, 0, { creator, partner, couple, sunsetBgImg, page, certBgImg, memoryImgs });
+
     if (!supports) {
       drawFrame(ctx, w, h, 1, 30, { creator, partner, couple, sunsetBgImg, page, certBgImg, memoryImgs });
       canvas.toBlob((blob) => {
@@ -298,6 +376,12 @@ export default function StatusRecorder({ page, photos }) {
     }
 
     const stream = canvas.captureStream(30);
+    const videoTrack = stream.getVideoTracks()[0];
+    if (videoTrack && typeof videoTrack.requestFrame === "function") {
+      try {
+        videoTrack.requestFrame();
+      } catch { }
+    }
     let mixed = stream;
 
     try {
@@ -317,24 +401,34 @@ export default function StatusRecorder({ page, photos }) {
       mixed = stream;
     }
 
-    const selectedMime = getBestSupportedMimeType();
-    const isMp4 = selectedMime.includes("mp4");
+    const mimeInfo = getBestSupportedMimeType();
+    const selectedMime = mimeInfo.mimeType;
+    const ext = mimeInfo.ext;
+    const isMp4 = ext === "mp4";
     const cleanBlobType = isMp4 ? "video/mp4" : "video/webm";
-    const ext = isMp4 ? "mp4" : "webm"; // CRITICAL: NEVER spoof WebM as MP4. Android fails to decode the video track!
 
     const fileName = `Love_Sanctuary_Status_30s_${cleanCreator}_and_${cleanPartner}.${ext}`;
 
     setDownloadFileName(fileName);
-    setFileFormatLabel("MP4");
+    setFileFormatLabel(mimeInfo.label);
 
-    const recorder = new MediaRecorder(mixed, { mimeType: selectedMime });
+    let recorder;
+    try {
+      recorder = new MediaRecorder(mixed, { mimeType: selectedMime });
+    } catch (e) {
+      recorder = new MediaRecorder(mixed);
+    }
     const chunks = [];
 
     recorder.ondataavailable = (event) => {
-      if (event.data.size) chunks.push(event.data);
+      if (event.data && event.data.size > 0) chunks.push(event.data);
     };
 
     recorder.onstop = () => {
+      try {
+        stream.getTracks().forEach((track) => track.stop());
+      } catch { }
+
       const blob = new Blob(chunks, { type: cleanBlobType });
       const file = new File([blob], fileName, { type: cleanBlobType });
       setFinalFile(file);
@@ -351,7 +445,7 @@ export default function StatusRecorder({ page, photos }) {
     };
 
     setPhase("recording");
-    recorder.start();
+    recorder.start(1000);
 
     const start = performance.now();
 
@@ -370,10 +464,18 @@ export default function StatusRecorder({ page, photos }) {
       
       drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, sunsetBgImg, page, certBgImg, memoryImgs });
 
+      if (videoTrack && typeof videoTrack.requestFrame === "function") {
+        try {
+          videoTrack.requestFrame();
+        } catch { }
+      }
+
       // Stop once we surpass the guaranteed recording padded duration
       if (elapsed >= DURATION_RECORD) {
         clearInterval(tickId);
-        recorder.stop();
+        if (recorder.state !== "inactive") {
+          recorder.stop();
+        }
       }
     }, 1000 / 30); // Force strictly paced 30 FPS pumping
   }
@@ -388,13 +490,79 @@ export default function StatusRecorder({ page, photos }) {
         alignItems: "center"
       }}
     >
-      <canvas
-        ref={canvasRef}
-        className="status-canvas"
-        width="720"
-        height="1280"
-        style={{ position: "absolute", left: "-9999px", top: "-9999px", visibility: "hidden" }}
-      />
+      {/* Live Preview Container during Recording / Hidden but active otherwise */}
+      <div
+        className="status-canvas-viewport"
+        style={
+          phase === "recording" || phase === "loading"
+            ? {
+                width: "220px",
+                height: "390px",
+                margin: "14px auto",
+                borderRadius: "18px",
+                overflow: "hidden",
+                border: "2px solid rgba(255, 79, 129, 0.7)",
+                boxShadow: "0 0 25px rgba(255, 79, 129, 0.4), inset 0 0 20px rgba(0,0,0,0.6)",
+                position: "relative",
+                background: "#0d0208"
+              }
+            : {
+                position: "fixed",
+                bottom: "-9999px",
+                left: 0,
+                width: "220px",
+                height: "390px",
+                pointerEvents: "none",
+                opacity: 0.01,
+                zIndex: -9999
+              }
+        }
+      >
+        <canvas
+          ref={canvasRef}
+          className="status-canvas"
+          width="720"
+          height="1280"
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "contain",
+            display: "block"
+          }}
+        />
+
+        {(phase === "recording" || phase === "loading") && (
+          <div
+            style={{
+              position: "absolute",
+              top: "8px",
+              left: "8px",
+              background: "rgba(18, 2, 10, 0.8)",
+              border: "1px solid rgba(255, 79, 129, 0.5)",
+              padding: "4px 10px",
+              borderRadius: "12px",
+              fontSize: "0.72rem",
+              color: "#ffd166",
+              fontWeight: 700,
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              backdropFilter: "blur(6px)"
+            }}
+          >
+            <span
+              style={{
+                width: "8px",
+                height: "8px",
+                borderRadius: "50%",
+                background: "#ff2a75",
+                boxShadow: "0 0 8px #ff2a75"
+              }}
+            />
+            {phase === "loading" ? "INITIALIZING" : "RECORDING LIVE"}
+          </div>
+        )}
+      </div>
 
       {phase === "idle" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "12px", width: "100%" }}>
@@ -425,6 +593,29 @@ export default function StatusRecorder({ page, photos }) {
               {isMobileDevice() ? "Download Status (30s Video)" : "Mobile Status (9:16 Video)"}
             </span>
             <span className="btn-icon-right">→</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={downloadStoryCardImage}
+            style={{
+              width: "100%",
+              background: "rgba(255, 255, 255, 0.08)",
+              border: "1px solid rgba(255, 209, 102, 0.4)",
+              color: "#ffd166",
+              fontWeight: 600,
+              padding: "11px 18px",
+              borderRadius: "30px",
+              cursor: "pointer",
+              fontSize: "0.95rem",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              transition: "all 0.3s ease"
+            }}
+          >
+            <span>📸</span> Download Story Card (HD Photo)
           </button>
 
           {!isMobileDevice() && (
@@ -512,12 +703,41 @@ export default function StatusRecorder({ page, photos }) {
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            gap: "10px"
+            gap: "12px"
           }}
         >
-          <div style={{ color: "#4cd964", fontWeight: 600, textAlign: "center" }}>
-            ✅ 30-Second Full Sanctuary Page Video Downloaded! ({fileFormatLabel})
+          <div style={{ color: "#4cd964", fontWeight: 700, textAlign: "center", fontSize: "1.05rem" }}>
+            ✅ 30-Second Sanctuary Video Ready! ({fileFormatLabel})
           </div>
+
+          {blobUrl && (
+            <div
+              style={{
+                width: "220px",
+                height: "390px",
+                borderRadius: "18px",
+                overflow: "hidden",
+                border: "2px solid rgba(76, 217, 100, 0.6)",
+                boxShadow: "0 0 25px rgba(76, 217, 100, 0.35)",
+                margin: "4px auto 8px",
+                background: "#000"
+              }}
+            >
+              <video
+                src={blobUrl}
+                controls
+                autoPlay
+                loop
+                playsInline
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "contain",
+                  display: "block"
+                }}
+              />
+            </div>
+          )}
 
           <button
             className="target-primary-btn glow"
@@ -562,6 +782,27 @@ export default function StatusRecorder({ page, photos }) {
 
           <button
             type="button"
+            onClick={downloadStoryCardImage}
+            style={{
+              width: "100%",
+              background: "rgba(255, 209, 102, 0.1)",
+              border: "1px solid rgba(255, 209, 102, 0.35)",
+              color: "#ffd166",
+              fontWeight: 600,
+              padding: "10px",
+              borderRadius: "30px",
+              cursor: "pointer",
+              display: "inline-flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "8px"
+            }}
+          >
+            <span>📸</span> Download HD Story Card (Image)
+          </button>
+
+          <button
+            type="button"
             onClick={() => setPhase("idle")}
             style={{
               background: "transparent",
@@ -569,7 +810,8 @@ export default function StatusRecorder({ page, photos }) {
               color: "rgba(255,255,255,0.7)",
               cursor: "pointer",
               textDecoration: "underline",
-              fontSize: "0.9rem"
+              fontSize: "0.9rem",
+              marginTop: "4px"
             }}
           >
             Record Again
