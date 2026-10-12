@@ -874,6 +874,7 @@ export default function PublicLove() {
                         creator: creator?.file_url,
                         partner: partner?.file_url,
                         couple: couple?.file_url,
+                        bg: customBg,
                       }}
                     />
 

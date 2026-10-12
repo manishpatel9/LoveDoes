@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import certBg from "../assets/cert_bg.png";
+import sunsetBg from "../assets/romantic_sunset_deck_bg.png";
 
 const isMobileDevice = () =>
   /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
@@ -22,10 +23,15 @@ function loadImage(src) {
         resolve(null);
         return;
       }
+
+      if (!src.startsWith("http")) {
+        const localImg = new Image();
+        localImg.onload = () => resolve(localImg);
+        localImg.onerror = () => resolve(null);
+        localImg.src = src;
+        return;
+      }
       
-      // Fallback: Extremely aggressive CORS Stripping Proxy Tunneling
-      // If original storage URL strictly blocks Cross-Origin, we route it through an image proxy 
-      // that inherently returns "Access-Control-Allow-Origin: *" to force Canvas compliance!
       const fallbackImg = new Image();
       fallbackImg.crossOrigin = "anonymous";
       fallbackImg.onload = () => resolve(fallbackImg);
@@ -235,6 +241,13 @@ export default function StatusRecorder({ page, photos }) {
 
     setPhase("loading");
 
+    if (document.fonts && document.fonts.ready) {
+      try {
+        await document.fonts.ready;
+      } catch { }
+    }
+
+    const sunsetBgImg = await loadImage(photos?.bg || page?.theme?.bgUrl || page?.theme?.bg_url || sunsetBg);
     const creator = await loadImage(photos?.creator);
     const partner = await loadImage(photos?.partner);
     const couple = await loadImage(photos?.couple);
@@ -243,8 +256,8 @@ export default function StatusRecorder({ page, photos }) {
     const memoryImgs = [];
     if (page?.memories?.length > 0) {
       for (const m of page.memories) {
-        if (m.photo) {
-          const loaded = await loadImage(m.photo);
+        if (m.photo || m.photo_url) {
+          const loaded = await loadImage(m.photo || m.photo_url);
           if (loaded) memoryImgs.push({ ...m, loadedImage: loaded });
         }
       }
@@ -258,7 +271,7 @@ export default function StatusRecorder({ page, photos }) {
     const cleanPartner = rawPartner.replace(/[^a-zA-Z0-9]/g, "_");
 
     if (!supports) {
-      drawFrame(ctx, w, h, 1, 30, { creator, partner, couple, page, certBgImg, memoryImgs });
+      drawFrame(ctx, w, h, 1, 30, { creator, partner, couple, sunsetBgImg, page, certBgImg, memoryImgs });
       canvas.toBlob((blob) => {
         if (!blob) return;
 
@@ -355,7 +368,7 @@ export default function StatusRecorder({ page, photos }) {
       // Update UI percent specifically up to 100%
       setProgress(Math.round(t * 100));
       
-      drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, certBgImg, memoryImgs });
+      drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, sunsetBgImg, page, certBgImg, memoryImgs });
 
       // Stop once we surpass the guaranteed recording padded duration
       if (elapsed >= DURATION_RECORD) {
@@ -632,18 +645,14 @@ export default function StatusRecorder({ page, photos }) {
 
 function drawCoverImage(ctx, img, x, y, w, h, radius = 0) {
   if (!img) return;
-
   ctx.save();
-
   if (radius > 0) {
     roundRect(ctx, x, y, w, h, radius);
     ctx.clip();
   }
-
   const imgRatio = img.width / img.height;
   const targetRatio = w / h;
   let sWidth, sHeight, sx, sy;
-
   if (imgRatio > targetRatio) {
     sHeight = img.height;
     sWidth = img.height * targetRatio;
@@ -655,351 +664,744 @@ function drawCoverImage(ctx, img, x, y, w, h, radius = 0) {
     sx = 0;
     sy = (img.height - sHeight) / 2;
   }
-
   ctx.drawImage(img, sx, sy, sWidth, sHeight, x, y, w, h);
   ctx.restore();
 }
 
-function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, page, certBgImg, memoryImgs }) {
-  const creatorName = page?.creatorName || "Rahul";
-  const partnerName = page?.partnerName || "Priya";
+function drawAvatarFallback(ctx, x, y, w, h, name = "Love", radius = 0) {
+  ctx.save();
+  if (radius > 0) {
+    roundRect(ctx, x, y, w, h, radius);
+    ctx.clip();
+  }
+  const grad = ctx.createLinearGradient(x, y, x + w, y + h);
+  grad.addColorStop(0, "#ff437b");
+  grad.addColorStop(0.5, "#d91b5c");
+  grad.addColorStop(1, "#8a0c3b");
+  ctx.fillStyle = grad;
+  ctx.fillRect(x, y, w, h);
 
-  const g = ctx.createLinearGradient(0, -timeSec * 2, w, h + timeSec * 2);
-  g.addColorStop(0, "#1a0209");
-  g.addColorStop(0.25, "#3d0515");
-  g.addColorStop(0.65, "#660a22");
-  g.addColorStop(1, "#29040e");
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+  ctx.textAlign = "center";
+  ctx.font = `bold ${Math.round(h * 0.38)}px 'Playfair Display', Georgia, serif`;
+  ctx.fillText(name.trim().charAt(0).toUpperCase() || "♥", x + w / 2, y + h * 0.52);
 
-  if (couple) {
-    ctx.save();
-    ctx.globalAlpha = 0.12;
+  ctx.font = `italic ${Math.round(h * 0.14)}px 'Great Vibes', cursive`;
+  ctx.fillText("Together Forever", x + w / 2, y + h * 0.76);
+  ctx.restore();
+}
+
+function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, sunsetBgImg, page, certBgImg, memoryImgs }) {
+  const creatorName = page?.creatorName || "Kumar";
+  const partnerName = page?.partnerName || "Lucky Patel";
+  const hasStory = !!(page?.storyText || page?.message);
+  const memCount = memoryImgs?.length || 0;
+  const hasExtra = hasStory || memCount > 0;
+
+  // 1. DYNAMIC ROMANTIC SUNSET BACKGROUND
+  if (sunsetBgImg) {
+    drawCoverImage(ctx, sunsetBgImg, 0, 0, w, h);
+  } else if (couple) {
     drawCoverImage(ctx, couple, 0, 0, w, h);
-    ctx.restore();
+  } else {
+    const bgG = ctx.createLinearGradient(0, 0, 0, h);
+    bgG.addColorStop(0, "#200615");
+    bgG.addColorStop(0.35, "#4a0f2b");
+    bgG.addColorStop(0.65, "#7b1c3b");
+    bgG.addColorStop(0.9, "#a83e38");
+    bgG.addColorStop(1, "#f28054");
+    ctx.fillStyle = bgG;
+    ctx.fillRect(0, 0, w, h);
   }
 
-  const orb1Y = 200 + Math.sin(timeSec) * 40;
-  const rad1 = ctx.createRadialGradient(w / 2, orb1Y, 10, w / 2, orb1Y, 350);
-  rad1.addColorStop(0, "rgba(230, 28, 93, 0.35)");
-  rad1.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = rad1;
+  // Twilight Atmospheric Vignette
+  const vignette = ctx.createLinearGradient(0, 0, 0, h);
+  vignette.addColorStop(0, "rgba(25, 4, 18, 0.35)");
+  vignette.addColorStop(0.5, "rgba(45, 8, 30, 0.22)");
+  vignette.addColorStop(1, "rgba(18, 3, 14, 0.48)");
+  ctx.fillStyle = vignette;
   ctx.fillRect(0, 0, w, h);
 
-  const bubbles = [
-    { text: "I Love You 💕", x: 60, speedY: 450, seed: 1 },
-    { text: "Ti amo 💖", x: 620, speedY: 520, seed: 2 },
-    { text: "Je t'aime 🌹", x: 90, speedY: 380, seed: 3 },
-    { text: "사랑해 🌸", x: 640, speedY: 610, seed: 4 },
-    { text: "愛してる ✨", x: 75, speedY: 690, seed: 5 },
-    { text: "Together Forever ♡", x: 630, speedY: 340, seed: 6 },
-    { text: "Soulmate ❤️", x: 80, speedY: 820, seed: 7 },
-    { text: "You & Me 💕", x: 610, speedY: 750, seed: 8 },
-    { text: "Forever 💍", x: 100, speedY: 920, seed: 9 }
-  ];
+  // Soft Ambient Glow Orbs
+  const orb1Y = 280 + Math.sin(timeSec * 0.9) * 35;
+  const orb1 = ctx.createRadialGradient(w / 2, orb1Y, 15, w / 2, orb1Y, 380);
+  orb1.addColorStop(0, "rgba(255, 60, 130, 0.32)");
+  orb1.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = orb1;
+  ctx.fillRect(0, 0, w, h);
 
-  bubbles.forEach((b) => {
-    const y = (h + 100 - ((timeSec * b.speedY * 0.5 + b.seed * 140) % (h + 200)));
-    const waveX = b.x + Math.sin(timeSec * 0.8 + b.seed) * 20;
-
-    ctx.save();
-    ctx.fillStyle = "rgba(255, 255, 255, 0.18)";
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
-    ctx.lineWidth = 1;
-    roundRect(ctx, waveX - 60, y - 18, 120, 34, 17);
+  // Twinkling Floating Fireflies & Stars
+  for (let i = 0; i < 28; i++) {
+    const starX = (i * 59 + timeSec * 22) % w;
+    const starY = (i * 97 + Math.sin(timeSec * 1.2 + i) * 18) % h;
+    const starSize = 1.2 + (i % 3);
+    const alpha = 0.35 + Math.sin(timeSec * 2.5 + i) * 0.35;
+    ctx.fillStyle = `rgba(255, 230, 180, ${Math.max(0.1, alpha)})`;
+    ctx.beginPath();
+    ctx.arc(starX, starY, starSize, 0, Math.PI * 2);
     ctx.fill();
-    ctx.stroke();
-
-    ctx.fillStyle = "#ffffff";
-    ctx.textAlign = "center";
-    ctx.font = "italic 16px Georgia, serif";
-    ctx.fillText(b.text, waveX, y + 5);
-    ctx.restore();
-  });
-
-  for (let i = 0; i < 35; i++) {
-    const cx = (i * 47 + timeSec * 35) % w;
-    const cy = (i * 83 + timeSec * 150) % (h + 100);
-    const size = 6 + (i % 6);
-
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(timeSec * 1.5 + i);
-    ctx.fillStyle = i % 2 === 0 ? "rgba(255, 117, 160, 0.7)" : "rgba(255, 215, 0, 0.6)";
-    ctx.fillRect(-size / 2, -size / 2, size, size * 1.4);
-    ctx.restore();
   }
 
-  const rainEmojis = ["💖", "💕", "✨", "💌", "🌹", "💖", "💕"];
-  for (let j = 0; j < 15; j++) {
-    const char = rainEmojis[j % rainEmojis.length];
-    const fallSpeed = 35 + (j % 5) * 5;
-    const dropY = (j * 110 + timeSec * fallSpeed) % (h + 100);
-    const swayX = Math.sin(timeSec * 0.5 + j) * 40;
-    const dropX = ((j * 85) % w) + swayX;
+  // Floating Confetti & Rose Petals
+  const emojis = ["💖", "💕", "✨", "🌹", "💌", "🌸", "✨"];
+  for (let j = 0; j < 14; j++) {
+    const char = emojis[j % emojis.length];
+    const dropY = (j * 115 + timeSec * (38 + (j % 4) * 6)) % (h + 120);
+    const swayX = Math.sin(timeSec * 0.6 + j) * 35;
+    const dropX = ((j * 73) % w) + swayX;
 
-    if (dropX > w / 2 - 120 && dropX < w / 2 + 120 && dropY > 50 && dropY < 250) {
-      continue;
-    }
+    // Keep away from central focal text
+    if (dropX > 160 && dropX < 560 && dropY > 200 && dropY < 480) continue;
 
     ctx.save();
-    ctx.font = "26px sans-serif";
+    ctx.font = "24px sans-serif";
     ctx.textAlign = "center";
     ctx.translate(dropX, dropY - 50);
-    ctx.rotate(Math.sin(timeSec * 0.8 + j) * 0.2);
+    ctx.rotate(Math.sin(timeSec * 0.8 + j) * 0.25);
     ctx.fillText(char, 0, 0);
     ctx.restore();
   }
 
-  // CALCULATE DYNAMIC SCROLL
-  const hasStory = !!page?.storyText;
-  const memCount = memoryImgs?.length || 0;
-  const totalContentH = 1100 + (hasStory ? 500 : 0) + (memCount * 450);
-  const maxScroll = Math.max(0, totalContentH - h + 100);
-  
-  // Cinematic ease scroll downwards over the 30s
-  const easeScroll = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-  const currentScrollY = maxScroll * easeScroll;
+  // 2. CAMERA SCROLL TIMING (Shows Celebration Screen first, then Certificate)
+  const SCENE_OFFSET = 1280;
+  let camY = 0;
+
+  if (!hasExtra) {
+    if (timeSec < 12.5) {
+      camY = 0; // Scene 1: Celebration Card
+    } else if (timeSec < 15.5) {
+      const p = (timeSec - 12.5) / 3.0;
+      const ease = p < 0.5 ? 2 * p * p : -1 + (4 - 2 * p) * p;
+      camY = SCENE_OFFSET * ease;
+    } else {
+      camY = SCENE_OFFSET; // Scene 2: Official Certificate
+    }
+  } else {
+    if (timeSec < 10) {
+      camY = 0;
+    } else if (timeSec < 12.5) {
+      const p = (timeSec - 10) / 2.5;
+      const ease = p < 0.5 ? 2 * p * p : -1 + (4 - 2 * p) * p;
+      camY = SCENE_OFFSET * ease;
+    } else if (timeSec < 21) {
+      camY = SCENE_OFFSET;
+    } else if (timeSec < 23.5) {
+      const p = (timeSec - 21) / 2.5;
+      const ease = p < 0.5 ? 2 * p * p : -1 + (4 - 2 * p) * p;
+      camY = SCENE_OFFSET + SCENE_OFFSET * ease;
+    } else {
+      camY = SCENE_OFFSET * 2;
+    }
+  }
 
   ctx.save();
-  ctx.translate(0, -currentScrollY);
+  ctx.translate(0, -camY);
 
+  // ─────────────────────────────────────────────────────────────
+  // ─── SCENE 1: "YOU SAID YES!" CELEBRATION CARD (TARGET MATCH) ─
+  // ─────────────────────────────────────────────────────────────
+  const cardW = 620;
+  const cardH = 880;
+  const cardX = (w - cardW) / 2;
+  const cardY = 180;
+
+  // Glass Panel Base
   ctx.save();
-  ctx.fillStyle = "rgba(230, 28, 93, 0.85)";
-  ctx.shadowColor = "rgba(230, 28, 93, 0.6)";
-  ctx.shadowBlur = 15;
-  roundRect(ctx, w / 2 - 110, 45, 220, 36, 18);
+  ctx.fillStyle = "rgba(30, 8, 22, 0.72)";
+  ctx.shadowColor = "rgba(255, 40, 120, 0.45)";
+  ctx.shadowBlur = 38;
+  roundRect(ctx, cardX, cardY, cardW, cardH, 28);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(255, 120, 180, 0.7)";
+  ctx.lineWidth = 1.8;
+  ctx.stroke();
+  ctx.restore();
+
+  // Top 3D YES! Heart Emblem (Overlapping Card Top)
+  ctx.save();
+  const badgePulse = 1 + Math.sin(timeSec * 3) * 0.03;
+  ctx.translate(w / 2, cardY);
+  ctx.scale(badgePulse, badgePulse);
+
+  // Sparkle Glow Rays
+  const rays = ctx.createRadialGradient(0, 0, 10, 0, 0, 60);
+  rays.addColorStop(0, "rgba(255, 255, 255, 0.6)");
+  rays.addColorStop(0.5, "rgba(255, 42, 117, 0.35)");
+  rays.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = rays;
+  ctx.beginPath();
+  ctx.arc(0, 0, 60, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 3D Heart Badge
+  const badgeG = ctx.createRadialGradient(-8, -12, 4, 0, 0, 42);
+  badgeG.addColorStop(0, "#ff5e98");
+  badgeG.addColorStop(0.55, "#ff2a75");
+  badgeG.addColorStop(1, "#c9184a");
+  ctx.fillStyle = badgeG;
+  ctx.shadowColor = "rgba(255, 42, 117, 0.85)";
+  ctx.shadowBlur = 24;
+  roundRect(ctx, -40, -38, 80, 76, 38);
   ctx.fill();
   ctx.shadowColor = "transparent";
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
   ctx.fillStyle = "#ffffff";
   ctx.textAlign = "center";
-  ctx.font = "bold 15px 'Cinzel', Georgia, serif";
-  ctx.fillText("✨ YOU SAID YES! ✨", w / 2, 68);
+  ctx.font = "italic 900 24px 'Playfair Display', Georgia, serif";
+  ctx.fillText("YES!", 0, 8);
+  ctx.restore();
 
-  const pulseSize = 36 + Math.sin(timeSec * 3) * 1.5;
-  ctx.font = `italic ${pulseSize}px 'Cormorant Garamond', Georgia, serif`;
+  // Pill Badge: ✨ YOU SAID YES ✨
+  ctx.save();
+  ctx.fillStyle = "rgba(255, 255, 255, 0.12)";
+  ctx.strokeStyle = "rgba(255, 209, 102, 0.45)";
+  ctx.lineWidth = 1;
+  roundRect(ctx, w / 2 - 105, cardY + 68, 210, 32, 16);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = "#ffd166";
+  ctx.textAlign = "center";
+  ctx.font = "bold 13px 'Cinzel', Georgia, serif";
+  ctx.fillText("✨ YOU SAID YES ✨", w / 2, cardY + 89);
+  ctx.restore();
+
+  // Heading: "You said YES!"
+  ctx.save();
+  ctx.textAlign = "center";
+  ctx.font = "italic bold 38px 'Playfair Display', Georgia, serif";
+  const youSaidW = ctx.measureText("You said ").width;
+
+  ctx.font = "bold 54px 'Great Vibes', 'Alex Brush', cursive";
+  const yesW = ctx.measureText("YES!").width;
+  const totalHeadW = youSaidW + yesW;
+  const headStartX = w / 2 - totalHeadW / 2;
+
+  // "You said " in Serif White
+  ctx.textAlign = "left";
   ctx.fillStyle = "#ffffff";
-  ctx.fillText("You said YES!", w / 2, 115);
-
-  ctx.font = "normal 48px 'Pinyon Script', 'Great Vibes', cursive";
-  ctx.fillStyle = "#ffb3c1";
   ctx.shadowColor = "rgba(0,0,0,0.4)";
-  ctx.shadowBlur = 8;
-  ctx.fillText(`${creatorName}  ♡  ${partnerName}`, w / 2, 168);
+  ctx.shadowBlur = 10;
+  ctx.font = "italic bold 38px 'Playfair Display', Georgia, serif";
+  ctx.fillText("You said ", headStartX, cardY + 148);
 
-  ctx.shadowColor = "transparent";
-  ctx.font = "bold 14px Georgia, serif";
-  ctx.fillStyle = "#ffd1d9";
-  ctx.fillText("Two Hearts  •  One Story  •  Forever & Always", w / 2, 202);
+  // "YES!" in Golden Cursive Calligraphy
+  const goldTextG = ctx.createLinearGradient(headStartX + youSaidW, cardY + 110, headStartX + totalHeadW, cardY + 155);
+  goldTextG.addColorStop(0, "#ffe082");
+  goldTextG.addColorStop(0.5, "#ffd166");
+  goldTextG.addColorStop(1, "#ffab40");
+  ctx.fillStyle = goldTextG;
+  ctx.shadowColor = "rgba(255, 209, 102, 0.75)";
+  ctx.shadowBlur = 18;
+  ctx.font = "bold 56px 'Great Vibes', 'Alex Brush', cursive";
+  ctx.fillText("YES!", headStartX + youSaidW, cardY + 152);
   ctx.restore();
 
-  if (creator) {
-    ctx.save();
-    const driftY1 = Math.sin(timeSec * 1.4) * 8;
-    ctx.translate(w / 2 - 130, 340 + driftY1);
-    ctx.rotate(-0.08);
-
-    ctx.shadowColor = "rgba(0,0,0,0.5)";
-    ctx.shadowBlur = 16;
-    ctx.fillStyle = "#ffffff";
-    roundRect(ctx, -100, -120, 200, 240, 12);
-    ctx.fill();
-    ctx.shadowColor = "transparent";
-
-    ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
-    ctx.fillRect(-35, -132, 70, 24);
-
-    drawCoverImage(ctx, creator, -88, -108, 176, 180, 0);
-
-    ctx.fillStyle = "#e61c5d";
-    roundRect(ctx, -60, 80, 120, 28, 14);
-    ctx.fill();
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 14px Georgia, serif";
-    ctx.textAlign = "center";
-    ctx.fillText(creatorName, 0, 99);
-    ctx.restore();
-  }
-
-  if (partner) {
-    ctx.save();
-    const driftY2 = Math.cos(timeSec * 1.6 + 1) * 8;
-    ctx.translate(w / 2 + 130, 340 + driftY2);
-    ctx.rotate(0.08);
-
-    ctx.shadowColor = "rgba(0,0,0,0.5)";
-    ctx.shadowBlur = 16;
-    ctx.fillStyle = "#ffffff";
-    roundRect(ctx, -100, -120, 200, 240, 12);
-    ctx.fill();
-    ctx.shadowColor = "transparent";
-
-    ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
-    ctx.fillRect(-35, -132, 70, 24);
-
-    drawCoverImage(ctx, partner, -88, -108, 176, 180, 0);
-
-    ctx.fillStyle = "#e61c5d";
-    roundRect(ctx, -60, 80, 120, 28, 14);
-    ctx.fill();
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 14px Georgia, serif";
-    ctx.textAlign = "center";
-    ctx.fillText(partnerName, 0, 99);
-    ctx.restore();
-  }
-
+  // Calligraphy Names: Creator ♡ / ♡ Partner ♡
   ctx.save();
-  const crownScale = 1 + Math.sin(timeSec * 2) * 0.08;
-  ctx.translate(w / 2, 330);
-  ctx.scale(crownScale, crownScale);
-  ctx.fillStyle = "#ffb800";
-  ctx.font = "28px sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("👑", 0, 0);
-  ctx.fillStyle = "#e61c5d";
-  ctx.font = "20px sans-serif";
-  ctx.fillText("❤️", 0, 30);
-  ctx.restore();
-
-  const certW = 600;
-  const certH = 500;
-  const certX = (w - certW) / 2;
-  const certDriftY = Math.sin(timeSec * 1.1 + 0.5) * 6;
-  const certY = 530 + certDriftY;
-
-  ctx.save();
-  ctx.shadowColor = "rgba(230, 28, 93, 0.5)";
+  ctx.shadowColor = "rgba(255, 79, 129, 0.6)";
   ctx.shadowBlur = 24;
 
+  // Top Row: Creator ♡
+  ctx.font = "normal 48px 'Great Vibes', 'Pinyon Script', cursive";
+  const cNameW = ctx.measureText(creatorName).width;
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText(creatorName, w / 2 - 14, cardY + 215);
+
+  ctx.font = "30px sans-serif";
+  ctx.fillStyle = "#ff5e98";
+  ctx.shadowColor = "#ff5e98";
+  ctx.shadowBlur = 12;
+  ctx.fillText("♡", w / 2 + cNameW / 2 + 6, cardY + 212);
+
+  // Bottom Row: ♡ Partner ♡
+  ctx.font = "normal 48px 'Great Vibes', 'Pinyon Script', cursive";
+  const pNameW = ctx.measureText(partnerName).width;
+
+  ctx.font = "30px sans-serif";
+  ctx.fillStyle = "#ff5e98";
+  ctx.shadowColor = "#ff5e98";
+  ctx.shadowBlur = 12;
+  ctx.fillText("♡", w / 2 - pNameW / 2 - 20, cardY + 268);
+
+  ctx.font = "normal 48px 'Great Vibes', 'Pinyon Script', cursive";
+  ctx.fillStyle = "#ffffff";
+  ctx.shadowColor = "rgba(255, 79, 129, 0.6)";
+  ctx.shadowBlur = 24;
+  ctx.fillText(partnerName, w / 2, cardY + 270);
+
+  ctx.font = "30px sans-serif";
+  ctx.fillStyle = "#ff5e98";
+  ctx.shadowColor = "#ff5e98";
+  ctx.shadowBlur = 12;
+  ctx.fillText("♡", w / 2 + pNameW / 2 + 20, cardY + 268);
+  ctx.restore();
+
+  // Subtitle Ribbon: Two Hearts ♥ One Story ♥ Forever & Always
+  ctx.save();
+  ctx.textAlign = "center";
+  ctx.font = "italic 16px 'Playfair Display', Georgia, serif";
+  ctx.fillStyle = "#ffd166";
+  ctx.shadowColor = "rgba(0,0,0,0.5)";
+  ctx.shadowBlur = 6;
+  ctx.fillText("Two Hearts", w / 2 - 135, cardY + 316);
+
+  ctx.font = "14px sans-serif";
+  ctx.fillStyle = "#ff4f81";
+  ctx.fillText("♥", w / 2 - 76, cardY + 315);
+
+  ctx.font = "italic 16px 'Playfair Display', Georgia, serif";
+  ctx.fillStyle = "#ffd166";
+  ctx.fillText("One Story", w / 2, cardY + 316);
+
+  ctx.font = "14px sans-serif";
+  ctx.fillStyle = "#ff4f81";
+  ctx.fillText("♥", w / 2 + 76, cardY + 315);
+
+  ctx.font = "italic 16px 'Playfair Display', Georgia, serif";
+  ctx.fillStyle = "#ffd166";
+  ctx.fillText("Forever & Always", w / 2 + 155, cardY + 316);
+  ctx.restore();
+
+  // Polaroid Photo Showcase Section
+  const polaroidCenterY = cardY + 495;
+
+  // Left Polaroid: Creator
+  ctx.save();
+  const driftY1 = Math.sin(timeSec * 1.5) * 6;
+  ctx.translate(w / 2 - 135, polaroidCenterY + driftY1);
+  ctx.rotate(-0.08); // -4.6 degrees tilt
+
+  // White Polaroid Card Frame
+  ctx.fillStyle = "#ffffff";
+  ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+  ctx.shadowBlur = 22;
+  roundRect(ctx, -95, -120, 190, 240, 12);
+  ctx.fill();
+  ctx.shadowColor = "transparent";
+
+  // Top White Tape
+  ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.95)";
+  ctx.lineWidth = 1;
+  roundRect(ctx, -26, -132, 52, 18, 3);
+  ctx.fill();
+  ctx.stroke();
+
+  // Photo
+  if (creator) {
+    drawCoverImage(ctx, creator, -85, -108, 170, 168, 6);
+  } else {
+    drawAvatarFallback(ctx, -85, -108, 170, 168, creatorName, 6);
+  }
+
+  // Pink Bottom Name Pill
+  const pillG1 = ctx.createLinearGradient(-65, 80, 65, 108);
+  pillG1.addColorStop(0, "#ff2a75");
+  pillG1.addColorStop(1, "#ff5e98");
+  ctx.fillStyle = pillG1;
+  ctx.shadowColor = "rgba(255, 42, 117, 0.45)";
+  ctx.shadowBlur = 10;
+  roundRect(ctx, -65, 80, 130, 28, 14);
+  ctx.fill();
+  ctx.shadowColor = "transparent";
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 13px Georgia, serif";
+  ctx.textAlign = "center";
+  ctx.fillText(creatorName, 0, 99);
+  ctx.restore();
+
+  // Right Polaroid: Partner
+  ctx.save();
+  const driftY2 = Math.cos(timeSec * 1.5 + 1) * 6;
+  ctx.translate(w / 2 + 135, polaroidCenterY + driftY2);
+  ctx.rotate(0.08); // +4.6 degrees tilt
+
+  // White Polaroid Card Frame
+  ctx.fillStyle = "#ffffff";
+  ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+  ctx.shadowBlur = 22;
+  roundRect(ctx, -95, -120, 190, 240, 12);
+  ctx.fill();
+  ctx.shadowColor = "transparent";
+
+  // Top White Tape
+  ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.95)";
+  ctx.lineWidth = 1;
+  roundRect(ctx, -26, -132, 52, 18, 3);
+  ctx.fill();
+  ctx.stroke();
+
+  // Photo
+  if (partner) {
+    drawCoverImage(ctx, partner, -85, -108, 170, 168, 6);
+  } else {
+    drawAvatarFallback(ctx, -85, -108, 170, 168, partnerName, 6);
+  }
+
+  // Pink Bottom Name Pill
+  const pillG2 = ctx.createLinearGradient(-65, 80, 65, 108);
+  pillG2.addColorStop(0, "#ff2a75");
+  pillG2.addColorStop(1, "#ff5e98");
+  ctx.fillStyle = pillG2;
+  ctx.shadowColor = "rgba(255, 42, 117, 0.45)";
+  ctx.shadowBlur = 10;
+  roundRect(ctx, -65, 80, 130, 28, 14);
+  ctx.fill();
+  ctx.shadowColor = "transparent";
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 13px Georgia, serif";
+  ctx.textAlign = "center";
+  ctx.fillText(partnerName, 0, 99);
+  ctx.restore();
+
+  // Center Seal: Crown & "Forever" Heart
+  ctx.save();
+  const crownScale = 1 + Math.sin(timeSec * 2.2) * 0.06;
+  ctx.translate(w / 2, polaroidCenterY);
+  ctx.scale(crownScale, crownScale);
+
+  ctx.font = "32px sans-serif";
+  ctx.shadowColor = "rgba(255, 209, 102, 0.7)";
+  ctx.shadowBlur = 14;
+  ctx.textAlign = "center";
+  ctx.fillText("👑", 0, -32);
+
+  // 3D Heart with "Forever"
+  const heartSealG = ctx.createRadialGradient(-6, -6, 2, 0, 0, 28);
+  heartSealG.addColorStop(0, "#ff5e98");
+  heartSealG.addColorStop(1, "#c9184a");
+  ctx.fillStyle = heartSealG;
+  ctx.shadowColor = "rgba(201, 24, 74, 0.65)";
+  ctx.shadowBlur = 16;
+  roundRect(ctx, -27, -6, 54, 52, 26);
+  ctx.fill();
+  ctx.shadowColor = "transparent";
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "normal 17px 'Great Vibes', cursive";
+  ctx.fillText("Forever", 0, 26);
+  ctx.restore();
+
+  // Floating Side Pill: "💕 You & Me 💕"
+  ctx.save();
+  const floatPillY = cardY + 410 + Math.sin(timeSec * 1.3) * 8;
+  ctx.fillStyle = "rgba(45, 12, 30, 0.75)";
+  ctx.strokeStyle = "rgba(255, 79, 129, 0.55)";
+  ctx.lineWidth = 1.2;
+  roundRect(ctx, 40, floatPillY, 130, 32, 16);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "italic 13px Georgia, serif";
+  ctx.textAlign = "center";
+  ctx.fillText("💕 You & Me 💕", 105, floatPillY + 21);
+  ctx.restore();
+
+  // Bottom Footer Note
+  ctx.save();
+  ctx.font = "italic 15px Georgia, serif";
+  ctx.fillStyle = "#ffb3c1";
+  ctx.textAlign = "center";
+  ctx.shadowColor = "rgba(0,0,0,0.5)";
+  ctx.shadowBlur = 8;
+  ctx.fillText("💕 A digital love story, created just for the two of you. 💕", w / 2, cardY + 740);
+  ctx.restore();
+
+  // ─────────────────────────────────────────────────────────────
+  // ─── SCENE 2: OFFICIAL ROMANTIC CERTIFICATE OF ETERNAL LOVE ───
+  // ─────────────────────────────────────────────────────────────
+  const certW = 660;
+  const certH = 920;
+  const certX = (w - certW) / 2;
+  const certY = SCENE_OFFSET + (SCENE_OFFSET - certH) / 2;
+
+  ctx.save();
+  ctx.shadowColor = "rgba(0, 0, 0, 0.7)";
+  ctx.shadowBlur = 35;
+  roundRect(ctx, certX, certY, certW, certH, 22);
+
   if (certBgImg) {
-    roundRect(ctx, certX, certY, certW, certH, 20);
+    ctx.save();
+    roundRect(ctx, certX, certY, certW, certH, 22);
     ctx.clip();
     ctx.drawImage(certBgImg, certX, certY, certW, certH);
+    ctx.restore();
   } else {
-    const bgG = ctx.createLinearGradient(certX, certY, certX + certW, certY + certH);
-    bgG.addColorStop(0, "#fffcf2");
-    bgG.addColorStop(1, "#f4ecc2");
-    ctx.fillStyle = bgG;
-    roundRect(ctx, certX, certY, certW, certH, 20);
+    const certG = ctx.createLinearGradient(certX, certY, certX + certW, certY + certH);
+    certG.addColorStop(0, "#fffef7");
+    certG.addColorStop(1, "#f5ebd0");
+    ctx.fillStyle = certG;
     ctx.fill();
   }
 
-  ctx.shadowColor = "transparent";
+  // Golden Outer Border
+  ctx.shadowColor = "rgba(200, 163, 86, 0.5)";
+  ctx.shadowBlur = 15;
+  ctx.strokeStyle = "rgba(200, 163, 86, 0.8)";
+  ctx.lineWidth = 2.5;
+  roundRect(ctx, certX, certY, certW, certH, 22);
+  ctx.stroke();
+  ctx.restore();
+
+  // Certificate Header Section
+  ctx.save();
   ctx.textAlign = "center";
 
+  ctx.fillStyle = "#c8a356";
+  ctx.font = "normal 22px Georgia, serif";
+  ctx.fillText("─── ༺ ♥ ༻ ───", w / 2, certY + 68);
+
   ctx.fillStyle = "#70101f";
-  ctx.font = "bold 14px 'Cinzel', Georgia, serif";
-  ctx.fillText("— THE OFFICIAL —", w / 2, certY + 55);
+  ctx.font = "700 14px 'Cinzel', Georgia, serif";
+  ctx.fillText("— THE OFFICIAL —", w / 2, certY + 104);
 
   ctx.fillStyle = "#4a0913";
-  ctx.font = "bold 26px 'Cinzel', Georgia, serif";
-  ctx.fillText("CERTIFICATE OF", w / 2, certY + 95);
+  ctx.font = "bold 28px 'Cinzel', 'Playfair Display', Georgia, serif";
+  ctx.fillText("CERTIFICATE OF", w / 2, certY + 146);
 
-  ctx.font = "900 38px 'Cinzel', Georgia, serif";
+  // ETERNAL L❤️VE
+  ctx.font = "900 44px 'Cinzel', Georgia, serif";
+  const part1 = "ETERNAL L";
+  const part2 = "VE";
+  const w1 = ctx.measureText(part1).width;
+  const w2 = ctx.measureText(part2).width;
+  const heartW = 38;
+  const totalCertTitleW = w1 + heartW + w2;
+  const startCertTitleX = w / 2 - totalCertTitleW / 2;
+
+  ctx.textAlign = "left";
   ctx.fillStyle = "#4a0913";
-  ctx.fillText("ETERNAL L❤️VE", w / 2, certY + 140);
+  ctx.fillText(part1, startCertTitleX, certY + 208);
+
+  ctx.font = "38px sans-serif";
+  ctx.fillText("❤️", startCertTitleX + w1 - 2, certY + 204);
+
+  ctx.font = "900 44px 'Cinzel', Georgia, serif";
+  ctx.fillText(part2, startCertTitleX + w1 + heartW - 4, certY + 208);
+
+  // — THIS CERTIFIES THAT —
+  ctx.textAlign = "center";
+  ctx.strokeStyle = "#c8a356";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(w / 2 - 190, certY + 252);
+  ctx.lineTo(w / 2 - 90, certY + 252);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(w / 2 + 90, certY + 252);
+  ctx.lineTo(w / 2 + 190, certY + 252);
+  ctx.stroke();
 
   ctx.fillStyle = "#70101f";
   ctx.font = "700 13px 'Cinzel', Georgia, serif";
-  ctx.fillText("— THIS CERTIFIES THAT —", w / 2, certY + 175);
+  ctx.fillText("THIS CERTIFIES THAT", w / 2, certY + 256);
+
+  ctx.font = "16px sans-serif";
+  ctx.fillStyle = "#aa1024";
+  ctx.fillText("♥", w / 2, certY + 280);
+
+  // Couple Names Row: Creator ❤️ Partner
+  ctx.font = "normal 52px 'Pinyon Script', 'Great Vibes', cursive";
+  ctx.fillStyle = "#660714";
+  ctx.shadowColor = "rgba(110, 9, 23, 0.25)";
+  ctx.shadowBlur = 10;
+
+  const leftNW = ctx.measureText(creatorName).width;
+  const rightNW = ctx.measureText(partnerName).width;
+  const spacing = 55;
+
+  ctx.fillText(creatorName, w / 2 - (spacing + leftNW / 2), certY + 360);
+
+  ctx.font = "34px sans-serif";
+  ctx.fillStyle = "#b80d22";
+  ctx.shadowBlur = 12;
+  ctx.fillText("❤️", w / 2, certY + 352);
 
   ctx.font = "normal 52px 'Pinyon Script', 'Great Vibes', cursive";
   ctx.fillStyle = "#660714";
-  ctx.fillText(`${creatorName}   ❤️   ${partnerName}`, w / 2, certY + 240);
+  ctx.shadowBlur = 10;
+  ctx.fillText(partnerName, w / 2 + (spacing + rightNW / 2), certY + 360);
+  ctx.shadowBlur = 0;
+
+  // Declaration Body Paragraphs
+  ctx.font = "italic 17px 'Cormorant Garamond', Georgia, serif";
+  ctx.fillStyle = "#1f1614";
+  ctx.fillText("are hereby declared to be forever bound in love,", w / 2, certY + 425);
+  ctx.fillText("in heart, in soul and in every lifetime.", w / 2, certY + 455);
+
+  ctx.font = "italic 21px 'Pinyon Script', 'Great Vibes', cursive";
+  ctx.fillStyle = "#8a0c1e";
+  ctx.fillText("This bond is certified as timeless, unconditional, and everlasting,", w / 2, certY + 508);
 
   ctx.font = "italic 16px 'Cormorant Garamond', Georgia, serif";
-  ctx.fillStyle = "#1a1012";
-  ctx.fillText("are hereby declared to be forever bound in love,", w / 2, certY + 280);
-  ctx.fillText("in heart, in soul and in every lifetime.", w / 2, certY + 305);
+  ctx.fillStyle = "#1f1614";
+  ctx.fillText("sealed with trust, respect, care and a love that grows stronger", w / 2, certY + 545);
+  ctx.fillText("with every heartbeat.", w / 2, certY + 572);
 
-  ctx.font = "italic 18px 'Pinyon Script', cursive";
-  ctx.fillStyle = "#8a0c1e";
-  ctx.fillText("This bond is certified as timeless, unconditional, and everlasting,", w / 2, certY + 345);
-
-  ctx.font = "italic 15px 'Cormorant Garamond', Georgia, serif";
-  ctx.fillStyle = "#1a1012";
-  ctx.fillText("sealed with trust, respect, care and a love that grows stronger.", w / 2, certY + 375);
-
-  ctx.font = "normal 32px 'Pinyon Script', cursive";
+  // Together Forever Calligraphy
+  ctx.font = "normal 44px 'Pinyon Script', 'Great Vibes', cursive";
   ctx.fillStyle = "#5c0d18";
-  ctx.fillText("Together Forever", w / 2, certY + 425);
+  ctx.fillText("Together Forever", w / 2, certY + 638);
 
-  ctx.font = "32px sans-serif";
-  ctx.fillText("❤️", w / 2, certY + 465);
+  ctx.fillStyle = "#c8a356";
+  ctx.font = "normal 18px Georgia, serif";
+  ctx.fillText("─── ༺ ♥ ༻ ───", w / 2, certY + 672);
+
+  // Signatures Row
+  // Left: Creator
+  ctx.font = "normal 34px 'Pinyon Script', 'Great Vibes', cursive";
+  ctx.fillStyle = "#1a1a1a";
+  ctx.fillText(creatorName, w / 2 - 165, certY + 750);
+
+  ctx.strokeStyle = "#8b0d1e";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(w / 2 - 240, certY + 772);
+  ctx.lineTo(w / 2 - 90, certY + 772);
+  ctx.stroke();
+
+  ctx.font = "12px sans-serif";
+  ctx.fillStyle = "#aa1024";
+  ctx.fillText("♥", w / 2 - 165, certY + 776);
+
+  ctx.font = "bold 12px 'Cinzel', Georgia, serif";
+  ctx.fillStyle = "#4a0812";
+  ctx.fillText("PARTNER IN LIFE", w / 2 - 165, certY + 796);
+
+  // Right: Partner
+  ctx.font = "normal 34px 'Pinyon Script', 'Great Vibes', cursive";
+  ctx.fillStyle = "#1a1a1a";
+  ctx.fillText(partnerName, w / 2 + 165, certY + 750);
+
+  ctx.beginPath();
+  ctx.moveTo(w / 2 + 90, certY + 772);
+  ctx.lineTo(w / 2 + 240, certY + 772);
+  ctx.stroke();
+
+  ctx.font = "12px sans-serif";
+  ctx.fillStyle = "#aa1024";
+  ctx.fillText("♥", w / 2 + 165, certY + 776);
+
+  ctx.font = "bold 12px 'Cinzel', Georgia, serif";
+  ctx.fillStyle = "#4a0812";
+  ctx.fillText("PARTNER IN LIFE", w / 2 + 165, certY + 796);
+
+  // Envelope Note (Bottom Left Corner)
+  ctx.save();
+  ctx.translate(certX + 110, certY + 865);
+  ctx.rotate((-12 * Math.PI) / 180);
+  ctx.font = "normal 22px 'Pinyon Script', 'Great Vibes', cursive";
+  ctx.fillStyle = "#2a1c15";
+  ctx.fillText("Forever Looks Better With You ♡", 0, 0);
+  ctx.restore();
 
   ctx.restore();
 
-  ctx.font = "italic 18px Georgia, serif";
-  ctx.fillStyle = "#ffb3c1";
-  ctx.textAlign = "center";
-  ctx.fillText("💕 A digital love story, created just for the two of you. 💕", w / 2, 1070);
+  // ─────────────────────────────────────────────────────────────
+  // ─── SCENE 3: LOVE LETTER & MEMORIES (IF PRESENT) ─────────────
+  // ─────────────────────────────────────────────────────────────
+  if (hasExtra) {
+    let extraY = SCENE_OFFSET * 2 + 140;
 
-  let currentY = 1140;
-
-  // Render Love Letter 
-  if (page?.storyText) {
-    ctx.shadowColor = "rgba(230, 28, 93, 0.4)";
-    ctx.shadowBlur = 15;
-    ctx.fillStyle = "rgba(25, 2, 8, 0.7)";
-    roundRect(ctx, 40, currentY, w - 80, 400, 20);
-    ctx.fill();
-    ctx.shadowBlur = 0;
-
-    ctx.fillStyle = "#ffd1d9";
-    ctx.font = "bold 24px 'Cinzel', serif";
-    ctx.fillText("💌 Our Love Letter 💌", w/2, currentY + 50);
-
-    ctx.fillStyle = "#fffcf2";
-    ctx.font = "18px 'Cormorant Garamond', serif";
-    wrapText(ctx, page.storyText, w/2, currentY + 110, w - 120, 28);
-    currentY += 460;
-  }
-
-  // Render Memories Timeline
-  if (memoryImgs?.length > 0) {
-    ctx.fillStyle = "#ffb3c1";
-    ctx.font = "bold 28px 'Cinzel', serif";
-    ctx.fillText("✨ Our Beautiful Memories ✨", w/2, currentY + 30);
-    currentY += 80;
-
-    memoryImgs.forEach((mem, idx) => {
+    if (page?.storyText || page?.message) {
+      const letterText = page.storyText || page.message;
       ctx.save();
-      const tilt = (idx % 2 === 0) ? -0.05 : 0.05;
-      const swayY = Math.sin(timeSec * 1.5 + idx) * 10;
-      ctx.translate(w/2, currentY + 180 + swayY);
-      ctx.rotate(tilt);
-
-      // Frame
-      ctx.shadowColor = "rgba(0,0,0,0.6)";
-      ctx.shadowBlur = 20;
-      ctx.fillStyle = "#ffffff";
-      roundRect(ctx, -160, -180, 320, 380, 16);
+      ctx.fillStyle = "rgba(25, 2, 8, 0.78)";
+      ctx.shadowColor = "rgba(230, 28, 93, 0.4)";
+      ctx.shadowBlur = 18;
+      roundRect(ctx, 45, extraY, w - 90, 420, 20);
       ctx.fill();
-      ctx.shadowColor = "transparent";
+      ctx.strokeStyle = "rgba(255, 120, 180, 0.6)";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
 
-      // Photo
-      drawCoverImage(ctx, mem.loadedImage, -145, -165, 290, 270, 8);
+      ctx.fillStyle = "#ffd1d9";
+      ctx.textAlign = "center";
+      ctx.font = "bold 24px 'Cinzel', serif";
+      ctx.fillText("💌 Our Love Letter 💌", w / 2, extraY + 52);
 
-      // Title & Date
-      ctx.fillStyle = "#1a0209";
-      ctx.font = "bold 20px Georgia, serif";
-      ctx.fillText(mem.title || "Our Memory", 0, 140);
-      
-      ctx.fillStyle = "#e61c5d";
-      ctx.font = "14px sans-serif";
-      ctx.fillText(mem.date || "", 0, 168);
-
+      ctx.fillStyle = "#fffcf2";
+      ctx.font = "18px 'Cormorant Garamond', Georgia, serif";
+      wrapText(ctx, letterText, w / 2, extraY + 115, w - 140, 28);
       ctx.restore();
-      currentY += 420;
-    });
+      extraY += 480;
+    }
+
+    if (memCount > 0) {
+      memoryImgs.forEach((mem, idx) => {
+        ctx.save();
+        const tilt = idx % 2 === 0 ? -0.05 : 0.05;
+        ctx.translate(w / 2, extraY + 220);
+        ctx.rotate(tilt);
+
+        ctx.fillStyle = "#ffffff";
+        ctx.shadowColor = "rgba(0,0,0,0.6)";
+        ctx.shadowBlur = 20;
+        roundRect(ctx, -160, -180, 320, 370, 16);
+        ctx.fill();
+
+        if (mem.loadedImage) {
+          drawCoverImage(ctx, mem.loadedImage, -145, -165, 290, 260, 8);
+        }
+
+        ctx.fillStyle = "#1a0209";
+        ctx.font = "bold 20px Georgia, serif";
+        ctx.textAlign = "center";
+        ctx.fillText(mem.title || "Our Memory", 0, 135);
+
+        ctx.fillStyle = "#e61c5d";
+        ctx.font = "14px sans-serif";
+        ctx.fillText(mem.date || "", 0, 162);
+        ctx.restore();
+        extraY += 440;
+      });
+    }
   }
 
-  ctx.restore(); // Restore the Y scrolling translation
+  ctx.restore(); // Restore camera translation
 
-  // Fixed Progress bar ALWAYS at bottom of screen
-  ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
-  ctx.fillRect(50, 1220, (w - 100) * t, 6);
+  // ─────────────────────────────────────────────────────────────
+  // ─── FIXED VIEWPORT OVERLAYS (PROGRESS BAR) ──────────────────
+  // ─────────────────────────────────────────────────────────────
+  ctx.save();
+  // Bottom Progress Track
+  ctx.fillStyle = "rgba(255, 255, 255, 0.22)";
+  roundRect(ctx, 45, 1240, w - 90, 6, 3);
+  ctx.fill();
+
+  // Glowing Progress Fill
+  const progG = ctx.createLinearGradient(45, 1240, 45 + (w - 90) * t, 1240);
+  progG.addColorStop(0, "#ff4d8d");
+  progG.addColorStop(1, "#ffd166");
+  ctx.fillStyle = progG;
+  roundRect(ctx, 45, 1240, Math.max(6, (w - 90) * t), 6, 3);
+  ctx.fill();
+
+  // Little Heart Tip
+  if (t > 0.02) {
+    ctx.font = "14px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("💖", 45 + (w - 90) * t, 1246);
+  }
+  ctx.restore();
 }
 
 function roundRect(ctx, x, y, w, h, r) {
