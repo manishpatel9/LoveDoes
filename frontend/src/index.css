@@ -2562,6 +2562,14 @@ main {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
 }
 
+.lp-uploaded-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
 .timeline-strip-item {
   display: flex;
   align-items: center;
