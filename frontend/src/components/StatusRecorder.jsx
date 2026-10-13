@@ -268,30 +268,39 @@ async function setupRecordingAudioStream(page, videoStream) {
 }
 
 function getBestSupportedMimeType() {
+  // If MediaRecorder is unavailable, fall back to WebM (the most universally supported).
   if (typeof MediaRecorder === "undefined") {
     return { mimeType: "video/webm", ext: "webm", label: "WEBM" };
   }
 
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const isMobile = /Android|iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && window.innerWidth < 900);
 
-  // On iOS, MP4 is standard. On Android and Chromium browsers, WebM with VP8/Opus is rock-solid
-  // and natively handles Canvas + Web Audio without dropping video tracks.
-  const candidates = isIOS
+  // For mobile devices (Android & iOS) we prioritize MP4 because WhatsApp and many native apps only accept MP4.
+  // If MP4 is not supported, we gracefully fall back to WebM.
+  const mobileCandidates = isMobile
     ? [
         { mimeType: "video/mp4;codecs=avc1.42E01E,mp4a.40.2", ext: "mp4", label: "MP4" },
         { mimeType: "video/mp4;codecs=avc1", ext: "mp4", label: "MP4" },
         { mimeType: "video/mp4", ext: "mp4", label: "MP4" },
         { mimeType: "video/webm;codecs=vp8,opus", ext: "webm", label: "WEBM" },
-        { mimeType: "video/webm", ext: "webm", label: "WEBM" }
+        { mimeType: "video/webm", ext: "webm", label: "WEBM" },
       ]
-    : [
+    : [];
+
+  // Desktop / non‑mobile candidates – keep the original order (WebM first, then MP4).
+  const desktopCandidates = !isMobile
+    ? [
         { mimeType: "video/webm;codecs=vp8,opus", ext: "webm", label: "WEBM" },
         { mimeType: "video/webm;codecs=vp8", ext: "webm", label: "WEBM" },
         { mimeType: "video/webm;codecs=h264,opus", ext: "webm", label: "WEBM" },
         { mimeType: "video/webm", ext: "webm", label: "WEBM" },
         { mimeType: "video/mp4;codecs=avc1,mp4a.40.2", ext: "mp4", label: "MP4" },
-        { mimeType: "video/mp4", ext: "mp4", label: "MP4" }
-      ];
+        { mimeType: "video/mp4", ext: "mp4", label: "MP4" },
+      ]
+    : [];
+
+  const candidates = mobileCandidates.concat(desktopCandidates);
 
   for (const item of candidates) {
     if (MediaRecorder.isTypeSupported(item.mimeType)) {
@@ -299,6 +308,7 @@ function getBestSupportedMimeType() {
     }
   }
 
+  // Fallback – WebM is the safest generic container.
   return { mimeType: "video/webm", ext: "webm", label: "WEBM" };
 }
 
