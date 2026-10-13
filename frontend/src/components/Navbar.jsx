@@ -12,7 +12,7 @@ export default function Navbar() {
     <header className="site-header">
       {/* BRAND LOGO */}
       <NavLink to="/" className="logo-brand" onClick={() => playSparkleSound()}>
-        <img src={logo} alt="LoveDoes logo" className="logo-image" />
+        <img src={logo + "?v=1"} alt="LoveDoes logo" className="logo-image" />
       </NavLink>
 
       {/* DESKTOP NAVIGATION LINKS */}
