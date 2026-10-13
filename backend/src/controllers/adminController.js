@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import { query } from "../config/db.js";
 import { authCookie, signAdmin } from "../middleware/auth.js";
 import { clearApiCache } from "./lovePageController.js";
+import { fileUrl } from "../middleware/upload.js";
 
 // Admin Login
 export async function adminLogin(req, res) {
@@ -277,7 +278,7 @@ export async function adminAddMusic(req, res) {
     const insertedTracks = [];
     for (let i = 0; i < audioFiles.length; i++) {
       const file = audioFiles[i];
-      const file_url = `/uploads/${file.filename}`;
+      const file_url = fileUrl(file);
       const title = String(titles[i] || file.originalname.replace(/\.[^/.]+$/, "")).trim() || `Track ${i + 1}`;
       const artist = defaultArtist;
       const tone = defaultTone;
@@ -309,7 +310,7 @@ export async function adminAddMusic(req, res) {
   const singleFile = audioFiles[0] || req.file;
   let file_url = req.body.file_url;
   if (singleFile) {
-    file_url = `/uploads/${singleFile.filename}`;
+    file_url = fileUrl(singleFile);
   }
 
   let title = String(req.body.title || "").trim();
@@ -371,7 +372,7 @@ export async function adminAddTheme(req, res) {
 
   let bgImage = req.body.backgroundImage || "";
   if (req.file) {
-    bgImage = `/uploads/${req.file.filename}`;
+    bgImage = fileUrl(req.file);
   }
 
   const config = {
@@ -432,7 +433,7 @@ export async function adminUpdateTheme(req, res) {
 
   let bgImage = req.body.backgroundImage || currentConfig.backgroundImage || "";
   if (req.file) {
-    bgImage = `/uploads/${req.file.filename}`;
+    bgImage = fileUrl(req.file);
   }
 
   const config = {
@@ -652,7 +653,7 @@ export async function updatePaymentSettings(req, res) {
   let qrCodeUrl = req.body.qrCodeUrl || req.body.qr_code_url;
 
   if (req.file) {
-    qrCodeUrl = `/uploads/${req.file.filename}`;
+    qrCodeUrl = fileUrl(req.file);
   }
 
   // Ensure table exists

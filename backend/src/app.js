@@ -1,6 +1,11 @@
+// ─── Load .env FIRST (before any module reads process.env) ───
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
+
+// ─── Now import everything else (env vars are already loaded) ───
 import "./config/db.js";
 import express from "express";
 import compression from "compression";
@@ -8,9 +13,6 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import helmet from "helmet";
 import api from "./routes/index.js";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const app = express();
 const uploadDir = path.resolve(process.env.UPLOAD_DIR || "uploads");

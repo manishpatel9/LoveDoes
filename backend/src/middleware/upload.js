@@ -30,6 +30,36 @@ const maxAudio = Number(process.env.MAX_AUDIO_MB || 12) * 1024 * 1024;
 
 fs.mkdirSync(uploadRoot, { recursive: true });
 
+// Configure Cloudinary explicitly from env vars (CLOUDINARY_URL auto-config may
+// not work if dotenv hasn't run yet when this module is first imported).
+const useCloud = Boolean(process.env.CLOUDINARY_URL || process.env.CLOUDINARY_CLOUD_NAME);
+if (useCloud) {
+  // If CLOUDINARY_URL is set the SDK auto-configures, but we also support
+  // individual env vars as a fallback.
+  if (!process.env.CLOUDINARY_URL && process.env.CLOUDINARY_CLOUD_NAME) {
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET,
+    });
+  }
+  console.log("☁️  Cloudinary storage ACTIVE — uploads will persist in the cloud.");
+} else {
+  console.log("💾  Using local disk storage for uploads (files lost on Render restart!).");
+}
+
+/**
+ * Return the public-facing URL for an uploaded file.
+ * Works for both Cloudinary (file.path = full https URL) and disk storage.
+ */
+export function fileUrl(file) {
+  if (!file) return null;
+  // Cloudinary: multer-storage-cloudinary puts the full URL in file.path
+  if (file.path && file.path.startsWith("http")) return file.path;
+  // Disk storage fallback
+  return `/uploads/${file.filename}`;
+}
+
 const diskStorage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, uploadRoot),
   filename: (_req, file, cb) => {
@@ -47,13 +77,12 @@ const cloudStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'lovedoes',
-    resource_type: 'auto', // Auto detects image or video/raw for audio
-    public_id: (req, file) => `${Date.now()}-${crypto.randomBytes(4).toString("hex")}`
+    resource_type: 'auto',
+    public_id: (_req, _file) => `${Date.now()}-${crypto.randomBytes(4).toString("hex")}`
   },
 });
 
-// Automatically use Cloudinary if credentials exist, preventing ephemeral loss on free-tier Render
-const activeStorage = process.env.CLOUDINARY_URL ? cloudStorage : diskStorage;
+const activeStorage = useCloud ? cloudStorage : diskStorage;
 
 export const createUpload = multer({
   storage: activeStorage,
