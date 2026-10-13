@@ -9376,7 +9376,7 @@ main {
 
 
 /* ==========================================================================
-   100% EXACT MATCH ROMANTIC CERTIFICATE OF ETERNAL LOVE STYLES
+   ROMANTIC CERTIFICATE OF ETERNAL LOVE — EXACT REFERENCE IMAGE MATCH
    ========================================================================== */
 .cert-100-wrapper {
   width: 100%;
@@ -9429,9 +9429,9 @@ main {
 
 .cert-100-kicker {
   font-family: 'Cinzel', Georgia, serif;
-  font-size: clamp(0.52rem, 0.95vw, 0.76rem);
-  font-weight: 700;
-  letter-spacing: 0.35em;
+  font-size: clamp(0.5rem, 0.9vw, 0.72rem);
+  font-weight: 400;
+  letter-spacing: 0.28em;
   color: #c8a356;
   text-transform: uppercase;
   margin-bottom: 2px;
@@ -9439,10 +9439,10 @@ main {
 
 .cert-100-sub-title {
   font-family: 'Cinzel', Georgia, serif;
-  font-size: clamp(0.72rem, 1.55vw, 1.25rem);
+  font-size: clamp(0.68rem, 1.45vw, 1.18rem);
   font-weight: 700;
   color: #4a0913;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.18em;
   margin: 1px 0 0 0;
   line-height: 1.15;
   text-transform: uppercase;
@@ -9450,17 +9450,34 @@ main {
 
 .cert-100-title {
   font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
-  font-size: clamp(1.35rem, 3.2vw, 2.6rem);
+  font-size: clamp(1.4rem, 3.3vw, 2.7rem);
   font-weight: 900;
   color: #4a0913;
-  letter-spacing: 0.08em;
-  margin: 0 0 4px 0;
+  letter-spacing: 0.06em;
+  margin: 0 0 1px 0;
   line-height: 1.1;
   white-space: nowrap;
   display: flex;
   align-items: center;
   justify-content: center;
-  text-shadow: 0 2px 5px rgba(74, 9, 19, 0.25), 0 0 1px rgba(200, 163, 86, 0.3);
+  gap: 2px;
+  text-shadow: 0 2px 6px rgba(74, 9, 19, 0.25);
+}
+
+.cert-title-heart {
+  color: #b0102a;
+  font-size: 0.72em;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  margin: 0 1px;
+}
+
+.cert-100-heart-accent {
+  font-size: clamp(0.5rem, 0.9vw, 0.72rem);
+  color: #b0102a;
+  margin: 1px 0 2px;
+  line-height: 1;
 }
 
 .cert-100-divider {
@@ -9515,28 +9532,29 @@ main {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 10px;
   width: 100%;
   margin: 2px 0;
+  flex-wrap: wrap;
 }
 
 .cert-100-script-name {
   font-family: 'Alex Brush', 'Great Vibes', cursive;
-  font-size: clamp(2.3rem, 5.2vw, 4.3rem);
+  font-size: clamp(2.1rem, 4.8vw, 4.0rem);
   font-weight: 400;
   color: #5c0816;
   line-height: 1;
   text-shadow: 0 2px 6px rgba(92, 8, 22, 0.22);
 }
 
-.cert-100-ampersand {
-  font-family: 'Alex Brush', 'Great Vibes', cursive;
-  font-size: clamp(1.8rem, 3.8vw, 3.2rem);
-  font-style: italic;
-  color: #c8a356;
+/* Heart separator between names (replaces ampersand) */
+.cert-100-heart-sep {
+  font-size: clamp(1.1rem, 2.2vw, 1.8rem);
+  color: #b0102a;
   line-height: 1;
-  filter: drop-shadow(0 1px 2px rgba(200, 163, 86, 0.4));
   margin: 0 4px;
+  align-self: center;
+  margin-top: -0.2em;
 }
 
 /* DECLARATION BODY */
@@ -9544,32 +9562,66 @@ main {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
-  max-width: 530px;
+  gap: 1px;
+  max-width: 560px;
+  width: 100%;
 }
 
 .cert-100-p {
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-style: italic;
-  font-size: clamp(0.74rem, 1.3vw, 1.02rem);
+  font-size: clamp(0.68rem, 1.22vw, 0.96rem);
   font-weight: 500;
   color: #2c161a;
-  line-height: 1.55;
+  line-height: 1.5;
   margin: 0;
   text-shadow: 0 1px 1px rgba(255, 255, 255, 0.4);
+  text-align: center;
+}
+
+/* Red highlighted first certification line */
+.cert-100-p.cert-100-p-red {
+  color: #990020;
+  font-weight: 600;
+  margin-top: 3px;
+}
+
+/* 'in love' inline highlight */
+.cert-highlight {
+  color: #990020;
+  font-style: italic;
+}
+
+/* Together Forever ornament row */
+.cert-100-tf-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.cert-tf-line-left,
+.cert-tf-line-right {
+  flex: 1;
+  height: 1px;
+  max-width: 80px;
+  background: linear-gradient(90deg, transparent, #c8a356, transparent);
+}
+
+.cert-100-tf-heart {
+  font-size: clamp(0.52rem, 0.9vw, 0.72rem);
+  color: #b0102a;
+  line-height: 1;
 }
 
 .cert-100-together-forever {
   font-family: 'Alex Brush', 'Great Vibes', cursive;
-  font-size: clamp(1.5rem, 3.1vw, 2.5rem);
+  font-size: clamp(1.3rem, 2.8vw, 2.25rem);
   color: #5c0d18;
-  margin-top: 2px;
+  line-height: 1.1;
   text-shadow: 0 1px 4px rgba(92, 13, 24, 0.2);
-}
-
-.cert-tf-flourish {
-  font-size: clamp(0.48rem, 0.8vw, 0.72rem);
-  color: #c8a356;
 }
 
 /* SIGNATURES ROW */
@@ -9578,20 +9630,21 @@ main {
   align-items: flex-end;
   justify-content: space-between;
   width: 100%;
-  max-width: 450px;
-  margin-top: 2px;
+  max-width: 480px;
+  margin-top: 3px;
+  gap: 8px;
 }
 
 .cert-100-sig-col {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 145px;
+  width: 150px;
 }
 
 .cert-100-sig-script {
   font-family: 'Alex Brush', 'Great Vibes', cursive;
-  font-size: clamp(1.35rem, 2.6vw, 2.1rem);
+  font-size: clamp(1.2rem, 2.4vw, 1.95rem);
   color: #1a1a1a;
   margin-bottom: 2px;
   white-space: nowrap;
@@ -9601,23 +9654,83 @@ main {
   width: 100%;
   height: 1.2px;
   background: #b89047;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
+/* PARTNER IN LIFE label (matches reference image) */
 .cert-100-sig-role {
   font-family: 'Cinzel', Georgia, serif;
-  font-size: clamp(0.46rem, 0.82vw, 0.65rem);
+  font-size: clamp(0.38rem, 0.7vw, 0.56rem);
   font-weight: 700;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.2em;
   color: #5a101b;
+  text-transform: uppercase;
 }
 
-.cert-100-sig-sub {
-  font-family: 'Georgia', serif;
-  font-size: clamp(0.42rem, 0.8vw, 0.6rem);
-  font-weight: 600;
-  color: #666666;
-  letter-spacing: 0.12em;
+/* Wax Seal Center Element */
+.cert-100-wax-seal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.cert-seal-laurel {
+  width: clamp(48px, 7.5vw, 72px);
+  height: clamp(48px, 7.5vw, 72px);
+  border-radius: 50%;
+  border: clamp(1.5px, 0.22vw, 2.5px) solid #c8a356;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 clamp(3px, 0.5vw, 5px) rgba(200, 163, 86, 0.3),
+              0 4px 16px rgba(100, 10, 20, 0.4);
+  position: relative;
+  z-index: 2;
+}
+
+.cert-seal-body {
+  width: 82%;
+  height: 82%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 38%, #c41c3a, #7a0a18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.25);
+}
+
+.cert-seal-hearts {
+  font-size: clamp(10px, 1.8vw, 18px);
+  color: #ffd166;
+  line-height: 1;
+  letter-spacing: -2px;
+}
+
+.cert-seal-ribbons {
+  display: flex;
+  gap: clamp(4px, 0.8vw, 8px);
+  margin-top: clamp(-2px, -0.3vw, -2px);
+  position: relative;
+  z-index: 1;
+}
+
+.cert-seal-ribbon {
+  width: clamp(10px, 1.8vw, 16px);
+  height: clamp(22px, 4vw, 38px);
+  background: #c41c3a;
+  border-radius: 0 0 4px 4px;
+}
+
+.cert-seal-ribbon-left {
+  transform: rotate(-12deg);
+  transform-origin: top center;
+}
+
+.cert-seal-ribbon-right {
+  transform: rotate(12deg);
+  transform-origin: top center;
 }
 
 /* TOOLBAR & MODAL STYLES */
