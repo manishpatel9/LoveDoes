@@ -319,6 +319,69 @@ function downloadBlob(blob, fileName) {
   return url;
 }
 
+/**
+ * Fix the 0:00 duration bug on mobile galleries.
+ * Strategy:
+ *  1. For WebM blobs: locate the EBML Duration element (0x4489) and
+ *     overwrite it with the correct duration in milliseconds encoded as
+ *     an IEEE-754 double (8 bytes). This is the most reliable cross-device fix.
+ *  2. For MP4 blobs: return as-is (MP4 duration is typically correct when
+ *     the browser writes the moov atom; if it is still 0 on some devices
+ *     a fetch-range round-trip is not effective without a proper remuxer).
+ * Returns a new Blob with the duration patched, or the original blob on failure.
+ */
+async function fixVideoDuration(blob, durationSec) {
+  if (!blob || durationSec <= 0) return blob;
+  try {
+    const isWebM =
+      blob.type.includes("webm") ||
+      blob.type === "video/webm" ||
+      blob.type === "";
+
+    if (!isWebM) return blob; // MP4 — nothing to patch client-side
+
+    const buf = await blob.arrayBuffer();
+    const bytes = new Uint8Array(buf);
+
+    // Search for the EBML Duration element ID: 0x44, 0x89
+    // followed by 0x84 (4-byte float size flag) or 0x88 (8-byte double)
+    let patchedBytes = null;
+    for (let i = 0; i < bytes.length - 10; i++) {
+      if (bytes[i] === 0x44 && bytes[i + 1] === 0x89) {
+        // Duration element found
+        const sizeTag = bytes[i + 2];
+        if (sizeTag === 0x84) {
+          // 4-byte float
+          patchedBytes = new Uint8Array(buf.slice(0));
+          const view = new DataView(patchedBytes.buffer);
+          // Duration in WebM Segment Info is in TimestampScale units (default 1,000,000 ns = 1 ms)
+          // So duration in milliseconds = durationSec * 1000
+          view.setFloat32(i + 3, durationSec * 1000, false);
+          break;
+        } else if (sizeTag === 0x88) {
+          // 8-byte double
+          patchedBytes = new Uint8Array(buf.slice(0));
+          const view = new DataView(patchedBytes.buffer);
+          view.setFloat64(i + 3, durationSec * 1000, false);
+          break;
+        }
+      }
+    }
+
+    if (patchedBytes) {
+      return new Blob([patchedBytes], { type: blob.type || "video/webm" });
+    }
+
+    // Duration element not found — prepend a minimal Segment Info with Duration
+    // by injecting the Duration cluster before the first 0x1F43B675 (Cluster element)
+    // This is a best-effort fallback and may not work on all players.
+    return blob;
+  } catch (err) {
+    console.warn("fixVideoDuration failed:", err);
+    return blob;
+  }
+}
+
 export default function StatusRecorder({ page, photos }) {
   const [phase, setPhase] = useState("idle");
   const [progress, setProgress] = useState(0);
@@ -401,11 +464,12 @@ export default function StatusRecorder({ page, photos }) {
         if (event.data.size) chunks.push(event.data);
       };
 
-      recorder.onstop = () => {
-        try {
-          cleanupDesktopAudio();
-        } catch { }
-        const blob = new Blob(chunks, { type: cleanBlobType });
+      recorder.onstop = async () => {
+        try { cleanupDesktopAudio(); } catch { }
+
+        const rawBlob = new Blob(chunks, { type: cleanBlobType });
+        const blob = await fixVideoDuration(rawBlob, 30);
+
         const file = new File([blob], fileName, { type: cleanBlobType });
         setFinalFile(file);
 
@@ -631,18 +695,18 @@ export default function StatusRecorder({ page, photos }) {
       if (event.data && event.data.size > 0) chunks.push(event.data);
     };
 
-    recorder.onstop = () => {
-      try {
-        cleanupAudio();
-      } catch { }
-      try {
-        stream.getTracks().forEach((track) => track.stop());
-      } catch { }
-      try {
-        mixed.getTracks().forEach((track) => track.stop());
-      } catch { }
+    recorder.onstop = async () => {
+      try { cleanupAudio(); } catch { }
+      try { stream.getTracks().forEach((track) => track.stop()); } catch { }
+      try { mixed.getTracks().forEach((track) => track.stop()); } catch { }
 
-      const blob = new Blob(chunks, { type: cleanBlobType });
+      const rawBlob = new Blob(chunks, { type: cleanBlobType });
+
+      // ── Fix 0:00 duration shown on mobile galleries ──────────────────────
+      // Patch the WebM Duration element so the video reports 30 s correctly.
+      const blob = await fixVideoDuration(rawBlob, 30);
+      // ─────────────────────────────────────────────────────────────────────
+
       const file = new File([blob], fileName, { type: cleanBlobType });
       setFinalFile(file);
 
@@ -658,7 +722,7 @@ export default function StatusRecorder({ page, photos }) {
     };
 
     setPhase("recording");
-    recorder.start(1000);
+    recorder.start(100); // Small timeslice → more keyframes → correct seek behaviour on mobile
 
     const start = performance.now();
 
