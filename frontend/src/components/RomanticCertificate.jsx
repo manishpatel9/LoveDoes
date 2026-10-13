@@ -14,322 +14,257 @@ export default function RomanticCertificate({
   const leftName = creatorName || "Kumar";
   const rightName = partnerName || "Bhumi Kashyap";
 
-  // High-Resolution 4K Canvas Certificate Download Handler (Exact Match to Reference Image)
+  // ── High-Resolution Canvas Certificate Download ──────────────────────────
   const handleDownloadImage = async () => {
     playRomanticChime();
     setDownloading(true);
-
     try {
       await document.fonts.ready;
 
       const canvas = document.createElement("canvas");
-      // Landscape 3:2 aspect ratio matching reference image proportions (2400 x 1600 px)
-      const width = 2400;
-      const height = 1600;
-      canvas.width = width;
-      canvas.height = height;
+      const W = 2400, H = 1600;
+      canvas.width = W;
+      canvas.height = H;
       const ctx = canvas.getContext("2d");
 
-      // 1. Draw base background template image
+      // Background
       const bgImg = new Image();
       bgImg.crossOrigin = "anonymous";
       bgImg.src = certBg;
+      await new Promise((r) => { bgImg.onload = r; bgImg.onerror = r; });
+      ctx.drawImage(bgImg, 0, 0, W, H);
 
-      await new Promise((resolve) => {
-        bgImg.onload = resolve;
-        bgImg.onerror = resolve;
-      });
-
-      ctx.drawImage(bgImg, 0, 0, width, height);
-
+      const cx = W / 2;
       ctx.textAlign = "center";
 
-      // 2. Top kicker: — THE OFFICIAL —
+      // ── Helper: reset shadow ──
+      const clearShadow = () => {
+        ctx.shadowColor = "transparent";
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+      };
+      const setShadow = (color, blur, oy = 3) => {
+        ctx.shadowColor = color;
+        ctx.shadowBlur = blur;
+        ctx.shadowOffsetY = oy;
+      };
+
+      // ── 1. Kicker: — THE OFFICIAL — ──────────────────────────────────────
+      ctx.font = "500 26px 'Cinzel Decorative', 'Cinzel', Georgia, serif";
       ctx.fillStyle = "#c8a356";
-      ctx.font = "700 24px 'Cinzel', Georgia, serif";
       ctx.letterSpacing = "5px";
-      // draw dashes manually
-      ctx.fillText("— THE OFFICIAL —", width / 2, 240);
+      ctx.fillText("— THE OFFICIAL —", cx, 235);
 
-      // CERTIFICATE OF
-      ctx.shadowColor = "rgba(74, 9, 19, 0.25)";
-      ctx.shadowBlur = 8;
-      ctx.shadowOffsetY = 3;
-      ctx.font = "bold 58px 'Cinzel', 'Playfair Display', Georgia, serif";
+      // ── 2. CERTIFICATE OF ────────────────────────────────────────────────
+      setShadow("rgba(74,9,19,0.22)", 10, 3);
+      ctx.font = "bold 62px 'Cinzel', Georgia, serif";
       ctx.fillStyle = "#4a0913";
-      ctx.letterSpacing = "4px";
-      ctx.fillText("CERTIFICATE OF", width / 2, 320);
+      ctx.letterSpacing = "5px";
+      ctx.fillText("CERTIFICATE OF", cx, 315);
 
-      // ETERNAL LOVE (large, bold)
-      ctx.shadowColor = "rgba(102, 7, 20, 0.35)";
-      ctx.shadowBlur = 14;
-      ctx.shadowOffsetY = 5;
-      ctx.font = "900 96px 'Cinzel', 'Playfair Display', Georgia, serif";
+      // ── 3. ETERNAL LOVE ──────────────────────────────────────────────────
+      setShadow("rgba(100,7,20,0.32)", 18, 6);
+      ctx.font = "900 102px 'Cinzel', 'Playfair Display', Georgia, serif";
       ctx.fillStyle = "#4a0913";
       ctx.letterSpacing = "6px";
-      ctx.fillText("ETERNAL LOVE", width / 2, 428);
+      ctx.fillText("ETERNAL LOVE", cx, 432);
+      clearShadow();
 
-      // Reset shadows
-      ctx.shadowColor = "transparent";
-      ctx.shadowBlur = 0;
-      ctx.shadowOffsetY = 0;
-
-      // Heart accent below ETERNAL LOVE
-      ctx.font = "bold 28px sans-serif";
+      // ── 4. Heart accent ──────────────────────────────────────────────────
+      ctx.font = "bold 30px sans-serif";
       ctx.fillStyle = "#b0102a";
       ctx.letterSpacing = "0px";
-      ctx.fillText("♥", width / 2, 468);
+      ctx.fillText("♥", cx, 474);
 
-      // — THIS CERTIFIES THAT —  (with lines)
-      ctx.strokeStyle = "#c8a356";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(width / 2 - 330, 510);
-      ctx.lineTo(width / 2 - 145, 510);
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.moveTo(width / 2 + 145, 510);
-      ctx.lineTo(width / 2 + 330, 510);
-      ctx.stroke();
+      // ── 5. THIS CERTIFIES THAT divider ───────────────────────────────────
+      const drawDivLine = (x1, x2, y) => {
+        ctx.strokeStyle = "#c8a356";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(x1, y);
+        ctx.lineTo(x2, y);
+        ctx.stroke();
+      };
+      drawDivLine(cx - 345, cx - 155, 516);
+      drawDivLine(cx + 155, cx + 345, 516);
 
       ctx.fillStyle = "#70101f";
-      ctx.font = "700 22px 'Cinzel', Georgia, serif";
+      ctx.font = "700 23px 'Cinzel', Georgia, serif";
       ctx.letterSpacing = "6px";
-      ctx.fillText("THIS CERTIFIES THAT", width / 2, 516);
+      ctx.fillText("THIS CERTIFIES THAT", cx, 522);
 
-      // 3. Couple Names Row: Left ♥ Right  (heart separator, NOT ampersand)
-      ctx.shadowColor = "rgba(110, 9, 23, 0.3)";
-      ctx.shadowBlur = 14;
-      ctx.shadowOffsetY = 4;
-      ctx.font = "normal 112px 'Alex Brush', 'Great Vibes', cursive";
+      // ── 6. Names row (left ♥ right) ──────────────────────────────────────
+      setShadow("rgba(110,9,23,0.28)", 16, 4);
+      ctx.font = "normal 116px 'Alex Brush', 'Great Vibes', cursive";
       ctx.fillStyle = "#5c0816";
+      ctx.letterSpacing = "0px";
 
-      const nameY = 635;
-      const heartGap = 58; // pixels around the heart
-
-      const leftWidth = ctx.measureText(leftName).width;
-      const rightWidth = ctx.measureText(rightName).width;
-
-      // Position: left name ends, then heart, then right name starts — all centred
-      const totalWidth = leftWidth + heartGap * 2 + 40 + rightWidth; // 40 px for heart char
-      const startX = width / 2 - totalWidth / 2;
+      const nameY = 645;
+      const lw = ctx.measureText(leftName).width;
+      const rw = ctx.measureText(rightName).width;
+      const heartPad = 60;
+      const heartCharW = 50;
+      const total = lw + heartPad * 2 + heartCharW + rw;
+      const sx = cx - total / 2;
 
       ctx.textAlign = "left";
-      ctx.fillText(leftName, startX, nameY);
+      ctx.fillText(leftName, sx, nameY);
 
-      // Heart separator
-      ctx.shadowBlur = 0;
-      ctx.font = "bold 52px sans-serif";
+      clearShadow();
+      ctx.font = "bold 54px sans-serif";
       ctx.fillStyle = "#b0102a";
-      const heartX = startX + leftWidth + heartGap;
-      ctx.fillText("♥", heartX, nameY - 10);
+      const hx = sx + lw + heartPad;
+      ctx.fillText("♥", hx, nameY - 12);
 
-      // Right name
-      ctx.font = "normal 112px 'Alex Brush', 'Great Vibes', cursive";
+      setShadow("rgba(110,9,23,0.28)", 16, 4);
+      ctx.font = "normal 116px 'Alex Brush', 'Great Vibes', cursive";
       ctx.fillStyle = "#5c0816";
-      ctx.shadowBlur = 14;
-      ctx.fillText(rightName, heartX + 40 + heartGap, nameY);
+      ctx.fillText(rightName, hx + heartCharW + heartPad, nameY);
 
       ctx.textAlign = "center";
+      clearShadow();
 
-      // Reset shadow for body text
-      ctx.shadowColor = "transparent";
-      ctx.shadowBlur = 0;
-      ctx.shadowOffsetY = 0;
-
-      // 4. Declaration Body Paragraph 1
-      ctx.font = "italic 33px 'Cormorant Garamond', Georgia, serif";
-      ctx.fillStyle = "#2c161a";
+      // ── 7. Declaration ───────────────────────────────────────────────────
+      ctx.font = "italic 500 34px 'Cormorant Garamond', Georgia, serif";
       ctx.letterSpacing = "0.3px";
-      // "are hereby declared to be forever bound in love,"  — 'in love' in red
-      const line1a = "are hereby declared to be forever bound ";
-      const line1b = "in love";
-      const line1c = ",";
-      const fullLine1 = line1a + line1b + line1c;
-      // measure parts
-      const w1a = ctx.measureText(line1a).width;
-      const w1b = ctx.measureText(line1b).width;
-      const line1Y = 730;
-      const line1StartX = width / 2 - ctx.measureText(fullLine1).width / 2;
+
+      // Line 1: "are hereby declared to be forever bound" + [red]"in love"[/red] + ","
+      const p1a = "are hereby declared to be forever bound ";
+      const p1b = "in love";
+      const p1c = ",";
+      const full1 = p1a + p1b + p1c;
+      const startP1 = cx - ctx.measureText(full1).width / 2;
+      const w1a = ctx.measureText(p1a).width;
+      const w1b = ctx.measureText(p1b).width;
       ctx.textAlign = "left";
       ctx.fillStyle = "#2c161a";
-      ctx.fillText(line1a, line1StartX, line1Y);
+      ctx.fillText(p1a, startP1, 740);
       ctx.fillStyle = "#990020";
-      ctx.font = "italic 33px 'Cormorant Garamond', Georgia, serif";
-      ctx.fillText(line1b, line1StartX + w1a, line1Y);
+      ctx.fillText(p1b, startP1 + w1a, 740);
       ctx.fillStyle = "#2c161a";
-      ctx.fillText(line1c, line1StartX + w1a + w1b, line1Y);
+      ctx.fillText(p1c, startP1 + w1a + w1b, 740);
 
       ctx.textAlign = "center";
       ctx.fillStyle = "#2c161a";
-      ctx.fillText("in heart, in soul and in every lifetime.", width / 2, 778);
+      ctx.fillText("in heart, in soul and in every lifetime.", cx, 790);
 
-      // Thin divider line
-      ctx.strokeStyle = "#c8a356";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(width / 2 - 220, 820);
-      ctx.lineTo(width / 2 + 220, 820);
-      ctx.stroke();
+      // Thin gold divider
+      drawDivLine(cx - 230, cx + 230, 834);
 
-      // 5. Certification Paragraph — first line italic red
-      ctx.font = "italic 33px 'Cormorant Garamond', Georgia, serif";
+      // Line 2 (red italic): certification sentence
+      ctx.font = "italic 600 34px 'Cormorant Garamond', Georgia, serif";
       ctx.fillStyle = "#990020";
-      ctx.fillText(
-        "This bond is certified as timeless, unconditional, and everlasting,",
-        width / 2,
-        868
-      );
+      ctx.fillText("This bond is certified as timeless, unconditional, and everlasting,", cx, 886);
 
+      // Lines 3–4
+      ctx.font = "italic 500 34px 'Cormorant Garamond', Georgia, serif";
       ctx.fillStyle = "#2c161a";
-      ctx.fillText(
-        "sealed with trust, respect, care and a love that grows stronger",
-        width / 2,
-        916
-      );
-      ctx.fillText("with every heartbeat.", width / 2, 964);
+      ctx.fillText("sealed with trust, respect, care and a love that grows stronger", cx, 936);
+      ctx.fillText("with every heartbeat.", cx, 982);
 
-      // 6. Together Forever with ornaments: — ♥ Together Forever ♥ —
-      ctx.font = "normal 72px 'Alex Brush', 'Great Vibes', cursive";
-      ctx.fillStyle = "#5c0d18";
-      const togetherForeverY = 1050;
+      // ── 8. Together Forever ──────────────────────────────────────────────
+      const tfY = 1065;
+      drawDivLine(cx - 380, cx - 210, tfY - 26);
+      drawDivLine(cx + 210,  cx + 380, tfY - 26);
 
-      // Draw ornament lines beside Together Forever
-      ctx.strokeStyle = "#c8a356";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(width / 2 - 360, togetherForeverY - 20);
-      ctx.lineTo(width / 2 - 198, togetherForeverY - 20);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(width / 2 + 198, togetherForeverY - 20);
-      ctx.lineTo(width / 2 + 360, togetherForeverY - 20);
-      ctx.stroke();
-
-      // Hearts in ornaments
-      ctx.font = "bold 24px sans-serif";
+      ctx.font = "bold 26px sans-serif";
       ctx.fillStyle = "#b0102a";
-      ctx.fillText("♥", width / 2 - 170, togetherForeverY - 16);
-      ctx.fillText("♥", width / 2 + 170, togetherForeverY - 16);
+      ctx.fillText("♥", cx - 182, tfY - 22);
+      ctx.fillText("♥", cx + 182, tfY - 22);
 
-      ctx.font = "normal 72px 'Alex Brush', 'Great Vibes', cursive";
+      ctx.font = "normal 76px 'Alex Brush', 'Great Vibes', cursive";
       ctx.fillStyle = "#5c0d18";
-      ctx.fillText("Together Forever", width / 2, togetherForeverY);
+      ctx.fillText("Together Forever", cx, tfY);
 
-      // 7. Signatures Row
-      // Left Signature
-      ctx.font = "normal 64px 'Alex Brush', 'Great Vibes', cursive";
+      // ── 9. Signature row ─────────────────────────────────────────────────
+      const sigY   = 1210;
+      const lineY  = 1230;
+      const roleY  = 1268;
+      const sigLX  = cx - 400;
+      const sigRX  = cx + 380;
+
+      ctx.font = "normal 66px 'Alex Brush', 'Great Vibes', cursive";
       ctx.fillStyle = "#1a1a1a";
-      ctx.fillText(leftName, width / 2 - 390, 1195);
+      ctx.fillText(leftName,  sigLX, sigY);
+      ctx.fillText(rightName, sigRX, sigY);
 
       ctx.strokeStyle = "#b89047";
       ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(width / 2 - 540, 1214);
-      ctx.lineTo(width / 2 - 240, 1214);
-      ctx.stroke();
+      drawDivLine(cx - 560, cx - 238, lineY);
+      drawDivLine(cx + 238, cx + 560, lineY);
 
-      ctx.font = "bold 19px 'Cinzel', Georgia, serif";
+      ctx.font = "700 20px 'Cinzel', Georgia, serif";
       ctx.fillStyle = "#5a101b";
       ctx.letterSpacing = "3px";
-      ctx.fillText("PARTNER IN LIFE", width / 2 - 390, 1252);
+      ctx.fillText("PARTNER IN LIFE", sigLX, roleY);
+      ctx.fillText("PARTNER IN LIFE", sigRX, roleY);
 
-      // Right Signature
-      ctx.font = "normal 64px 'Alex Brush', 'Great Vibes', cursive";
-      ctx.fillStyle = "#1a1a1a";
-      ctx.fillText(rightName, width / 2 + 370, 1195);
+      // ── 10. Wax Seal (center, between signatures) ────────────────────────
+      const seX = cx, seY = 1235, seR = 82;
 
-      ctx.strokeStyle = "#b89047";
-      ctx.lineWidth = 1.5;
+      // Gold outer ring
       ctx.beginPath();
-      ctx.moveTo(width / 2 + 220, 1214);
-      ctx.lineTo(width / 2 + 540, 1214);
-      ctx.stroke();
-
-      ctx.font = "bold 19px 'Cinzel', Georgia, serif";
-      ctx.fillStyle = "#5a101b";
-      ctx.letterSpacing = "3px";
-      ctx.fillText("PARTNER IN LIFE", width / 2 + 370, 1252);
-
-      // 8. Wax Seal (center-bottom between the two signatures)
-      const sealCX = width / 2;
-      const sealCY = 1230;
-      const sealR = 78;
-
-      // Outer gold ring
-      ctx.beginPath();
-      ctx.arc(sealCX, sealCY, sealR + 22, 0, Math.PI * 2);
+      ctx.arc(seX, seY, seR + 24, 0, Math.PI * 2);
       ctx.strokeStyle = "#c8a356";
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 2.5;
       ctx.stroke();
 
-      // Gold laurel wreath simulation (simple circles around)
-      for (let i = 0; i < 24; i++) {
-        const angle = (i / 24) * Math.PI * 2;
-        const cx2 = sealCX + (sealR + 12) * Math.cos(angle);
-        const cy2 = sealCY + (sealR + 12) * Math.sin(angle);
+      // Laurel dots
+      for (let i = 0; i < 26; i++) {
+        const a = (i / 26) * Math.PI * 2;
         ctx.beginPath();
-        ctx.arc(cx2, cy2, 7, 0, Math.PI * 2);
+        ctx.arc(seX + (seR + 13) * Math.cos(a), seY + (seR + 13) * Math.sin(a), 6.5, 0, Math.PI * 2);
         ctx.fillStyle = "#d4af37";
         ctx.fill();
       }
 
-      // Red wax seal body
-      const sealGrad = ctx.createRadialGradient(
-        sealCX - 18, sealCY - 18, 10,
-        sealCX, sealCY, sealR
-      );
-      sealGrad.addColorStop(0, "#c41c3a");
-      sealGrad.addColorStop(1, "#7a0a18");
+      // Red body
+      const sGrad = ctx.createRadialGradient(seX - 20, seY - 20, 8, seX, seY, seR);
+      sGrad.addColorStop(0, "#c41c3a");
+      sGrad.addColorStop(1, "#7a0a18");
       ctx.beginPath();
-      ctx.arc(sealCX, sealCY, sealR, 0, Math.PI * 2);
-      ctx.fillStyle = sealGrad;
+      ctx.arc(seX, seY, seR, 0, Math.PI * 2);
+      ctx.fillStyle = sGrad;
       ctx.fill();
 
       // Hearts on seal
-      ctx.font = "bold 56px sans-serif";
+      ctx.font = "bold 58px sans-serif";
       ctx.fillStyle = "#ffd166";
-      ctx.textAlign = "center";
-      ctx.fillText("♥♥", sealCX, sealCY + 18);
+      ctx.letterSpacing = "-3px";
+      ctx.fillText("♥♥", seX, seY + 20);
 
-      // Red ribbon tails
+      // Ribbon tails
       ctx.fillStyle = "#c41c3a";
-      // Left ribbon
-      ctx.save();
-      ctx.translate(sealCX - 30, sealCY + sealR);
-      ctx.rotate(-0.25);
-      ctx.fillRect(-18, 0, 36, 80);
-      ctx.restore();
-      // Right ribbon
-      ctx.save();
-      ctx.translate(sealCX + 30, sealCY + sealR);
-      ctx.rotate(0.25);
-      ctx.fillRect(-18, 0, 36, 80);
-      ctx.restore();
+      [[-30, -0.26], [30, 0.26]].forEach(([dx, rot]) => {
+        ctx.save();
+        ctx.translate(seX + dx, seY + seR - 4);
+        ctx.rotate(rot);
+        ctx.fillRect(-17, 0, 34, 82);
+        ctx.restore();
+      });
 
-      // 9. Envelope Note (Bottom Left)
+      // ── 11. Bottom-left envelope note ────────────────────────────────────
       ctx.save();
-      ctx.translate(250, 1360);
+      ctx.translate(245, 1368);
       ctx.rotate((-15 * Math.PI) / 180);
       ctx.textAlign = "center";
-      ctx.font = "normal 40px 'Alex Brush', 'Great Vibes', cursive";
+      ctx.font = "normal 42px 'Alex Brush', 'Great Vibes', cursive";
       ctx.fillStyle = "#2a1c15";
       ctx.letterSpacing = "0px";
       ctx.fillText("Forever Looks", 0, 0);
-      ctx.fillText("Better", 0, 44);
-      ctx.fillText("With You", 0, 88);
-      ctx.font = "28px sans-serif";
+      ctx.fillText("Better", 0, 46);
+      ctx.fillText("With You", 0, 92);
+      ctx.font = "30px sans-serif";
       ctx.fillStyle = "#aa1024";
-      ctx.fillText("♡", 0, 124);
+      ctx.fillText("♡", 0, 130);
       ctx.restore();
 
-      // Download PNG trigger
-      const dataUrl = canvas.toDataURL("image/png");
-      const link = document.createElement("a");
-      link.href = dataUrl;
-      link.download = `Certificate_of_Eternal_Love_${leftName.replace(/\s+/g, "_")}_and_${rightName.replace(/\s+/g, "_")}.png`;
-      link.click();
+      // Download
+      const a = document.createElement("a");
+      a.href = canvas.toDataURL("image/png");
+      a.download = `Certificate_Eternal_Love_${leftName.replace(/\s+/g, "_")}_${rightName.replace(/\s+/g, "_")}.png`;
+      a.click();
     } catch (err) {
       console.error("Certificate download error:", err);
     } finally {
@@ -344,18 +279,23 @@ export default function RomanticCertificate({
         ref={certCardRef}
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6 }}
+        transition={{ duration: 0.7, ease: "easeOut" }}
         style={{ backgroundImage: `url(${certBg})` }}
       >
-        {/* INNER CONTENT OVERLAY MATCHING REFERENCE IMAGE */}
         <div className="cert-100-content">
 
-          {/* HEADER SECTION */}
+          {/* ── HEADER ── */}
           <div className="cert-100-header">
             <div className="cert-100-kicker">— THE OFFICIAL —</div>
+
             <h2 className="cert-100-sub-title">CERTIFICATE OF</h2>
-            <h1 className="cert-100-title">ETERNAL LO<span className="cert-title-heart">♥</span>VE</h1>
+
+            <h1 className="cert-100-title">
+              ETERNAL&nbsp;LO<span className="cert-title-heart">♥</span>VE
+            </h1>
+
             <div className="cert-100-heart-accent">♥</div>
+
             <div className="cert-100-divider">
               <span className="cert-line" />
               <span className="cert-div-text">THIS CERTIFIES THAT</span>
@@ -363,21 +303,24 @@ export default function RomanticCertificate({
             </div>
           </div>
 
-          {/* COUPLE NAMES ROW — heart separator */}
+          {/* ── NAMES ── */}
           <div className="cert-100-names-row">
             <span className="cert-100-script-name">{leftName}</span>
             <span className="cert-100-heart-sep">♥</span>
             <span className="cert-100-script-name">{rightName}</span>
           </div>
 
-          {/* DECLARATION BODY */}
+          {/* ── BODY ── */}
           <div className="cert-100-body">
+
             <p className="cert-100-p">
               are hereby declared to be forever bound{" "}
               <em className="cert-highlight">in love</em>,
               <br />
               in heart, in soul and in every lifetime.
             </p>
+
+            <div className="cert-100-mid-rule" />
 
             <p className="cert-100-p cert-100-p-red">
               This bond is certified as timeless, unconditional, and everlasting,
@@ -388,17 +331,18 @@ export default function RomanticCertificate({
               with every heartbeat.
             </p>
 
-            {/* Together Forever with ornaments */}
+            {/* Together Forever */}
             <div className="cert-100-tf-row">
               <span className="cert-tf-line-left" />
               <span className="cert-100-tf-heart">♥</span>
-              <div className="cert-100-together-forever">Together Forever</div>
+              <span className="cert-100-together-forever">Together Forever</span>
               <span className="cert-100-tf-heart">♥</span>
               <span className="cert-tf-line-right" />
             </div>
+
           </div>
 
-          {/* SIGNATURES ROW */}
+          {/* ── SIGNATURES ── */}
           <div className="cert-100-signatures-row">
             <div className="cert-100-sig-col">
               <span className="cert-100-sig-script">{leftName}</span>
@@ -406,7 +350,7 @@ export default function RomanticCertificate({
               <span className="cert-100-sig-role">PARTNER IN LIFE</span>
             </div>
 
-            {/* Wax seal center */}
+            {/* Wax seal */}
             <div className="cert-100-wax-seal">
               <div className="cert-seal-laurel">
                 <div className="cert-seal-body">
@@ -426,17 +370,18 @@ export default function RomanticCertificate({
             </div>
           </div>
 
-          {/* ENVELOPE OVERLAY TEXT (BOTTOM LEFT) */}
+          {/* Envelope note */}
           <div className="cert-100-envelope-text">
             <span>Forever Looks</span>
             <span>Better</span>
             <span>With You</span>
             <span className="env-heart">♡</span>
           </div>
+
         </div>
       </motion.div>
 
-      {/* ACTION BUTTONS TOOLBAR */}
+      {/* ── TOOLBAR ── */}
       <div className="cert-100-toolbar">
         <button
           type="button"
@@ -444,7 +389,9 @@ export default function RomanticCertificate({
           onClick={handleDownloadImage}
           disabled={downloading}
         >
-          {downloading ? "⌛ Generating Official Certificate..." : "📜 Download Official Certificate (PNG)"}
+          {downloading
+            ? "⌛ Generating Certificate…"
+            : "📜 Download Certificate (PNG)"}
         </button>
 
         {onReset && (

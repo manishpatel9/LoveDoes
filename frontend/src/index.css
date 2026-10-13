@@ -9428,55 +9428,63 @@ main {
 }
 
 .cert-100-kicker {
-  font-family: 'Cinzel', Georgia, serif;
-  font-size: clamp(0.5rem, 0.9vw, 0.72rem);
-  font-weight: 400;
-  letter-spacing: 0.28em;
+  font-family: 'Cinzel', 'Cinzel Decorative', Georgia, serif;
+  font-size: clamp(0.52rem, 0.95vw, 0.76rem);
+  font-weight: 500;
+  letter-spacing: 0.3em;
   color: #c8a356;
   text-transform: uppercase;
-  margin-bottom: 2px;
+  margin-bottom: 1px;
+  /* Dash decoration is in JSX text */
 }
 
 .cert-100-sub-title {
   font-family: 'Cinzel', Georgia, serif;
-  font-size: clamp(0.68rem, 1.45vw, 1.18rem);
+  font-size: clamp(0.72rem, 1.55vw, 1.28rem);
   font-weight: 700;
   color: #4a0913;
-  letter-spacing: 0.18em;
-  margin: 1px 0 0 0;
+  letter-spacing: 0.2em;
+  margin: 0;
   line-height: 1.15;
   text-transform: uppercase;
 }
 
 .cert-100-title {
   font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
-  font-size: clamp(1.4rem, 3.3vw, 2.7rem);
+  font-size: clamp(1.5rem, 3.5vw, 2.85rem);
   font-weight: 900;
   color: #4a0913;
-  letter-spacing: 0.06em;
-  margin: 0 0 1px 0;
-  line-height: 1.1;
+  letter-spacing: 0.05em;
+  margin: 2px 0 0 0;
+  line-height: 1.08;
   white-space: nowrap;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  text-shadow: 0 2px 6px rgba(74, 9, 19, 0.25);
+  gap: 1px;
+  /* Rich layered shadow for depth */
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.5),
+    0 3px 8px rgba(74, 9, 19, 0.3),
+    0 6px 20px rgba(74, 9, 19, 0.12);
 }
 
 .cert-title-heart {
   color: #b0102a;
-  font-size: 0.72em;
+  font-size: 0.68em;
   line-height: 1;
   display: inline-flex;
   align-items: center;
-  margin: 0 1px;
+  margin: 0;
+  /* Keeps the heart vertically centred with caps */
+  align-self: center;
+  padding-bottom: 0.04em;
 }
 
 .cert-100-heart-accent {
-  font-size: clamp(0.5rem, 0.9vw, 0.72rem);
+  font-size: clamp(0.52rem, 0.95vw, 0.75rem);
   color: #b0102a;
-  margin: 1px 0 2px;
+  margin: 0 0 2px;
   line-height: 1;
 }
 
@@ -9498,11 +9506,12 @@ main {
 
 .cert-div-text {
   font-family: 'Cinzel', Georgia, serif;
-  font-size: clamp(0.48rem, 0.88vw, 0.68rem);
+  font-size: clamp(0.5rem, 0.9vw, 0.7rem);
   font-weight: 700;
-  letter-spacing: 0.32em;
+  letter-spacing: 0.3em;
   color: #70101f;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .cert-100-envelope-text {
@@ -9540,28 +9549,33 @@ main {
 
 .cert-100-script-name {
   font-family: 'Alex Brush', 'Great Vibes', cursive;
-  font-size: clamp(2.1rem, 4.8vw, 4.0rem);
+  /* Slightly larger — names are the visual focus */
+  font-size: clamp(2.2rem, 5vw, 4.2rem);
   font-weight: 400;
   color: #5c0816;
-  line-height: 1;
-  text-shadow: 0 2px 6px rgba(92, 8, 22, 0.22);
+  line-height: 0.95;
+  text-shadow:
+    0 2px 8px rgba(92, 8, 22, 0.24),
+    0 0 1px rgba(92, 8, 22, 0.08);
 }
 
-/* Heart separator between names (replaces ampersand) */
+/* Heart separator between names */
 .cert-100-heart-sep {
-  font-size: clamp(1.1rem, 2.2vw, 1.8rem);
+  font-size: clamp(1.15rem, 2.3vw, 1.9rem);
   color: #b0102a;
   line-height: 1;
-  margin: 0 4px;
+  margin: 0 2px;
   align-self: center;
-  margin-top: -0.2em;
+  /* Optical vertical alignment with script caps */
+  margin-top: -0.35em;
+  filter: drop-shadow(0 1px 3px rgba(176, 16, 42, 0.35));
 }
 
-/* DECLARATION BODY */
 .cert-100-body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  /* Tighter gap — body text should feel unified */
   gap: 1px;
   max-width: 560px;
   width: 100%;
@@ -9570,26 +9584,36 @@ main {
 .cert-100-p {
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-style: italic;
-  font-size: clamp(0.68rem, 1.22vw, 0.96rem);
+  font-size: clamp(0.7rem, 1.25vw, 1.0rem);
   font-weight: 500;
   color: #2c161a;
-  line-height: 1.5;
+  line-height: 1.55;
   margin: 0;
-  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.4);
   text-align: center;
+  /* Subtle legibility shadow over busy background */
+  text-shadow: 0 1px 2px rgba(255,255,255,0.5);
 }
 
-/* Red highlighted first certification line */
+/* Thin gold rule between declaration and certification */
+.cert-100-mid-rule {
+  width: 55%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #c8a356 40%, #c8a356 60%, transparent);
+  margin: 3px 0;
+}
+
+/* Bold red first certification line */
 .cert-100-p.cert-100-p-red {
-  color: #990020;
+  color: #8c001a;
   font-weight: 600;
-  margin-top: 3px;
+  font-size: clamp(0.72rem, 1.28vw, 1.02rem);
 }
 
 /* 'in love' inline highlight */
 .cert-highlight {
-  color: #990020;
+  color: #8c001a;
   font-style: italic;
+  font-weight: 600;
 }
 
 /* Together Forever ornament row */
@@ -9597,31 +9621,35 @@ main {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 5px;
   width: 100%;
-  margin-top: 4px;
+  margin-top: 5px;
 }
 
 .cert-tf-line-left,
 .cert-tf-line-right {
   flex: 1;
   height: 1px;
-  max-width: 80px;
-  background: linear-gradient(90deg, transparent, #c8a356, transparent);
+  max-width: 90px;
+  background: linear-gradient(90deg, transparent, #c8a356 50%, transparent);
 }
 
 .cert-100-tf-heart {
-  font-size: clamp(0.52rem, 0.9vw, 0.72rem);
+  font-size: clamp(0.55rem, 0.95vw, 0.76rem);
   color: #b0102a;
   line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(176,16,42,0.3));
 }
 
 .cert-100-together-forever {
   font-family: 'Alex Brush', 'Great Vibes', cursive;
-  font-size: clamp(1.3rem, 2.8vw, 2.25rem);
+  /* Slightly larger than previous for more visual impact */
+  font-size: clamp(1.4rem, 3.0vw, 2.4rem);
   color: #5c0d18;
-  line-height: 1.1;
-  text-shadow: 0 1px 4px rgba(92, 13, 24, 0.2);
+  line-height: 1.05;
+  text-shadow:
+    0 2px 6px rgba(92, 13, 24, 0.22),
+    0 1px 0 rgba(255,255,255,0.3);
 }
 
 /* SIGNATURES ROW */
@@ -9644,10 +9672,12 @@ main {
 
 .cert-100-sig-script {
   font-family: 'Alex Brush', 'Great Vibes', cursive;
-  font-size: clamp(1.2rem, 2.4vw, 1.95rem);
-  color: #1a1a1a;
-  margin-bottom: 2px;
+  /* Larger script for presence */
+  font-size: clamp(1.3rem, 2.6vw, 2.1rem);
+  color: #1a1010;
+  margin-bottom: 1px;
   white-space: nowrap;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .cert-100-sig-line {
@@ -9657,14 +9687,16 @@ main {
   margin-bottom: 3px;
 }
 
-/* PARTNER IN LIFE label (matches reference image) */
+/* PARTNER IN LIFE — matches reference image exactly */
 .cert-100-sig-role {
   font-family: 'Cinzel', Georgia, serif;
-  font-size: clamp(0.38rem, 0.7vw, 0.56rem);
+  font-size: clamp(0.4rem, 0.72vw, 0.58rem);
   font-weight: 700;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.22em;
   color: #5a101b;
   text-transform: uppercase;
+  /* Pop on light parchment */
+  text-shadow: 0 1px 0 rgba(255,255,255,0.6);
 }
 
 /* Wax Seal Center Element */
