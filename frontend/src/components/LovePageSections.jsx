@@ -16,10 +16,18 @@ export default function LovePageSections({ setPhotos }) {
   const [testimonialIdx, setTestimonialIdx] = useState(0);
   const [copiedLink, setCopiedLink] = useState(false);
   // ---------- Image upload state ----------
-  const [photos, setLocalPhotos] = useState([]);
+  const [photos, setLocalPhotos] = useState(() => {
+    // Load from localStorage if available
+    const saved = localStorage.getItem('uploadedPhotos');
+    return saved ? JSON.parse(saved) : [];
+  });
   // Sync with parent if setter provided
   useEffect(() => {
     if (typeof setPhotos === "function") setPhotos(photos);
+  }, [photos]);
+  // Persist to localStorage whenever photos change
+  useEffect(() => {
+    localStorage.setItem('uploadedPhotos', JSON.stringify(photos));
   }, [photos]);
   // ---------- Upload handler ----------
   const handleImageUpload = (e) => {
