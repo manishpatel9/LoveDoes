@@ -319,65 +319,126 @@ function downloadBlob(blob, fileName) {
   return url;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// EBML / WebM Duration Injector
+// Fixes the infamous "0:00 duration" bug seen in mobile gallery apps.
+//
+// Root cause: MediaRecorder produces a *streaming* WebM container that has
+// NO Duration element in its Segment Info block. Without this field, mobile
+// gallery players (Android, iOS) display "0:00" even though the video plays
+// correctly. This function:
+//   • Strategy 1 – patches an existing Duration element (rare for MediaRecorder)
+//   • Strategy 2 – INJECTS a Duration element into the Segment Info block when
+//     it is absent (always the case for MediaRecorder output on Android/Chrome)
+//
+// No external libraries needed. Pure ArrayBuffer byte manipulation.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Read an EBML variable-length integer (VINT) at the given offset. */
+function readEbmlVint(bytes, offset) {
+  const b = bytes[offset];
+  if (b & 0x80) return { value: b & 0x7f,                                                 width: 1 };
+  if (b & 0x40) return { value: ((b & 0x3f) << 8)  | bytes[offset + 1],                  width: 2 };
+  if (b & 0x20) return { value: ((b & 0x1f) << 16) | (bytes[offset + 1] << 8) | bytes[offset + 2], width: 3 };
+  if (b & 0x10) return { value: ((b & 0x0f) << 24) | (bytes[offset + 1] << 16) | (bytes[offset + 2] << 8) | bytes[offset + 3], width: 4 };
+  // Unknown-size element marker (0x01 FF FF FF FF FF FF FF) — treat as large
+  return { value: -1, width: (b === 0x01) ? 8 : 1 };
+}
+
 /**
- * Fix the 0:00 duration bug on mobile galleries.
- * Strategy:
- *  1. For WebM blobs: locate the EBML Duration element (0x4489) and
- *     overwrite it with the correct duration in milliseconds encoded as
- *     an IEEE-754 double (8 bytes). This is the most reliable cross-device fix.
- *  2. For MP4 blobs: return as-is (MP4 duration is typically correct when
- *     the browser writes the moov atom; if it is still 0 on some devices
- *     a fetch-range round-trip is not effective without a proper remuxer).
- * Returns a new Blob with the duration patched, or the original blob on failure.
+ * Fix the 0:00 duration bug that MediaRecorder causes on mobile gallery apps.
+ * Operates purely on bytes — no external libraries.
+ * Returns a new Blob with the Duration field correctly set, or the original
+ * blob if the file is not WebM or patching fails.
  */
 async function fixVideoDuration(blob, durationSec) {
   if (!blob || durationSec <= 0) return blob;
+
   try {
-    const isWebM =
-      blob.type.includes("webm") ||
-      blob.type === "video/webm" ||
-      blob.type === "";
+    // ── Only WebM files need patching ──────────────────────────────────────
+    // Check both the MIME type AND the magic bytes (1A 45 DF A3 = EBML header)
+    const buf    = await blob.arrayBuffer();
+    const bytes  = new Uint8Array(buf);
 
-    if (!isWebM) return blob; // MP4 — nothing to patch client-side
+    const mimeOk = blob.type.includes("webm") || blob.type === "" || blob.type.includes("octet");
+    const magicOk = bytes[0] === 0x1A && bytes[1] === 0x45 && bytes[2] === 0xDF && bytes[3] === 0xA3;
+    if (!mimeOk && !magicOk) return blob; // Not WebM
 
-    const buf = await blob.arrayBuffer();
-    const bytes = new Uint8Array(buf);
+    const durationMs  = durationSec * 1000;
+    const SEARCH_LIMIT = Math.min(bytes.length, 2 * 1024 * 1024); // Search only first 2 MB
 
-    // Search for the EBML Duration element ID: 0x44, 0x89
-    // followed by 0x84 (4-byte float size flag) or 0x88 (8-byte double)
-    let patchedBytes = null;
-    for (let i = 0; i < bytes.length - 10; i++) {
+    // ── Strategy 1: patch an existing Duration element (0x44 0x89) ─────────
+    for (let i = 0; i < SEARCH_LIMIT - 12; i++) {
       if (bytes[i] === 0x44 && bytes[i + 1] === 0x89) {
-        // Duration element found
-        const sizeTag = bytes[i + 2];
-        if (sizeTag === 0x84) {
-          // 4-byte float
-          patchedBytes = new Uint8Array(buf.slice(0));
-          const view = new DataView(patchedBytes.buffer);
-          // Duration in WebM Segment Info is in TimestampScale units (default 1,000,000 ns = 1 ms)
-          // So duration in milliseconds = durationSec * 1000
-          view.setFloat32(i + 3, durationSec * 1000, false);
-          break;
-        } else if (sizeTag === 0x88) {
-          // 8-byte double
-          patchedBytes = new Uint8Array(buf.slice(0));
-          const view = new DataView(patchedBytes.buffer);
-          view.setFloat64(i + 3, durationSec * 1000, false);
-          break;
-        }
+        const sz = bytes[i + 2];
+        const patched = new Uint8Array(buf.slice(0));
+        const dv = new DataView(patched.buffer);
+        if (sz === 0x84) { dv.setFloat32(i + 3, durationMs, false); }
+        else if (sz === 0x88) { dv.setFloat64(i + 3, durationMs, false); }
+        else { continue; }
+        console.log("[fixVideoDuration] Strategy 1: patched existing Duration element.");
+        return new Blob([patched], { type: blob.type || "video/webm" });
       }
     }
 
-    if (patchedBytes) {
-      return new Blob([patchedBytes], { type: blob.type || "video/webm" });
+    // ── Strategy 2: inject Duration into the Segment Info element ──────────
+    // Segment Info element ID: 0x15 0x49 0xA9 0x66  (4 bytes)
+    for (let i = 0; i < SEARCH_LIMIT - 20; i++) {
+      if (bytes[i] === 0x15 && bytes[i+1] === 0x49 && bytes[i+2] === 0xA9 && bytes[i+3] === 0x66) {
+        // Read the Info element's size VINT
+        const sizePos  = i + 4;
+        const vint     = readEbmlVint(bytes, sizePos);
+        const infoBodyStart = sizePos + vint.width;
+
+        // Build the Duration element (11 bytes):
+        //   0x44 0x89      — Duration element ID
+        //   0x88            — size VINT: value 8 (float64)
+        //   [8 bytes]       — IEEE-754 double, big-endian, value = durationMs
+        const durEl = new Uint8Array(11);
+        durEl[0] = 0x44; durEl[1] = 0x89; // ID
+        durEl[2] = 0x88;                   // size = 8 bytes
+        new DataView(durEl.buffer).setFloat64(3, durationMs, false);
+
+        // Splice durEl right at the start of the Info body
+        const newBytes = new Uint8Array(bytes.length + 11);
+        newBytes.set(bytes.slice(0, infoBodyStart));
+        newBytes.set(durEl, infoBodyStart);
+        newBytes.set(bytes.slice(infoBodyStart), infoBodyStart + 11);
+
+        // Update the Info element's declared size (add 11 bytes)
+        // Only safe to update if the size fits in the same VINT width
+        if (vint.value !== -1) {
+          const newInfoSize = vint.value + 11;
+          const sv = sizePos; // position of the VINT in newBytes
+          if (vint.width === 1 && newInfoSize < 0x7f) {
+            newBytes[sv] = newInfoSize | 0x80;
+          } else if (vint.width === 2 && newInfoSize < 0x3fff) {
+            newBytes[sv]   = ((newInfoSize >> 8) & 0x3f) | 0x40;
+            newBytes[sv+1] = newInfoSize & 0xff;
+          } else if (vint.width === 3 && newInfoSize < 0x1fffff) {
+            newBytes[sv]   = ((newInfoSize >> 16) & 0x1f) | 0x20;
+            newBytes[sv+1] = (newInfoSize >> 8) & 0xff;
+            newBytes[sv+2] = newInfoSize & 0xff;
+          } else if (vint.width === 4 && newInfoSize < 0xfffffff) {
+            newBytes[sv]   = ((newInfoSize >> 24) & 0x0f) | 0x10;
+            newBytes[sv+1] = (newInfoSize >> 16) & 0xff;
+            newBytes[sv+2] = (newInfoSize >> 8) & 0xff;
+            newBytes[sv+3] = newInfoSize & 0xff;
+          }
+          // If vint.width >= 8 (unknown size), leave as-is — players tolerate it
+        }
+
+        console.log("[fixVideoDuration] Strategy 2: injected Duration into Segment Info at offset", i, "value", durationMs, "ms");
+        return new Blob([newBytes], { type: blob.type || "video/webm" });
+      }
     }
 
-    // Duration element not found — prepend a minimal Segment Info with Duration
-    // by injecting the Duration cluster before the first 0x1F43B675 (Cluster element)
-    // This is a best-effort fallback and may not work on all players.
+    // Neither strategy worked — return original blob unchanged
+    console.warn("[fixVideoDuration] Could not locate Duration or Segment Info element.");
     return blob;
+
   } catch (err) {
-    console.warn("fixVideoDuration failed:", err);
+    console.warn("[fixVideoDuration] Error:", err);
     return blob;
   }
 }
