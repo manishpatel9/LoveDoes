@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { playSparkleSound, playHeartbeatSound, playRomanticChime } from "../utils/audioSynth.js";
@@ -8,13 +8,34 @@ const fadeUp = {
   show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
 };
 
-export default function LovePageSections() {
+export default function LovePageSections({ setPhotos }) {
   const navigate = useNavigate();
   const [activeStep, setActiveStep] = useState(2); // 1: Couple, 2: Photos, 3: Memories, 4: Message, 5: Theme, 6: Preview
   const [activeThemeFilter, setActiveThemeFilter] = useState("all");
   const [selectedOccasionTab, setSelectedOccasionTab] = useState("Photos");
   const [testimonialIdx, setTestimonialIdx] = useState(0);
   const [copiedLink, setCopiedLink] = useState(false);
+  // ---------- Image upload state ----------
+  const [photos, setLocalPhotos] = useState([]);
+  // Sync with parent if setter provided
+  useEffect(() => {
+    if (typeof setPhotos === "function") setPhotos(photos);
+  }, [photos]);
+  // ---------- Upload handler ----------
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    const readers = files.map(
+      (file) =>
+        new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (ev) => resolve({ src: ev.target.result, title: file.name });
+          reader.readAsDataURL(file);
+        })
+    );
+    Promise.all(readers).then((newImages) => {
+      setLocalPhotos((prev) => [...prev, ...newImages]);
+    });
+  };
 
   const shareUrl = "https://lovedoes.app/rahul-priya";
 
@@ -159,27 +180,72 @@ export default function LovePageSections() {
 
           {/* Stepper Body Container */}
           <div className="lp-stepper-body-split">
+            {/* Left column – Upload UI */}
             <div className="lp-upload-col">
               <h3 className="lp-upload-heading">Upload Photos</h3>
               <p className="lp-upload-sub">Add your favorite photos and memories.</p>
 
+              {/* Photo upload UI */}
               <div className="lp-dropzone-row">
-                <div className="lp-dropzone-box">
+                {/* Your Photo */}
+                <div
+                  className="lp-dropzone-box"
+                  onClick={() => document.getElementById('yourPhotoInput').click()}
+                >
                   <span className="lp-dropzone-lbl">Your Photo</span>
                   <div className="lp-upload-placeholder">
                     <span className="camera-icon">📷</span>
                     <span>Click to upload<br />JPG, PNG, WEBP</span>
                   </div>
+                  <input
+                    id="yourPhotoInput"
+                    type="file"
+                    accept="image/*"
+                    style={{ display: "none" }}
+                    onChange={handleImageUpload}
+                  />
                 </div>
 
-                <div className="lp-dropzone-box">
+                {/* Partner's Photo */}
+                <div
+                  className="lp-dropzone-box"
+                  onClick={() => document.getElementById('partnerPhotoInput').click()}
+                >
                   <span className="lp-dropzone-lbl">Partner's Photo</span>
                   <div className="lp-upload-placeholder">
                     <span className="camera-icon">📷</span>
                     <span>Click to upload<br />JPG, PNG, WEBP</span>
                   </div>
+                  <input
+                    id="partnerPhotoInput"
+                    type="file"
+                    accept="image/*"
+                    style={{ display: "none" }}
+                    onChange={handleImageUpload}
+                  />
                 </div>
               </div>
+
+              {/* Render uploaded images */}
+              {photos.length > 0 && (
+                <div className="lp-uploaded-gallery">
+                  {photos.map((img, idx) => (
+                    <motion.button
+                      key={idx}
+                      type="button"
+                      className="compact-polaroid"
+                      onClick={(e) => { e.stopPropagation(); setLight(img); }}
+                      initial={{ opacity: 0, y: 15, rotate: idx % 2 === 0 ? -4 : 4 }}
+                      animate={{ opacity: 1, y: 0, rotate: idx % 2 === 0 ? -4 : 4 }}
+                      transition={{ delay: idx * 0.12 }}
+                      whileHover={{ scale: 1.1, rotate: 0, zIndex: 10 }}
+                    >
+                      <img src={img.src} alt={img.title} />
+                      <span className="polaroid-label">{img.title}</span>
+                    </motion.button>
+                  ))}
+                </div>
+              )}
 
               <div className="lp-stepper-nav-btns">
                 <button
