@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import logo from "../assets/Lovedoes.png";
 import { playSparkleSound } from "../utils/audioSynth.js";
 
 export default function Navbar() {
@@ -11,9 +12,7 @@ export default function Navbar() {
     <header className="site-header">
       {/* BRAND LOGO */}
       <NavLink to="/" className="logo-brand" onClick={() => playSparkleSound()}>
-        <span className="logo-sparkle-dot" />
-        <span className="logo-text">LoveDoes</span>
-        <span className="logo-heart-badge">💖</span>
+        <img src={logo} alt="LoveDoes logo" className="logo-image" />
       </NavLink>
 
       {/* DESKTOP NAVIGATION LINKS */}

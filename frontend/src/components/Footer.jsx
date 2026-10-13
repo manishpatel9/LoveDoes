@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import logo from "../assets/Lovedoes.png";
 import { playSparkleSound } from "../utils/audioSynth.js";
 
 export default function Footer() {
@@ -17,7 +18,7 @@ export default function Footer() {
         {/* TOP BRAND EMBLEM */}
         <div className="royal-footer-crown-header">
           <span className="royal-crown-icon">👑</span>
-          <span className="royal-footer-logo">LoveDoes</span>
+          <img src={logo} alt="LoveDoes logo" className="royal-footer-logo-image" />
           <span className="royal-crown-icon">👑</span>
         </div>
 
