@@ -610,12 +610,13 @@ export default function PublicLove() {
             <ScreenFade screenKey="memories">
               <div className="glass-panel target-exact-welcome-card compact-one-page">
                 <div className="target-pill-badge">
-                  <span className="badge-heart">📖</span>
+                  <span className="badge-heart">📸</span>
                   <span className="badge-text">SWEET MEMORIES</span>
-                  <span className="badge-heart">📖</span>
+                  <span className="badge-heart">✨</span>
                 </div>
                 <h2 className="compact-headline">Moments Frozen in Time</h2>
-                
+
+                {/* Polaroid Photo Row */}
                 <div className="compact-gallery-row">
                   {gallery.slice(0, 3).map((item, idx) => (
                     <motion.button
@@ -623,10 +624,10 @@ export default function PublicLove() {
                       className="compact-polaroid"
                       key={item.src}
                       onClick={(e) => { e.stopPropagation(); setLight(item); }}
-                      initial={{ opacity: 0, y: 15, rotate: idx % 2 === 0 ? -3 : 3 }}
-                      animate={{ opacity: 1, y: 0, rotate: idx % 2 === 0 ? -3 : 3 }}
-                      transition={{ delay: idx * 0.1 }}
-                      whileHover={{ scale: 1.08, rotate: 0 }}
+                      initial={{ opacity: 0, y: 15, rotate: idx % 2 === 0 ? -4 : 4 }}
+                      animate={{ opacity: 1, y: 0, rotate: idx % 2 === 0 ? -4 : 4 }}
+                      transition={{ delay: idx * 0.12 }}
+                      whileHover={{ scale: 1.1, rotate: 0, zIndex: 10 }}
                     >
                       <img src={item.src} alt={item.title} />
                       <span className="polaroid-label">{item.title}</span>
@@ -634,14 +635,27 @@ export default function PublicLove() {
                   ))}
                 </div>
 
+                {/* Premium Memory Cards */}
                 {memories.length > 0 && (
-                  <div className="compact-timeline-strip">
-                    {memories.slice(0, 2).map((m) => (
-                      <div className="timeline-strip-item" key={m.title}>
-                        <span className="strip-dot">✨</span>
-                        <strong>{m.title}:</strong>
-                        <span>{m.description}</span>
-                      </div>
+                  <div className="premium-memory-cards">
+                    {memories.slice(0, 3).map((m, idx) => (
+                      <motion.div
+                        key={m.title || idx}
+                        className="premium-memory-card"
+                        initial={{ opacity: 0, x: idx % 2 === 0 ? -20 : 20, y: 10 }}
+                        animate={{ opacity: 1, x: 0, y: 0 }}
+                        transition={{ delay: 0.2 + idx * 0.12, duration: 0.5 }}
+                      >
+                        <div className="pmc-accent-bar" />
+                        <div className="pmc-body">
+                          <div className="pmc-title-row">
+                            <span className="pmc-icon">💫</span>
+                            <span className="pmc-title">{m.title}</span>
+                          </div>
+                          <p className="pmc-desc">{m.description}</p>
+                        </div>
+                        <div className="pmc-bottom-glow" />
+                      </motion.div>
                     ))}
                   </div>
                 )}
@@ -653,6 +667,7 @@ export default function PublicLove() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
+                  <span className="btn-heart-prefix">💌</span>
                   <span className="btn-label-text">Read Love Letter</span>
                   <span className="btn-arrow-suffix">→</span>
                 </motion.button>
@@ -669,15 +684,48 @@ export default function PublicLove() {
                   <span className="badge-text">LETTER FROM THE HEART</span>
                   <span className="badge-heart">💌</span>
                 </div>
+
                 <h2 className="compact-headline">From My Heart To Yours</h2>
-                <div className="compact-letter-box">
-                  <Typewriter
-                    speed={22}
-                    className="message-box glow-text love-letter-text"
-                    text={page.message || "Some people come into our lives and make everything more beautiful."}
-                  />
+
+                {/* Premium Parchment Love Letter Box */}
+                <div className="premium-letter-wrapper">
+                  {/* Decorative top flourish */}
+                  <div className="plt-top-flourish">
+                    <svg width="200" height="18" viewBox="0 0 200 18" fill="none">
+                      <path d="M10 9 C50 2 80 16 100 9 C120 2 150 16 190 9" stroke="rgba(255,182,193,0.6)" strokeWidth="1.5" strokeLinecap="round"/>
+                      <circle cx="10" cy="9" r="3" fill="rgba(255,126,168,0.7)"/>
+                      <circle cx="100" cy="9" r="2" fill="rgba(255,209,102,0.7)"/>
+                      <circle cx="190" cy="9" r="3" fill="rgba(255,126,168,0.7)"/>
+                    </svg>
+                  </div>
+
+                  {/* Opening quote mark */}
+                  <div className="plt-opening-quote">❝</div>
+
+                  {/* The letter body */}
+                  <div className="plt-body">
+                    <Typewriter
+                      speed={18}
+                      className="premium-love-letter-text"
+                      text={page.message || "Some people come into our lives and make everything more beautiful. You are one of those rare souls who changed my world completely."}
+                    />
+                  </div>
+
+                  {/* Closing quote */}
+                  <div className="plt-closing-quote">❞</div>
+
+                  {/* Gold divider */}
+                  <div className="plt-gold-divider">
+                    <span className="plt-divider-gem">💎</span>
+                  </div>
+
+                  {/* Signature */}
+                  <div className="plt-signature-row">
+                    <span className="plt-signature-pre">With all my love,</span>
+                    <span className="plt-signature-name">{page.creatorName}</span>
+                    <span className="plt-signature-heart">💕</span>
+                  </div>
                 </div>
-                <p className="compact-letter-signature">— {page.creatorName} 💕</p>
 
                 <motion.button
                   className="target-start-story-btn compact-btn"
@@ -686,7 +734,7 @@ export default function PublicLove() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <span className="btn-label-text">Continue</span>
+                  <span className="btn-label-text">Continue the Journey</span>
                   <span className="btn-arrow-suffix">→</span>
                 </motion.button>
               </div>
