@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { playSparkleSound, playHeartbeatSound, playRomanticChime } from "../utils/audioSynth.js";
+import { handleImageFallback } from "../utils/imageFallback.js";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -138,7 +139,7 @@ export default function LovePageSections({ setPhotos }) {
                 handleStartCreate();
               }}
             >
-              <img src={t.img} alt={t.name} />
+              <img src={t.img} alt={t.name} onError={handleImageFallback} />
               <div className="lp-theme-overlay">
                 <span className="lp-theme-badge">{t.name}</span>
                 <span className="lp-theme-tag">{t.tag}</span>
@@ -248,7 +249,7 @@ export default function LovePageSections({ setPhotos }) {
                       transition={{ delay: idx * 0.12 }}
                       whileHover={{ scale: 1.1, rotate: 0, zIndex: 10 }}
                     >
-                      <img src={img.src} alt={img.title} />
+                      <img src={img.src} alt={img.title} onError={handleImageFallback} />
                       <span className="polaroid-label">{img.title}</span>
                     </motion.button>
                   ))}
@@ -422,16 +423,16 @@ export default function LovePageSections({ setPhotos }) {
 
         <div className="lp-polaroid-fan-deck">
           <div className="fan-card side-l">
-            <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=250&auto=format&fit=crop&q=80" alt="Memory 1" />
+            <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=250&auto=format&fit=crop&q=80" alt="Memory 1" onError={handleImageFallback} />
           </div>
           <div className="fan-card center-highlight">
-            <img src="https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=300&auto=format&fit=crop&q=80" alt="Memory Center" />
+            <img src="https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=300&auto=format&fit=crop&q=80" alt="Memory Center" onError={handleImageFallback} />
             <div className="polaroid-card-script">
               <span>Same People<br />Different Days<br />Same Love ♡</span>
             </div>
           </div>
           <div className="fan-card side-r">
-            <img src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=250&auto=format&fit=crop&q=80" alt="Memory 2" />
+            <img src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=250&auto=format&fit=crop&q=80" alt="Memory 2" onError={handleImageFallback} />
           </div>
         </div>
 
@@ -472,7 +473,7 @@ export default function LovePageSections({ setPhotos }) {
             ‹
           </button>
           <div className="test-card-content">
-            <img src={testimonials[testimonialIdx].avatar} alt={testimonials[testimonialIdx].name} className="test-avatar" />
+            <img src={testimonials[testimonialIdx].avatar} alt={testimonials[testimonialIdx].name} className="test-avatar" onError={handleImageFallback} />
             <div className="test-stars">⭐⭐⭐⭐⭐</div>
             <p className="test-quote">“{testimonials[testimonialIdx].quote}”</p>
             <span className="test-author">- {testimonials[testimonialIdx].name}</span>

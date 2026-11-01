@@ -1,7 +1,20 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { playSparkleSound, playHeartbeatSound, playRomanticChime } from "../utils/audioSynth.js";
+import {
+  playSparkleSound,
+  playHeartbeatSound,
+  playRomanticChime,
+  startLoveSongPreview,
+  stopLoveSongPreview,
+} from "../utils/audioSynth.js";
+import { handleImageFallback } from "../utils/imageFallback.js";
+
+const LOVE_SONG_TRACKS = [
+  { title: "Soft Piano for Two", artist: "LoveDoes Original" },
+  { title: "Starlight Waltz", artist: "LoveDoes Original" },
+  { title: "Sunset Promise", artist: "LoveDoes Original" },
+];
 
 const SLIDES = [
   {
@@ -94,16 +107,40 @@ export default function TenSlidesCarousel() {
   const [valentineName, setValentineName] = useState("Ananya");
   const [occasion, setOccasion] = useState("Valentine's Day");
   const [isPlayingMusic, setIsPlayingMusic] = useState(false);
+  const [musicTrackIndex, setMusicTrackIndex] = useState(0);
   const touchStartX = useRef(0);
+
+  const navigateToSlide = useCallback((index) => {
+    if (SLIDES[index].type !== "soundtrack-player" && isPlayingMusic) {
+      stopLoveSongPreview();
+      setIsPlayingMusic(false);
+    }
+    setCurrentIndex(index);
+  }, [isPlayingMusic]);
+
+  const nextSlide = useCallback(() => {
+    playSparkleSound();
+    navigateToSlide((currentIndex + 1) % SLIDES.length);
+  }, [currentIndex, navigateToSlide]);
+
+  const prevSlide = useCallback(() => {
+    playSparkleSound();
+    navigateToSlide((currentIndex - 1 + SLIDES.length) % SLIDES.length);
+  }, [currentIndex, navigateToSlide]);
+
+  const goToSlide = useCallback((index) => {
+    playHeartbeatSound();
+    navigateToSlide(index);
+  }, [navigateToSlide]);
 
   // Autoplay timer
   useEffect(() => {
     if (!isAutoplay || viewMode !== "slider") return;
     const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % SLIDES.length);
+      navigateToSlide((currentIndex + 1) % SLIDES.length);
     }, 7000);
     return () => clearInterval(timer);
-  }, [isAutoplay, viewMode]);
+  }, [currentIndex, isAutoplay, navigateToSlide, viewMode]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -114,22 +151,7 @@ export default function TenSlidesCarousel() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [viewMode, currentIndex]);
-
-  const nextSlide = () => {
-    playSparkleSound();
-    setCurrentIndex((prev) => (prev + 1) % SLIDES.length);
-  };
-
-  const prevSlide = () => {
-    playSparkleSound();
-    setCurrentIndex((prev) => (prev - 1 + SLIDES.length) % SLIDES.length);
-  };
-
-  const goToSlide = (idx) => {
-    playHeartbeatSound();
-    setCurrentIndex(idx);
-  };
+  }, [nextSlide, prevSlide, viewMode]);
 
   const handleStartStory = () => {
     playRomanticChime();
@@ -176,6 +198,7 @@ export default function TenSlidesCarousel() {
                   <img
                     src="https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=300&auto=format&fit=crop&q=80"
                     alt="Couple Kissing"
+                    onError={handleImageFallback}
                   />
                 </div>
                 <div className="side-rose">🌹</div>
@@ -237,6 +260,7 @@ export default function TenSlidesCarousel() {
                   <img
                     src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&auto=format&fit=crop&q=80"
                     alt="Sunset Couple"
+                    onError={handleImageFallback}
                   />
                   <span className="polaroid-caption-script">You & Me ♡</span>
                 </div>
@@ -244,6 +268,7 @@ export default function TenSlidesCarousel() {
                   <img
                     src="https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=300&auto=format&fit=crop&q=80"
                     alt="Couple Memory"
+                    onError={handleImageFallback}
                   />
                 </div>
                 <div className="handwritten-arrow-note">
@@ -270,33 +295,32 @@ export default function TenSlidesCarousel() {
                 </div>
                 <div className="player-body">
                   <img
-                    src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=150&auto=format&fit=crop&q=80"
+                    src="/bg.png"
                     alt="Album Art"
                     className="album-cover"
                   />
                   <div className="track-details">
-                    <strong className="track-title">Perfect</strong>
-                    <span className="track-artist">Ed Sheeran</span>
+                    <strong className="track-title">{currentMusicTrack.title}</strong>
+                    <span className="track-artist">{currentMusicTrack.artist}</span>
                   </div>
                 </div>
                 <div className="player-controls">
-                  <button type="button" className="ctrl-btn">⏮</button>
+                  <button type="button" className="ctrl-btn" onClick={() => changeMusicTrack(-1)} aria-label="Previous preview track">⏮</button>
                   <button
                     type="button"
                     className="ctrl-btn play-pause"
-                    onClick={() => {
-                      playSparkleSound();
-                      setIsPlayingMusic(!isPlayingMusic);
-                    }}
+                    onClick={toggleMusicPreview}
+                    aria-label={isPlayingMusic ? "Pause preview music" : "Play preview music"}
+                    aria-pressed={isPlayingMusic}
                   >
                     {isPlayingMusic ? "⏸" : "▶"}
                   </button>
-                  <button type="button" className="ctrl-btn">⏭</button>
+                  <button type="button" className="ctrl-btn" onClick={() => changeMusicTrack(1)} aria-label="Next preview track">⏭</button>
                 </div>
                 <div className="progress-bar-line">
-                  <span className="time-lbl">1:42</span>
-                  <div className="bar-track"><div className="bar-fill" style={{ width: "42%" }} /></div>
-                  <span className="time-lbl">4:23</span>
+                  <span className="time-lbl">{isPlayingMusic ? "Playing" : "Preview"}</span>
+                  <div className="bar-track"><div className="bar-fill" style={{ width: isPlayingMusic ? "100%" : "0%", transition: "width 0.3s ease" }} /></div>
+                  <span className="time-lbl">Loop</span>
                 </div>
                 <div className="handwritten-music-note">
                   <span>Songs that bring<br />you closer ♡</span>
@@ -348,7 +372,8 @@ export default function TenSlidesCarousel() {
                 { label: "Just Because", icon: "💖" },
                 { label: "Special Moments", icon: "⭐" },
               ].map((occ) => (
-                <div
+                <button
+                  type="button"
                   key={occ.label}
                   className="occasion-card-chip"
                   onClick={() => {
@@ -359,7 +384,7 @@ export default function TenSlidesCarousel() {
                 >
                   <span className="chip-icon">{occ.icon}</span>
                   <span className="chip-name">{occ.label}</span>
-                </div>
+                </button>
               ))}
             </div>
           </div>
@@ -407,6 +432,7 @@ export default function TenSlidesCarousel() {
                 <img
                   src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80"
                   alt="Priya & Arjun"
+                  onError={handleImageFallback}
                 />
                 <div className="testimonial-quote-box">
                   <p className="testimonial-quote">“It's not just a website, it's our little world. ♡”</p>
@@ -462,6 +488,26 @@ export default function TenSlidesCarousel() {
   };
 
   const currentSlide = SLIDES[currentIndex];
+  const currentMusicTrack = LOVE_SONG_TRACKS[musicTrackIndex];
+
+  useEffect(() => () => stopLoveSongPreview(), []);
+
+  const toggleMusicPreview = () => {
+    if (isPlayingMusic) {
+      stopLoveSongPreview();
+      setIsPlayingMusic(false);
+      return;
+    }
+    if (startLoveSongPreview(musicTrackIndex)) setIsPlayingMusic(true);
+  };
+
+  const changeMusicTrack = (direction) => {
+    setMusicTrackIndex((current) => {
+      const next = (current + direction + LOVE_SONG_TRACKS.length) % LOVE_SONG_TRACKS.length;
+      if (isPlayingMusic) startLoveSongPreview(next);
+      return next;
+    });
+  };
 
   return (
     <div className="ten-slides-container">

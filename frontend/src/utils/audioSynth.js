@@ -5,6 +5,13 @@ let audioCtx = null;
 let ambientOscs = [];
 let ambientGain = null;
 let isAmbientPlaying = false;
+let loveSongPreviewInterval = null;
+
+const LOVE_SONG_PREVIEWS = [
+  [261.63, 329.63, 392, 493.88, 392, 329.63, 293.66, 349.23],
+  [220, 277.18, 329.63, 440, 392, 329.63, 277.18, 246.94],
+  [293.66, 369.99, 440, 587.33, 493.88, 440, 369.99, 329.63],
+];
 
 function getAudioContext() {
   if (!audioCtx) {
@@ -101,6 +108,47 @@ export function playSparkleSound() {
     });
   } catch (e) {
     console.debug("Sparkle failed:", e);
+  }
+}
+
+export function startLoveSongPreview(trackIndex = 0) {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return false;
+
+    stopLoveSongPreview();
+    const notes = LOVE_SONG_PREVIEWS[trackIndex % LOVE_SONG_PREVIEWS.length];
+    let noteIndex = 0;
+
+    const playNote = () => {
+      const startTime = ctx.currentTime;
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(notes[noteIndex], startTime);
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.07, startTime + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.42);
+      oscillator.connect(gain);
+      gain.connect(ctx.destination);
+      oscillator.start(startTime);
+      oscillator.stop(startTime + 0.45);
+      noteIndex = (noteIndex + 1) % notes.length;
+    };
+
+    playNote();
+    loveSongPreviewInterval = setInterval(playNote, 480);
+    return true;
+  } catch (error) {
+    console.debug("Love song preview failed:", error);
+    return false;
+  }
+}
+
+export function stopLoveSongPreview() {
+  if (loveSongPreviewInterval) {
+    clearInterval(loveSongPreviewInterval);
+    loveSongPreviewInterval = null;
   }
 }
 

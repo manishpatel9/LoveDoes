@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { playSparkleSound, playHeartbeatSound } from "../utils/audioSynth.js";
+import { handleImageFallback } from "../utils/imageFallback.js";
 
 const CARDS = [
   {
@@ -81,7 +82,7 @@ export default function RomanticPolaroidDeck() {
                 {/* Front Side */}
                 <div className="polaroid-face polaroid-front">
                   <div className="polaroid-img-wrapper">
-                    <img src={card.frontPhoto} alt={card.title} loading="lazy" />
+                    <img src={card.frontPhoto} alt={card.title} loading="lazy" onError={handleImageFallback} />
                     <span className="polaroid-tag">{card.tag}</span>
                   </div>
                   <div className="polaroid-caption">

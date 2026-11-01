@@ -51,7 +51,16 @@ export default function RomanticStepsTimeline() {
             <motion.article
               key={s.num}
               className={`card step-card ${isActive ? "active-step" : ""}`}
+              role="button"
+              tabIndex={0}
+              aria-expanded={isActive}
               onClick={() => handleStepClick(i)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  handleStepClick(i);
+                }
+              }}
               onMouseEnter={() => playHeartbeatSound()}
               whileHover={{ y: -6 }}
             >
@@ -60,7 +69,7 @@ export default function RomanticStepsTimeline() {
                 <span className="step-icon-emoji">{s.icon}</span>
               </div>
               <h3>{s.title}</h3>
-              <p className="hint">{s.d}</p>
+              <p className="hint">{s.desc}</p>
 
               {isActive && (
                 <motion.div

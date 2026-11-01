@@ -1,6 +1,6 @@
 import { useLocation, Link, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import PublicLayout from "../layouts/PublicLayout.jsx";
+import PublicLayout from "./layouts/PublicLayout.jsx";
 import ConfettiBurst from "../components/ConfettiBurst.jsx";
 
 export default function Success() {

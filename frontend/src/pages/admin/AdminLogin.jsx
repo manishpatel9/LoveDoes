@@ -118,6 +118,8 @@ export default function AdminLogin() {
                 className="password-toggle-btn"
                 onClick={() => setShowPassword(!showPassword)}
                 title={showPassword ? "Hide Password" : "Show Password"}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-pressed={showPassword}
               >
                 {showPassword ? "🙈" : "👁️"}
               </button>
@@ -129,6 +131,7 @@ export default function AdminLogin() {
             {error && (
               <motion.div
                 className="admin-error-box"
+                role="alert"
                 initial={{ opacity: 0, height: 0, y: -10 }}
                 animate={{ opacity: 1, height: "auto", y: 0 }}
                 exit={{ opacity: 0, height: 0, y: -10 }}

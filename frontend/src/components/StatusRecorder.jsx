@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import certBg from "../assets/cert_bg.png";
 import sunsetBg from "../assets/romantic_sunset_deck_bg.png";
+import { CERTIFICATE_COPY } from "../utils/certificateCopy.js";
 
 const isMobileDevice = () =>
   /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
@@ -273,7 +274,6 @@ function getBestSupportedMimeType() {
     return { mimeType: "video/webm", ext: "webm", label: "WEBM" };
   }
 
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
   const isMobile = /Android|iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && window.innerWidth < 900);
 
   // For mobile devices (Android & iOS) we prioritize MP4 because WhatsApp and many native apps only accept MP4.
@@ -607,7 +607,7 @@ export default function StatusRecorder({ page, photos }) {
       } catch { }
     }
 
-    const sunsetBgImg = await loadImage(photos?.bg || page?.theme?.bgUrl || page?.theme?.bg_url || "/image.png" || sunsetBg);
+    const sunsetBgImg = await loadImage(photos?.bg || page?.theme?.bgUrl || page?.theme?.bg_url || sunsetBg);
     const creator = await loadImage(photos?.creator || page?.photos?.find((p) => p.type === "creator" || p.category === "creator")?.file_url || "/creator_avatar.png");
     const partner = await loadImage(photos?.partner || page?.photos?.find((p) => p.type === "partner" || p.category === "partner")?.file_url || "/partner_avatar.png");
     const couple = await loadImage(photos?.couple || page?.photos?.find((p) => p.type === "couple" || p.category === "couple")?.file_url || "/romantic_sunset_deck_bg.png");
@@ -671,7 +671,7 @@ export default function StatusRecorder({ page, photos }) {
       } catch { }
     }
 
-    const sunsetBgImg = await loadImage(photos?.bg || page?.theme?.bgUrl || page?.theme?.bg_url || "/image.png" || sunsetBg);
+    const sunsetBgImg = await loadImage(photos?.bg || page?.theme?.bgUrl || page?.theme?.bg_url || sunsetBg);
     const creator = await loadImage(photos?.creator || page?.photos?.find((p) => p.type === "creator" || p.category === "creator")?.file_url || "/creator_avatar.png");
     const partner = await loadImage(photos?.partner || page?.photos?.find((p) => p.type === "partner" || p.category === "partner")?.file_url || "/partner_avatar.png");
     const couple = await loadImage(photos?.couple || page?.photos?.find((p) => p.type === "couple" || p.category === "couple")?.file_url || "/romantic_sunset_deck_bg.png");
@@ -1924,7 +1924,7 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, sunsetBgIm
   ctx.fillStyle = "#c8a356";
   ctx.font = "normal 14px 'Cinzel', Georgia, serif";
   ctx.letterSpacing = "4px";
-  ctx.fillText("✦ THE OFFICIAL ✦", w / 2, certY + 95);
+  ctx.fillText(`✦ ${CERTIFICATE_COPY.kicker} ✦`, w / 2, certY + 95);
 
   ctx.fillStyle = "#4a0913";
   ctx.font = "bold 26px 'Cinzel', 'Playfair Display', Georgia, serif";
@@ -1936,7 +1936,7 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, sunsetBgIm
   ctx.letterSpacing = "5px";
   ctx.fillText("ETERNAL LOVE", w / 2, certY + 195);
 
-  // — THIS CERTIFIES THAT —
+  // — PRESENTED TO —
   ctx.textAlign = "center";
   ctx.strokeStyle = "#c8a356";
   ctx.lineWidth = 1.5;
@@ -1953,7 +1953,7 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, sunsetBgIm
   ctx.fillStyle = "#70101f";
   ctx.font = "700 13px 'Cinzel', Georgia, serif";
   ctx.letterSpacing = "4px";
-  ctx.fillText("THIS CERTIFIES THAT", w / 2, certY + 244);
+  ctx.fillText(CERTIFICATE_COPY.presentedTo, w / 2, certY + 244);
 
   // Couple Names Row: Creator & Partner
   ctx.font = "normal 52px 'Alex Brush', 'Great Vibes', cursive";
@@ -1982,17 +1982,15 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, sunsetBgIm
   // Declaration Body Paragraphs (Harmonious Editorial Typography)
   ctx.font = "italic 17px 'Cormorant Garamond', Georgia, serif";
   ctx.fillStyle = "#2c161a";
-  ctx.fillText("are hereby declared to be forever united in sacred love,", w / 2, certY + 410);
-  ctx.fillText("in heart, in soul, and in every lifetime.", w / 2, certY + 438);
-
-  ctx.fillText("This bond is certified as timeless, unconditional, and everlasting —", w / 2, certY + 490);
-  ctx.fillText("sealed with profound devotion, trust, and a love that deepens", w / 2, certY + 518);
-  ctx.fillText("with every heartbeat.", w / 2, certY + 544);
+  ctx.fillText(CERTIFICATE_COPY.declaration, w / 2, certY + 410);
+  ctx.fillText(CERTIFICATE_COPY.wish, w / 2, certY + 438);
+  ctx.fillText(CERTIFICATE_COPY.toast, w / 2, certY + 490);
+  ctx.fillText(CERTIFICATE_COPY.closing, w / 2, certY + 518);
 
   // Together Forever Calligraphy
   ctx.font = "normal 42px 'Alex Brush', 'Great Vibes', cursive";
   ctx.fillStyle = "#5c0d18";
-  ctx.fillText("Together Forever", w / 2, certY + 615);
+  ctx.fillText(CERTIFICATE_COPY.together, w / 2, certY + 615);
 
   ctx.strokeStyle = "#c8a356";
   ctx.lineWidth = 1.2;
@@ -2021,7 +2019,7 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, sunsetBgIm
   ctx.font = "bold 11px 'Cinzel', Georgia, serif";
   ctx.fillStyle = "#5a101b";
   ctx.letterSpacing = "2px";
-  ctx.fillText("SOULMATE & PARTNER", w / 2 - 165, certY + 772);
+  ctx.fillText(CERTIFICATE_COPY.signature, w / 2 - 165, certY + 772);
 
   // Right: Partner
   ctx.font = "normal 34px 'Alex Brush', 'Great Vibes', cursive";
@@ -2036,7 +2034,7 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, sunsetBgIm
   ctx.font = "bold 11px 'Cinzel', Georgia, serif";
   ctx.fillStyle = "#5a101b";
   ctx.letterSpacing = "2px";
-  ctx.fillText("SOULMATE & PARTNER", w / 2 + 165, certY + 772);
+  ctx.fillText(CERTIFICATE_COPY.signature, w / 2 + 165, certY + 772);
 
   // Envelope Note (Bottom Left Corner)
   ctx.save();
@@ -2044,7 +2042,7 @@ function drawFrame(ctx, w, h, t, timeSec, { creator, partner, couple, sunsetBgIm
   ctx.rotate((-12 * Math.PI) / 180);
   ctx.font = "normal 22px 'Alex Brush', 'Great Vibes', cursive";
   ctx.fillStyle = "#2a1c15";
-  ctx.fillText("Forever Looks Better With You ♡", 0, 0);
+  ctx.fillText(`${CERTIFICATE_COPY.envelopeFirstLine} ${CERTIFICATE_COPY.envelopeSecondLine} ♡`, 0, 0);
   ctx.restore();
 
   // Official Royal 3D Wax Seal Stamp (Center Bottom of Certificate)

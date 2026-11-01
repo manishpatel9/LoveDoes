@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import PhotoUploader from "../components/PhotoUploader.jsx";
 import LovePreview from "../components/LovePreview.jsx";
-import PublicLayout from "../layouts/PublicLayout.jsx";
+import PublicLayout from "./layouts/PublicLayout.jsx";
 import HeartField from "../components/HeartField.jsx";
 import RosePetals from "../components/RosePetals.jsx";
 import { COUPLE_AVATARS } from "../components/CoupleAvatars.jsx";
@@ -171,7 +171,8 @@ export default function Create() {
 
   const canNext = useMemo(() => {
     if (step === 0) return form.creatorName.trim() && form.partnerName.trim();
-    if (step === 1) return true; // Photos or avatars available
+    if (step === 1) return Boolean(form.creatorFile && form.partnerFile);
+    if (step === 5) return Boolean(form.themeId);
     return true;
   }, [step, form]);
 
@@ -183,18 +184,23 @@ export default function Create() {
   async function onPhoto(kind, event) {
     const file = event.target.files?.[0];
     if (!file) return;
+    event.target.value = "";
     if (file.size > 8 * 1024 * 1024) {
       setError("Each photo must be under 8 MB before compression.");
       return;
     }
-    const compact = await compressImage(file);
     const map = {
       creator: ["creatorFile", "creatorPreview"],
       partner: ["partnerFile", "partnerPreview"],
       couple: ["coupleFile", "couplePreview"],
     };
     const [fileKey, previewKey] = map[kind];
-    readPreview(compact, (preview) => update({ [fileKey]: compact, [previewKey]: preview }));
+    try {
+      const compact = await compressImage(file);
+      readPreview(compact, (preview) => update({ [fileKey]: compact, [previewKey]: preview }));
+    } catch (err) {
+      setError(err.message || "Could not process that photo. Please try another image.");
+    }
   }
 
   function onAudio(event) {
@@ -213,6 +219,10 @@ export default function Create() {
     update({ memories: [...form.memories, emptyMemory()] });
   }
 
+  function removeMemory(index) {
+    update({ memories: form.memories.filter((_, i) => i !== index) });
+  }
+
   function patchMemory(index, partial) {
     const next = form.memories.map((m, i) => (i === index ? { ...m, ...partial } : m));
     update({ memories: next });
@@ -221,8 +231,17 @@ export default function Create() {
   async function onMemoryPhoto(index, event) {
     const file = event.target.files?.[0];
     if (!file) return;
-    const compact = await compressImage(file);
-    readPreview(compact, (preview) => patchMemory(index, { file: compact, preview }));
+    event.target.value = "";
+    if (file.size > 8 * 1024 * 1024) {
+      setError("Each memory photo must be under 8 MB before compression.");
+      return;
+    }
+    try {
+      const compact = await compressImage(file);
+      readPreview(compact, (preview) => patchMemory(index, { file: compact, preview }));
+    } catch (err) {
+      setError(err.message || "Could not process that photo. Please try another image.");
+    }
   }
 
   async function submit() {
@@ -275,9 +294,9 @@ export default function Create() {
         <div className="card wizard-card">
           <div className="wizard-header-wrapper">
             <div className="royal-wizard-badge">
-              👑 ROYAL LOVE SANCTUARY CREATOR
+              ✨ YOUR STORY, YOUR WAY
             </div>
-            <h1 className="royal-wizard-title">Craft Your Eternal Love Sanctuary</h1>
+            <h1 className="royal-wizard-title">Create a love story that feels like yours</h1>
             <div className="romantic-quote-ticker">
               <span>✨</span>
               <span>{ROMANTIC_QUOTES[quoteIndex]}</span>
@@ -342,14 +361,16 @@ export default function Create() {
           </div>
 
           {/* Stepper Navigation Tabs */}
-          <div className="step-tabs">
+          <div className="step-tabs" aria-label="Creation steps">
             {tabIcons.map((tabLabel, idx) => (
               <button
                 key={idx}
                 type="button"
                 className={`step-tab-btn ${step === idx ? "active" : ""} ${idx < step ? "done" : ""}`}
+                aria-current={step === idx ? "step" : undefined}
+                disabled={idx > step && (idx !== step + 1 || !canNext)}
                 onClick={() => {
-                  if (idx <= step || canNext) setStep(idx);
+                  if (idx <= step || (idx === step + 1 && canNext)) setStep(idx);
                 }}
               >
                 {tabLabel}
@@ -357,7 +378,7 @@ export default function Create() {
             ))}
           </div>
 
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+          <div className="wizard-progress-labels">
             <span style={{ fontSize: "0.82rem", color: "#ffd166", fontWeight: 600 }}>
               Step {step + 1} of 7: {labels[step]} Details
             </span>
@@ -366,7 +387,7 @@ export default function Create() {
             </span>
           </div>
 
-          <div className="progress">
+          <div className="progress" role="progressbar" aria-label="Creation progress" aria-valuemin={1} aria-valuemax={7} aria-valuenow={step + 1}>
             {labels.map((_, i) => (
               <span key={i} className={i <= step ? "done" : ""} />
             ))}
@@ -477,7 +498,7 @@ export default function Create() {
               {step === 1 && (
                 <>
                   <p style={{ color: "var(--muted)", fontStyle: "italic", marginBottom: 16 }}>
-                    Upload real photos of you both, or select an animated couple avatar style below.
+                    Add a photo for each of you. These portraits appear throughout your love page; the couple photo is optional.
                   </p>
 
                   <div className="grid-2" style={{ marginBottom: 20 }}>
@@ -498,6 +519,9 @@ export default function Create() {
                       onClear={() => update({ partnerFile: null, partnerPreview: "" })}
                     />
                   </div>
+                  {(!form.creatorFile || !form.partnerFile) && (
+                    <p className="wizard-inline-hint">Both portraits are needed before you can continue. Illustrated portraits are shown in the preview until you add photos.</p>
+                  )}
 
                   <PhotoUploader
                     label="Couple Photo (Together)"
@@ -510,20 +534,22 @@ export default function Create() {
 
                   {(!form.creatorPreview || !form.partnerPreview) && (
                     <div style={{ marginTop: 24 }}>
-                      <p className="avatar-presets-title">✨ Or choose a romantic animated couple style:</p>
+                      <p className="avatar-presets-title">✨ Preview with an illustrated couple style:</p>
                       <div className="avatar-presets-grid">
                         {COUPLE_AVATARS.map((preset) => (
-                          <div
+                          <button
                             key={preset.id}
+                            type="button"
                             className={`avatar-preset-card ${activeAvatarPreset.id === preset.id ? "selected" : ""}`}
                             onClick={() => setActiveAvatarPreset(preset)}
+                            aria-pressed={activeAvatarPreset.id === preset.id}
                           >
                             <div style={{ display: "flex", justifyContent: "center", gap: 4 }}>
                               {preset.creatorSvg}
                               {preset.partnerSvg}
                             </div>
                             <div className="avatar-preset-name">{preset.name}</div>
-                          </div>
+                          </button>
                         ))}
                       </div>
                     </div>
@@ -549,6 +575,14 @@ export default function Create() {
                         boxShadow: "0 10px 30px rgba(0, 0, 0, 0.5)",
                       }}
                     >
+                      <button
+                        type="button"
+                        className="memory-remove-btn"
+                        onClick={() => removeMemory(i)}
+                        aria-label={`Remove memory ${i + 1}`}
+                      >
+                        Remove memory
+                      </button>
                       <div className="field">
                         <label style={{ color: "#ff9ebb" }}>📖 Memory #{i + 1} Title</label>
                         <input
@@ -587,6 +621,7 @@ export default function Create() {
                     type="button"
                     className="add-memory-btn"
                     onClick={addMemory}
+                    disabled={form.memories.length >= 10}
                     style={{
                       width: "100%",
                       padding: "14px",
@@ -601,7 +636,7 @@ export default function Create() {
                       transition: "all 0.25s ease",
                     }}
                   >
-                    ✨ + Add Memory Highlight
+                    {form.memories.length >= 10 ? "Memory limit reached (10)" : "✨ + Add Memory Highlight"}
                   </button>
                 </>
               )}
@@ -649,6 +684,15 @@ export default function Create() {
                         key={track.id}
                         className={`music-card ${form.musicId === track.id ? "selected" : ""}`}
                         onClick={() => update({ musicId: track.id })}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            update({ musicId: track.id });
+                          }
+                        }}
+                        role="radio"
+                        aria-checked={form.musicId === track.id}
+                        tabIndex={0}
                         style={{
                           width: "100%",
                           marginBottom: 10,

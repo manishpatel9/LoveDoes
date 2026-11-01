@@ -1,7 +1,7 @@
-import Navbar from "../components/Navbar.jsx";
-import Footer from "../components/Footer.jsx";
-import AmbientGlow from "../components/AmbientGlow.jsx";
-import HeartField from "../components/HeartField.jsx";
+import Navbar from "../../components/Navbar.jsx";
+import Footer from "../../components/Footer.jsx";
+import AmbientGlow from "../../components/AmbientGlow.jsx";
+import HeartField from "../../components/HeartField.jsx";
 
 export default function PublicLayout({ children, hideNavbar = false }) {
   return (

@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import certBg from "../assets/cert_bg.png";
 import { playRomanticChime } from "../utils/audioSynth.js";
+import { CERTIFICATE_COPY } from "../utils/certificateCopy.js";
 
 export default function RomanticCertificate({
   creatorName = "Kumar",
@@ -50,11 +51,11 @@ export default function RomanticCertificate({
         ctx.shadowOffsetY = oy;
       };
 
-      // ── 1. Kicker: — THE OFFICIAL — ──────────────────────────────────────
+      // ── 1. Certificate introduction ───────────────────────────────────────
       ctx.font = "500 26px 'Cinzel Decorative', 'Cinzel', Georgia, serif";
       ctx.fillStyle = "#c8a356";
       ctx.letterSpacing = "5px";
-      ctx.fillText("— THE OFFICIAL —", cx, 235);
+      ctx.fillText(CERTIFICATE_COPY.kicker, cx, 235);
 
       // ── 2. CERTIFICATE OF ────────────────────────────────────────────────
       setShadow("rgba(74,9,19,0.22)", 10, 3);
@@ -77,7 +78,7 @@ export default function RomanticCertificate({
       ctx.letterSpacing = "0px";
       ctx.fillText("♥", cx, 474);
 
-      // ── 5. THIS CERTIFIES THAT divider ───────────────────────────────────
+      // ── 5. Presented-to divider ──────────────────────────────────────────
       const drawDivLine = (x1, x2, y) => {
         ctx.strokeStyle = "#c8a356";
         ctx.lineWidth = 1.5;
@@ -92,7 +93,7 @@ export default function RomanticCertificate({
       ctx.fillStyle = "#70101f";
       ctx.font = "700 23px 'Cinzel', Georgia, serif";
       ctx.letterSpacing = "6px";
-      ctx.fillText("THIS CERTIFIES THAT", cx, 522);
+      ctx.fillText(CERTIFICATE_COPY.presentedTo, cx, 522);
 
       // ── 6. Names row (left ♥ right) ──────────────────────────────────────
       setShadow("rgba(110,9,23,0.28)", 16, 4);
@@ -129,41 +130,25 @@ export default function RomanticCertificate({
       ctx.font = "italic 500 34px 'Cormorant Garamond', Georgia, serif";
       ctx.letterSpacing = "0.3px";
 
-      // Line 1: "are hereby declared to be forever bound" + [red]"in love"[/red] + ","
-      const p1a = "are hereby declared to be forever bound ";
-      const p1b = "in love";
-      const p1c = ",";
-      const full1 = p1a + p1b + p1c;
-      const startP1 = cx - ctx.measureText(full1).width / 2;
-      const w1a = ctx.measureText(p1a).width;
-      const w1b = ctx.measureText(p1b).width;
-      ctx.textAlign = "left";
-      ctx.fillStyle = "#2c161a";
-      ctx.fillText(p1a, startP1, 740);
-      ctx.fillStyle = "#990020";
-      ctx.fillText(p1b, startP1 + w1a, 740);
-      ctx.fillStyle = "#2c161a";
-      ctx.fillText(p1c, startP1 + w1a + w1b, 740);
-
       ctx.textAlign = "center";
       ctx.fillStyle = "#2c161a";
-      ctx.fillText("in heart, in soul and in every lifetime.", cx, 790);
+      ctx.fillText(CERTIFICATE_COPY.declaration, cx, 740);
+      ctx.fillText(CERTIFICATE_COPY.wish, cx, 790);
 
       // Thin gold divider
       drawDivLine(cx - 230, cx + 230, 834);
 
-      // Line 2 (red italic): certification sentence
+      // A celebratory toast, rather than a legal-style certification.
       ctx.font = "italic 600 34px 'Cormorant Garamond', Georgia, serif";
       ctx.fillStyle = "#990020";
-      ctx.fillText("This bond is certified as timeless, unconditional, and everlasting,", cx, 886);
+      ctx.fillText(CERTIFICATE_COPY.toast, cx, 886);
 
       // Lines 3–4
       ctx.font = "italic 500 34px 'Cormorant Garamond', Georgia, serif";
       ctx.fillStyle = "#2c161a";
-      ctx.fillText("sealed with trust, respect, care and a love that grows stronger", cx, 936);
-      ctx.fillText("with every heartbeat.", cx, 982);
+      ctx.fillText(CERTIFICATE_COPY.closing, cx, 936);
 
-      // ── 8. Together Forever ──────────────────────────────────────────────
+      // ── 8. Together, always ──────────────────────────────────────────────
       const tfY = 1065;
       drawDivLine(cx - 380, cx - 210, tfY - 26);
       drawDivLine(cx + 210,  cx + 380, tfY - 26);
@@ -175,7 +160,7 @@ export default function RomanticCertificate({
 
       ctx.font = "normal 76px 'Alex Brush', 'Great Vibes', cursive";
       ctx.fillStyle = "#5c0d18";
-      ctx.fillText("Together Forever", cx, tfY);
+      ctx.fillText(CERTIFICATE_COPY.together, cx, tfY);
 
       // ── 9. Signature row ─────────────────────────────────────────────────
       const sigY   = 1210;
@@ -197,8 +182,8 @@ export default function RomanticCertificate({
       ctx.font = "700 20px 'Cinzel', Georgia, serif";
       ctx.fillStyle = "#5a101b";
       ctx.letterSpacing = "3px";
-      ctx.fillText("PARTNER IN LIFE", sigLX, roleY);
-      ctx.fillText("PARTNER IN LIFE", sigRX, roleY);
+      ctx.fillText(CERTIFICATE_COPY.signature, sigLX, roleY);
+      ctx.fillText(CERTIFICATE_COPY.signature, sigRX, roleY);
 
       // ── 10. Wax Seal (center, between signatures) ────────────────────────
       const seX = cx, seY = 1235, seR = 82;
@@ -252,9 +237,8 @@ export default function RomanticCertificate({
       ctx.font = "normal 42px 'Alex Brush', 'Great Vibes', cursive";
       ctx.fillStyle = "#2a1c15";
       ctx.letterSpacing = "0px";
-      ctx.fillText("Forever Looks", 0, 0);
-      ctx.fillText("Better", 0, 46);
-      ctx.fillText("With You", 0, 92);
+      ctx.fillText(CERTIFICATE_COPY.envelopeFirstLine, 0, 0);
+      ctx.fillText(CERTIFICATE_COPY.envelopeSecondLine, 0, 46);
       ctx.font = "30px sans-serif";
       ctx.fillStyle = "#aa1024";
       ctx.fillText("♡", 0, 130);
@@ -286,7 +270,7 @@ export default function RomanticCertificate({
 
           {/* ── HEADER ── */}
           <div className="cert-100-header">
-            <div className="cert-100-kicker">— THE OFFICIAL —</div>
+            <div className="cert-100-kicker">{CERTIFICATE_COPY.kicker}</div>
 
             <h2 className="cert-100-sub-title">CERTIFICATE OF</h2>
 
@@ -298,7 +282,7 @@ export default function RomanticCertificate({
 
             <div className="cert-100-divider">
               <span className="cert-line" />
-              <span className="cert-div-text">THIS CERTIFIES THAT</span>
+              <span className="cert-div-text">{CERTIFICATE_COPY.presentedTo}</span>
               <span className="cert-line" />
             </div>
           </div>
@@ -314,28 +298,25 @@ export default function RomanticCertificate({
           <div className="cert-100-body">
 
             <p className="cert-100-p">
-              are hereby declared to be forever bound{" "}
-              <em className="cert-highlight">in love</em>,
-              <br />
-              in heart, in soul and in every lifetime.
+              {CERTIFICATE_COPY.declaration}
             </p>
+
+            <p className="cert-100-p">{CERTIFICATE_COPY.wish}</p>
 
             <div className="cert-100-mid-rule" />
 
             <p className="cert-100-p cert-100-p-red">
-              This bond is certified as timeless, unconditional, and everlasting,
+              {CERTIFICATE_COPY.toast}
             </p>
             <p className="cert-100-p">
-              sealed with trust, respect, care and a love that grows stronger
-              <br />
-              with every heartbeat.
+              {CERTIFICATE_COPY.closing}
             </p>
 
-            {/* Together Forever */}
+            {/* Certificate closing */}
             <div className="cert-100-tf-row">
               <span className="cert-tf-line-left" />
               <span className="cert-100-tf-heart">♥</span>
-              <span className="cert-100-together-forever">Together Forever</span>
+              <span className="cert-100-together-forever">{CERTIFICATE_COPY.together}</span>
               <span className="cert-100-tf-heart">♥</span>
               <span className="cert-tf-line-right" />
             </div>
@@ -347,7 +328,7 @@ export default function RomanticCertificate({
             <div className="cert-100-sig-col">
               <span className="cert-100-sig-script">{leftName}</span>
               <div className="cert-100-sig-line" />
-              <span className="cert-100-sig-role">PARTNER IN LIFE</span>
+              <span className="cert-100-sig-role">{CERTIFICATE_COPY.signature}</span>
             </div>
 
             {/* Wax seal */}
@@ -366,15 +347,14 @@ export default function RomanticCertificate({
             <div className="cert-100-sig-col">
               <span className="cert-100-sig-script">{rightName}</span>
               <div className="cert-100-sig-line" />
-              <span className="cert-100-sig-role">PARTNER IN LIFE</span>
+              <span className="cert-100-sig-role">{CERTIFICATE_COPY.signature}</span>
             </div>
           </div>
 
           {/* Envelope note */}
           <div className="cert-100-envelope-text">
-            <span>Forever Looks</span>
-            <span>Better</span>
-            <span>With You</span>
+            <span>{CERTIFICATE_COPY.envelopeFirstLine}</span>
+            <span>{CERTIFICATE_COPY.envelopeSecondLine}</span>
             <span className="env-heart">♡</span>
           </div>
 

@@ -1,4 +1,4 @@
-import PublicLayout from "../layouts/PublicLayout.jsx";
+import PublicLayout from "./layouts/PublicLayout.jsx";
 import CursorStardust from "../components/CursorStardust.jsx";
 import AudioSoundtrackBar from "../components/AudioSoundtrackBar.jsx";
 
@@ -17,7 +17,7 @@ export default function Terms() {
           <ul style={{ color: "#ffd0dc", fontSize: "1.05rem", lineHeight: 1.8, paddingLeft: 20 }}>
             <li>Respectful Content: Only upload content you have explicit consent to share.</li>
             <li>Sanctuary Integrity: Do not attempt to reverse engineer or misuse the platform infrastructure.</li>
-            <li>Forever Hosting: Standard digital pages remain accessible indefinitely unless deleted upon user request.</li>
+            <li>Page Availability: Standard digital pages are available for 30 days after creation and may become unavailable after that period.</li>
           </ul>
         </div>
       </div>

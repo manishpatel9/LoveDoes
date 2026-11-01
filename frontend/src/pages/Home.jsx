@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import PublicLayout from "../layouts/PublicLayout.jsx";
+import PublicLayout from "./layouts/PublicLayout.jsx";
 import CursorStardust from "../components/CursorStardust.jsx";
 import AudioSoundtrackBar from "../components/AudioSoundtrackBar.jsx";
 import LoveBubbles from "../components/LoveBubbles.jsx";

@@ -17,6 +17,8 @@ export default function StarlightWishWall() {
   const [newWish, setNewWish] = useState("");
   const [author, setAuthor] = useState("");
   const [submittedMsg, setSubmittedMsg] = useState("");
+  const [wishError, setWishError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const handleStarClick = (wish) => {
     playSparkleSound();
@@ -27,33 +29,41 @@ export default function StarlightWishWall() {
     e.preventDefault();
     if (!newWish.trim()) return;
     playRomanticChime();
+    setSubmitting(true);
+    setWishError("");
 
     const wishText = newWish.trim();
     const wishAuthor = author.trim() || "Secret Lover";
 
-    const created = {
-      id: Date.now(),
-      text: wishText,
-      author: wishAuthor,
-      icon: "⭐",
-    };
-
-    setWishes((prev) => [created, ...prev]);
-    setActiveWish(created);
-    setNewWish("");
-    setAuthor("");
-    setSubmittedMsg("Your love wish has floated up into the starlight constellation! ✨");
-    setTimeout(() => setSubmittedMsg(""), 4000);
-
     try {
-      await submitContactMessage({
+      const result = await submitContactMessage({
         name: wishAuthor,
         email: "starlight-wish@lovedoes.app",
         topic: "⭐ Secret Whisper / Starlight Wish",
         message: wishText,
       });
+      if (!result.success) {
+        setWishError(result.error || "Your wish could not be saved. Please try again.");
+        return;
+      }
+
+      const created = {
+        id: Date.now(),
+        text: wishText,
+        author: wishAuthor,
+        icon: "⭐",
+      };
+      setWishes((prev) => [created, ...prev]);
+      setActiveWish(created);
+      setNewWish("");
+      setAuthor("");
+      setSubmittedMsg("Your love wish has floated up into the starlight constellation! ✨");
+      setTimeout(() => setSubmittedMsg(""), 4000);
     } catch (err) {
       console.error("Failed to persist wish to admin dashboard:", err);
+      setWishError(err.message || "Your wish could not be saved. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -140,11 +150,12 @@ export default function StarlightWishWall() {
               />
             </div>
 
-            <button type="submit" className="btn glow" style={{ width: "100%" }}>
-              Send Wish to the Stars ✨
+            <button type="submit" className="btn glow" style={{ width: "100%" }} disabled={submitting}>
+              {submitting ? "Sending your wish..." : "Send Wish to the Stars ✨"}
             </button>
           </form>
 
+          {wishError && <p className="error" role="alert">{wishError}</p>}
           {submittedMsg && <p className="success-msg">{submittedMsg}</p>}
         </div>
       </div>

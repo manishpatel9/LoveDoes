@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import PublicLayout from "../layouts/PublicLayout.jsx";
+import PublicLayout from "./layouts/PublicLayout.jsx";
 import CursorStardust from "../components/CursorStardust.jsx";
 import AudioSoundtrackBar from "../components/AudioSoundtrackBar.jsx";
 import LoveBubbles from "../components/LoveBubbles.jsx";
 import RosePetals from "../components/RosePetals.jsx";
 import { playSparkleSound, playHeartbeatSound, playRomanticChime } from "../utils/audioSynth.js";
 import { submitContactMessage } from "../services/api.js";
+import { handleImageFallback } from "../utils/imageFallback.js";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -29,6 +30,7 @@ export default function Contact() {
   const [errorMessage, setErrorMessage] = useState("");
   const [openFaq, setOpenFaq] = useState(0);
   const [copiedInfo, setCopiedInfo] = useState("");
+  const [copyError, setCopyError] = useState("");
 
   const handleInputChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -67,11 +69,30 @@ export default function Contact() {
     }
   };
 
-  const handleCopy = (text, label) => {
+  const handleCopy = async (text, label) => {
     playSparkleSound();
-    navigator.clipboard.writeText(text);
-    setCopiedInfo(label);
-    setTimeout(() => setCopiedInfo(""), 3000);
+    setCopyError("");
+    setCopiedInfo("Copying...");
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error("Clipboard access is unavailable in this browser.");
+      }
+      await Promise.race([
+        navigator.clipboard.writeText(text),
+        new Promise((_, reject) => {
+          setTimeout(() => reject(new Error("Clipboard access timed out.")), 3000);
+        }),
+      ]);
+      setCopiedInfo(label);
+    } catch (error) {
+      console.error("Could not copy contact information.", error);
+      setCopiedInfo("");
+      setCopyError("Copy failed. Please copy the visible text manually.");
+    }
+    setTimeout(() => {
+      setCopiedInfo("");
+      setCopyError("");
+    }, 3000);
   };
 
   const faqs = [
@@ -81,7 +102,7 @@ export default function Contact() {
     },
     {
       q: "How long does our love page stay active online?",
-      a: "Your digital sanctuary stays live forever! We preserve your romantic memories, photos, audio, and certificates so your love story shines for decades to come.",
+      a: "New love pages are available for 30 days after creation. Please download your photos, audio, certificates, and videos before the page expires.",
     },
     {
       q: "Is my private message and proposal password-protected?",
@@ -270,8 +291,12 @@ export default function Contact() {
               <div className="info-details">
                 <h4>Direct Email Sanctuary</h4>
                 <p>support@lovedoes.app</p>
-                <span className="info-badge">
-                  {copiedInfo === "Email copied to clipboard!" ? "✓ Copied!" : "Fast 2-Hour Response"}
+                <span className="info-badge" aria-live="polite">
+                  {copiedInfo === "Email copied to clipboard!"
+                    ? "✓ Copied!"
+                    : copiedInfo === "Copying..."
+                      ? "Copying..."
+                      : "Fast 2-Hour Response"}
                 </span>
               </div>
             </div>
@@ -285,11 +310,17 @@ export default function Contact() {
               <div className="info-details">
                 <h4>Instant WhatsApp Concierge</h4>
                 <p>+1 (800) LOVE-DOES</p>
-                <span className="info-badge">
-                  {copiedInfo === "WhatsApp number copied!" ? "✓ Copied!" : "Live 24/7 Concierge"}
+                <span className="info-badge" aria-live="polite">
+                  {copiedInfo === "WhatsApp number copied!"
+                    ? "✓ Copied!"
+                    : copiedInfo === "Copying..."
+                      ? "Copying..."
+                      : "Live 24/7 Concierge"}
                 </span>
               </div>
             </div>
+
+            {copyError && <p className="info-badge" role="status">{copyError}</p>}
 
             <div className="info-card-item" onClick={() => playSparkleSound()}>
               <div className="info-icon">📍</div>
@@ -306,6 +337,7 @@ export default function Contact() {
                 <img
                   src="https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=360&auto=format&fit=crop&q=80"
                   alt="Love Letter Memory"
+                  onError={handleImageFallback}
                 />
                 <span className="c-polaroid-script">Every message brings a smile ♡</span>
               </div>
