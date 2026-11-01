@@ -77,6 +77,15 @@ const musicRows = [
 ];
 
 async function main() {
+  const ssl =
+    process.env.DB_SSL === "true"
+      ? {
+          ca: fs.readFileSync(
+            path.resolve(__dirname, "../../", process.env.DB_SSL_CA || "certs/ca.pem"),
+            "utf8"
+          ),
+        }
+      : undefined;
   const connection = await mysql.createConnection({
     host: process.env.DB_HOST,
     port: Number(process.env.DB_PORT || 3306),
@@ -84,6 +93,7 @@ async function main() {
     password: process.env.DB_PASSWORD,
     multipleStatements: true,
     database: process.env.DB_NAME,
+    ssl,
   });
 
   await connection.query(schema);

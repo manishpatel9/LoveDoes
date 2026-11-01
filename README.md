@@ -12,6 +12,7 @@ Personalized love-page generator: React + Vite frontend, Node.js/Express API, My
 
 1. Start MySQL locally.
 2. Copy credentials into `backend/.env` (already set for local development).
+   For MySQL TLS, set `DB_SSL=true` and `DB_SSL_CA=./certs/ca.pem`; the CA path is relative to `backend`.
 3. Install and initialize:
 
 ```bash
