@@ -80,7 +80,8 @@ export async function createLovePage(req, res) {
   const occasion = String(req.body.occasion || "Valentine").trim().slice(0, 120);
   const specialDate = req.body.specialDate || null;
   const message = String(req.body.message || "").trim().slice(0, 1000);
-  const themeId = Number(req.body.themeId);
+  const rawThemeId = req.body.themeId;
+  const themeId = rawThemeId == null || rawThemeId === "" ? null : Number(rawThemeId);
   const musicId = Number(req.body.musicId);
   const memories = parseMemories(req.body.memories);
 
@@ -96,10 +97,16 @@ export async function createLovePage(req, res) {
     return;
   }
 
-  const themeRows = await query("SELECT id FROM themes WHERE id = ? AND status = 'active'", [themeId]);
-  if (!themeRows.length) {
-    res.status(400).json({ success: false, error: "Please choose a theme." });
-    return;
+  if (themeId !== null) {
+    if (!Number.isInteger(themeId) || themeId <= 0) {
+      res.status(400).json({ success: false, error: "Please choose a valid theme." });
+      return;
+    }
+    const themeRows = await query("SELECT id FROM themes WHERE id = ? AND status = 'active'", [themeId]);
+    if (!themeRows.length) {
+      res.status(400).json({ success: false, error: "Please choose a valid theme." });
+      return;
+    }
   }
 
   const musicRows = await query("SELECT id FROM music WHERE id = ? AND status = 'active'", [musicId]);
@@ -375,6 +382,5 @@ export async function getPublicPaymentSettings(_req, res) {
     });
   }
 }
-
 
 

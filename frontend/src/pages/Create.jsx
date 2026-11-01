@@ -172,7 +172,6 @@ export default function Create() {
   const canNext = useMemo(() => {
     if (step === 0) return form.creatorName.trim() && form.partnerName.trim();
     if (step === 1) return Boolean(form.creatorFile && form.partnerFile);
-    if (step === 5) return Boolean(form.themeId);
     return true;
   }, [step, form]);
 
@@ -255,7 +254,7 @@ export default function Create() {
       data.append("occasion", form.occasion.trim());
       data.append("specialDate", form.specialDate);
       data.append("message", form.message.trim());
-      data.append("themeId", String(form.themeId));
+      data.append("themeId", form.themeId == null ? "" : String(form.themeId));
       data.append("musicId", String(form.musicId));
       if (form.creatorFile) data.append("creatorPhoto", form.creatorFile);
       if (form.partnerFile) data.append("partnerPhoto", form.partnerFile);
@@ -726,8 +725,16 @@ export default function Create() {
               {step === 5 && (
                 <div>
                   <h3 style={{ marginBottom: 8 }}>🎨 Select Aesthetic Vibe</h3>
-                  <p className="hint" style={{ marginBottom: 16 }}>Choose how your love sanctuary will look and feel to your partner.</p>
+                  <p className="hint" style={{ marginBottom: 16 }}>Choose a style, or skip this step to use the classic look.</p>
                   <div className="theme-grid">
+                    <button
+                      type="button"
+                      className={`theme-card ${form.themeId == null ? "selected" : ""}`}
+                      onClick={() => update({ themeId: null })}
+                    >
+                      <div className="swatch" style={{ background: "linear-gradient(135deg, #ff4f81, #fff1f5)" }} />
+                      <strong style={{ fontSize: "0.95rem" }}>Classic (default)</strong>
+                    </button>
                     {themes.map((theme) => (
                       <button
                         type="button"
@@ -761,7 +768,7 @@ export default function Create() {
                     }}
                   />
                   <p className="hint" style={{ marginTop: 12, textAlign: "center" }}>
-                    🎉 {form.occasion} · {selectedTheme?.name}{form.audioFile ? " · Personal Song Attached" : ""}
+                    🎉 {form.occasion} · {selectedTheme?.name || "Classic"}{form.audioFile ? " · Personal Song Attached" : ""}
                   </p>
                 </>
               )}
